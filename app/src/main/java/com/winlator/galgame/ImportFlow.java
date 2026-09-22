@@ -160,8 +160,12 @@ public final class ImportFlow {
             // drives：Container 默认 + S: 常驻存档盘（B4，不修改 DEFAULT_DRIVES 常量）
             data.put("drives", Container.DEFAULT_DRIVES + "S:" + saveDir.getAbsolutePath());
 
+            // wincomponents：预设/默认 基础上强制开启视频解码组件（P3，OP/ED 不黑屏）
+            String wincomponents = GalgameVideoSupport.ensureVideoComponents(
+                    preset != null ? preset.wincomponents : null);
+            data.put("wincomponents", wincomponents);
+
             if (preset != null) {
-                if (preset.wincomponents != null) data.put("wincomponents", preset.wincomponents);
                 if (preset.dxwrapper != null) data.put("dxwrapper", preset.dxwrapper);
                 if (preset.box64Preset != null) data.put("box64Preset", preset.box64Preset);
                 data.put("startupSelection", preset.startupSelection);
