@@ -13,6 +13,7 @@ public final class EnginePreset {
 
     public final String locale;          // ja_JP.UTF-8 等（日文化，A4）
     public final String font;            // 注入字体文件名（otf-ipafont.ttf 等）
+    public final String fontFace;        // 注册到 Windows Fonts 键的字体名（IPAexGothic 等）
     public final String graphicsDriver;  // "default" 表示沿用 Container 默认
     public final String dxwrapper;       // dxvk / d8vk / ...
     public final String box64Preset;     // compatibility / performance / ...
@@ -21,11 +22,12 @@ public final class EnginePreset {
     public final int startupSelection;   // 0 正常 / 1 必要 / 2 激进
     public final String env;             // 追加到 Container.envVars 的区域环境变量
 
-    private EnginePreset(String locale, String font, String graphicsDriver, String dxwrapper,
-                         String box64Preset, String wincomponents, String windowsVersion,
-                         int startupSelection, String env) {
+    private EnginePreset(String locale, String font, String fontFace, String graphicsDriver,
+                         String dxwrapper, String box64Preset, String wincomponents,
+                         String windowsVersion, int startupSelection, String env) {
         this.locale = locale;
         this.font = font;
+        this.fontFace = fontFace;
         this.graphicsDriver = graphicsDriver;
         this.dxwrapper = dxwrapper;
         this.box64Preset = box64Preset;
@@ -39,6 +41,7 @@ public final class EnginePreset {
     static EnginePreset fromJson(JSONObject o) throws JSONException {
         String locale = o.has("locale") ? o.getString("locale") : null;
         String font = o.has("font") ? o.getString("font") : null;
+        String fontFace = o.has("font_face") ? o.getString("font_face") : null;
         String graphicsDriver = o.has("graphics_driver") ? o.getString("graphics_driver") : null;
         String dxwrapper = o.has("dxwrapper") ? o.getString("dxwrapper") : null;
         String box64Preset = o.has("box64_preset") ? o.getString("box64_preset") : null;
@@ -46,7 +49,7 @@ public final class EnginePreset {
         String windowsVersion = o.has("windows_version") ? o.getString("windows_version") : null;
         int startupSelection = o.has("startup_selection") ? o.getInt("startup_selection") : 1;
         String env = o.has("env") ? o.getString("env") : null;
-        return new EnginePreset(locale, font, graphicsDriver, dxwrapper, box64Preset,
+        return new EnginePreset(locale, font, fontFace, graphicsDriver, dxwrapper, box64Preset,
                 wincomponents, windowsVersion, startupSelection, env);
     }
 

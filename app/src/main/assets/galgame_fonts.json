@@ -1,0 +1,7 @@
+{
+  "_comment": "P2 日文字体清单。框架不分发字体二进制；此文件只描述「去哪找、怎么认、注册成什么名字」。",
+  "drop_in_dir": "galgame-fonts",
+  "aliases": ["MS Gothic", "MS PGothic", "MS UI Gothic", "Yu Gothic", "Meiryo"],
+  "japanese_hints": ["ipa", "gothic", "mincho", "noto", "meiryo", "yugoth", "msgothic", "kochi", "takao", "sourcehan", "source-han", "japan"],
+  "extensions": ["ttf", "otf", "ttc"]
+}

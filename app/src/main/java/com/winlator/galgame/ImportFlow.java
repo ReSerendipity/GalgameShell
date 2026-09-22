@@ -97,6 +97,19 @@ public final class ImportFlow {
      * @return 容器内游戏目录（drive_c/galgame/<gameId>）
      */
     public static File stageGameFiles(Container container, ImportResult result, File sourceFolder) {
+        return stageGameFiles(container, result, sourceFolder, null);
+    }
+
+    /**
+     * 容器创建后调用：A3 复制游戏到容器可写位置 + B4 确认 S: 盘 + P2 日文化注入 + 写 galgame_overlay.json。
+     * @param container    已创建的 Container（来自 ContainerManager 回调）
+     * @param result       {@link #run} 的返回值
+     * @param sourceFolder 原始游戏源文件夹（A3 源）
+     * @param context      用于 P2 日文化注入；为 null 则跳过注入（便于无 UI 的单测）
+     * @return 容器内游戏目录（drive_c/galgame/<gameId>）
+     */
+    public static File stageGameFiles(Container container, ImportResult result, File sourceFolder,
+                                      Context context) {
         if (result.route != EngineDetector.Route.A || result.containerData == null) {
             throw new IllegalStateException("仅 A 路由需要 stage（B 路由由原生播放器处理）");
         }
@@ -114,10 +127,16 @@ public final class ImportFlow {
         // B4：S: 盘目录再确认一次（run 中已 ensure，重装/重置后此处兜底）
         new GalgameSaveManager(result.gameId).ensureSaveDir();
 
+        result.gameExe = findExecutable(gameDir, result.engine);
+
+        // P2：日文化注入（LC_ALL/LANG + 区域注册表 + 日文字体）；缺失字体只告警不阻断
+        if (context != null) {
+            result.localeReport = GalgameLocaleInjector.apply(container, result.preset, gameDir, context);
+        }
+
         // 写 galgame_overlay.json（不修改官方 .container，供前端/启动器读取）
         writeOverlay(root, result, gameDir);
 
-        result.gameExe = findExecutable(gameDir, result.engine);
         return gameDir;
     }
 
@@ -262,6 +281,20 @@ public final class ImportFlow {
             if (!result.encryptionMarkers.isEmpty()) {
                 o.put("encryption_markers", new JSONArray(result.encryptionMarkers));
             }
+            if (result.localeReport != null) {
+                JSONObject loc = new JSONObject();
+                loc.put("locale", result.localeReport.locale);
+                loc.put("env_applied", result.localeReport.envApplied);
+                if (result.localeReport.fontFile != null) loc.put("font_file", result.localeReport.fontFile);
+                if (result.localeReport.fontFace != null) loc.put("font_face", result.localeReport.fontFace);
+                if (!result.localeReport.faces.isEmpty()) {
+                    loc.put("faces", new JSONArray(result.localeReport.faces));
+                }
+                if (!result.localeReport.warnings.isEmpty()) {
+                    loc.put("warnings", new JSONArray(result.localeReport.warnings));
+                }
+                o.put("locale_injection", loc);
+            }
             File f = new File(root, "galgame_overlay.json");
             try (Writer w = new java.io.FileWriter(f)) { w.write(o.toString(2)); }
         } catch (Exception ignored) {
@@ -281,5 +314,6 @@ public final class ImportFlow {
         public JSONObject containerData;// A 路由：ContainerManager.createContainerAsync(data)
         public File saveDir;            // S: 盘路径（A 路由）
         public File gameExe;            // 启动用 exe（stageGameFiles 后填）
+        public GalgameLocaleInjector.Report localeReport; // P2 日文化注入结果（stageGameFiles 后填）
     }
 }

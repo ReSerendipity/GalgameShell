@@ -14,8 +14,11 @@
  *   - ImportFlow            P1 导入即玩：detect → 构造 Container data JSONObject
  *                           （envVars / drives 含 S: / wincomponents / dxwrapper / box64Preset
  *                            + extraData 承载 galgame 专属项）→ UI 调 ContainerManager 创建
- *                            → stageGameFiles 做 A3 复制 + B4 S: 盘 + 写 galgame_overlay.json
+ *                            → stageGameFiles 做 A3 复制 + B4 S: 盘 + P2 日文化 + 写 galgame_overlay.json
  *   - GalgameSaveManager    B4 存档持久化（S: 盘 + 导出/恢复；Shell Folder/符号链接留 P4 接缝）
+ *   - GalgameLocaleInjector P2 日文化注入（env LC_ALL/LANG + 区域注册表 + 日文字体；
+ *                           仅调用官方 WineRegistryEditor/WineUtils 公开 API）
+ *   - GalgameFonts          P2 日文字体定位（drop-in 目录 / 游戏目录；框架不分发字体）
  *   - （B 路由唤起 / 诊断向导 后续 Phase 追加）
  */
 package com.winlator.galgame;
