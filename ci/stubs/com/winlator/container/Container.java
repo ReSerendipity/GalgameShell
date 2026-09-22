@@ -4,6 +4,7 @@ public class Container {
     public static final String DEFAULT_ENV_VARS = "";
     public static final String DEFAULT_DRIVES = "";
     public static final String DEFAULT_WINCOMPONENTS = "direct3d=1,directsound=1,directmusic=1,directshow=0,directplay=0,xaudio=1,vcrun2005=0,vcrun2010=1,wmdecoder=1";
+    public final int id = 0;
     public Container(int id) {}
     public File getRootDir() { return null; }
     public String getEnvVars() { return ""; }

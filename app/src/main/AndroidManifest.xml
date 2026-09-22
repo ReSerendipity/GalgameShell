@@ -16,6 +16,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- GalgameShell: 让 Android 11+ 能看到原生播放器（B 路由唤起，P5） -->
+    <queries>
+        <package android:name="org.tvp.kirikiri2" />
+        <package android:name="jp.ogapee.onscripter.release" />
+        <package android:name="cyou.joiplay" />
+        <package android:name="com.akira.tyranoemu" />
+    </queries>
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:appCategory="game"
@@ -52,6 +60,13 @@
             android:theme="@style/AppThemeDark"
             android:exported="false"
             android:screenOrientation="sensor" />
+
+        <!-- GalgameShell 游戏库（全新 Activity，P1/P2/P4/P5 前端入口） -->
+        <activity android:name="com.winlator.galgame.ui.GalgameLibraryActivity"
+            android:theme="@style/AppThemeDark"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
 
         <!-- Needed for keep the container alive when in background or the device is locked. -->
         <service
