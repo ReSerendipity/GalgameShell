@@ -8,29 +8,46 @@
     <string name="galgame_app_name">GalgameShell</string>
     <string name="galgame_tagline">GalGame Android Shell (Winlator-based)</string>
 
+    <!-- 通用 -->
+    <string name="galgame_ok">确定</string>
+    <string name="galgame_cancel">取消</string>
+
+    <!-- 库 UI -->
+    <string name="galgame_library_title">游戏库</string>
+    <string name="galgame_library_empty">还没有导入游戏，点击上方「导入游戏」开始</string>
+    <string name="galgame_action_launch">启动</string>
+    <string name="galgame_action_diagnose">诊断</string>
+    <string name="galgame_action_export_save">导出存档</string>
+    <string name="galgame_action_logs">查看日志</string>
+
     <!-- 导入即玩 (P1) -->
     <string name="galgame_import_title">导入游戏</string>
     <string name="galgame_import_pick_folder">选择游戏文件夹</string>
+    <string name="galgame_import_hint">游戏文件夹路径（如 /sdcard/Download/MyGame）</string>
     <string name="galgame_import_detecting">正在识别引擎…</string>
     <string name="galgame_import_build_container">正在为「%1$s」创建独立容器…</string>
-    <string name="galgame_import_done">导入完成，点击开始</string>
+    <string name="galgame_import_done">导入完成，回到列表点击「启动」</string>
+    <string name="galgame_import_invalid">路径不存在或不是文件夹</string>
+    <string name="galgame_import_failed">导入失败</string>
 
     <!-- 引擎识别 (B1) -->
     <string name="galgame_engine_detected">识别引擎：%1$s</string>
     <string name="galgame_route_a">模拟路由（Winlator 内核）</string>
-    <string name="galgame_route_b">原生路由：%1$s</string>
+    <string name="galgame_route_b">原生路由</string>
     <string name="galgame_encrypted_warn">检测到加密特征（%1$s），暂不支持自动解密（A5）</string>
 
     <!-- 日文化 (P2) -->
     <string name="galgame_ja_locale_applied">已注入 ja_JP.UTF-8 区域与日文字体</string>
 
-    <!-- 存档 (B4) -->
+    <!-- 存档 (B4/P4) -->
     <string name="galgame_save_autobackup_on">退出自动备份：开</string>
     <string name="galgame_save_export">导出存档</string>
     <string name="galgame_save_export_done">存档已导出至 Download/galgame-backup</string>
+    <string name="galgame_save_export_fail">存档导出失败</string>
     <string name="galgame_save_restored">存档已从备份恢复</string>
 
     <!-- B 路由唤起免责 (A4 Tier-2) -->
+    <string name="galgame_broute_enable">我已了解风险，启用闭源播放器</string>
     <string name="galgame_broute_disclaimer">第三方原生播放器（JoiPlay / Tyranor）为闭源聚合器，仅按需唤起，使用风险自负</string>
 
     <!-- 诊断向导 (Part I §I.6) -->
@@ -40,4 +57,7 @@
     <string name="galgame_diag_bitness">32/64 位</string>
     <string name="galgame_diag_oom">内存不足</string>
     <string name="galgame_diag_audio">音频后端</string>
+
+    <!-- 日志查看 -->
+    <string name="galgame_logs_none">未找到日志文件</string>
 </resources>

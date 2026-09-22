@@ -7,11 +7,13 @@ public class Intent {
     public Intent() {}
     public Intent(String action) {}
     public Intent(String action, android.net.Uri uri) {}
+    public Intent(Context packageContext, Class<?> cls) {}
     public Intent setPackage(String packageName) { return this; }
     public Intent addFlags(int flags) { return this; }
     public Intent setAction(String action) { return this; }
     public Intent setData(android.net.Uri data) { return this; }
     public Intent putExtra(String name, String value) { return this; }
     public Intent putExtra(String name, boolean value) { return this; }
+    public Intent putExtra(String name, int value) { return this; }
     public String getAction() { return null; }
 }
