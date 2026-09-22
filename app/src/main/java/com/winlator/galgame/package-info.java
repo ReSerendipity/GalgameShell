@@ -19,6 +19,10 @@
  *   - GalgameLocaleInjector P2 日文化注入（env LC_ALL/LANG + 区域注册表 + 日文字体；
  *                           仅调用官方 WineRegistryEditor/WineUtils 公开 API）
  *   - GalgameFonts          P2 日文字体定位（drop-in 目录 / 游戏目录；框架不分发字体）
- *   - （B 路由唤起 / 诊断向导 后续 Phase 追加）
+ *   - GalgameVideoSupport   P3 视频解码（强制 directshow=1/wmdecoder=1，OP/ED 不黑屏）
+ *   - NativeRouteLauncher   P5 B 路由唤起（Tier-1 开源默认 / Tier-2 闭源需显式开启+免责）
+ *   - GalgameDiagnostics    诊断向导（GPU 驱动 / 日文 / 视频 / 位宽 / 音频 / 加密 检查表）
+ *   - GalgameLogs           日志查看（定位 logs.txt / stderr / dxvk 等 + 要害行提取）
+ *   - （库 UI / 导入流 UI / 诊断 UI 见 com.winlator.galgame.ui，后续 Phase 追加）
  */
 package com.winlator.galgame;
