@@ -9,6 +9,7 @@ public class AlertDialog implements DialogInterface {
         public Builder setTitle(CharSequence title) { return this; }
         public Builder setTitle(int titleId) { return this; }
         public Builder setMessage(CharSequence message) { return this; }
+        public Builder setMessage(int messageId) { return this; }
         public Builder setView(android.view.View view) { return this; }
         public Builder setItems(CharSequence[] items, DialogInterface.OnClickListener l) { return this; }
         public Builder setPositiveButton(CharSequence text, DialogInterface.OnClickListener l) { return this; }

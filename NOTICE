@@ -1,0 +1,73 @@
+GalgameShell — NOTICE
+=====================
+
+本文件汇总 GalgameShell（下称"本外壳"）的版权、许可证与第三方组件归属。
+本项目遵守 LGPL-2.1（见同目录 LICENSE），并履行其"提供对应源码"的义务（A6 / AC-18）。
+
+1. 项目与上游
+-------------
+- 本外壳：GalgameShell，是 galgame 专用外壳（装修层）。
+- 上游基座：winlator-app (https://github.com/brunodev85/winlator-app)，作者 BrunoDev85，
+  许可证 LGPL-2.1。
+- 本外壳以 LGPL-2.1 发布，且公开源码：
+  https://github.com/ReSerendipity/GalgameShell
+
+  对应源码获取方式（LGPL-2.1 §6 / AC-18）：
+  - 应用内：「游戏库 → 关于」中列出源码地址；
+  - 仓库：上述 GitHub 地址（分支 galgame）；
+  - 分发二进制时，须同时提供或书面承诺提供上述源码。
+
+2. 本外壳新增部分（新增价值层）
+-------------------------------
+位于新包 com.winlator.galgame 与 com.winlator.galgame.ui，以及新增资源：
+  assets/engine_presets.json、assets/galgame_fonts.json、
+  res/values/galgame_strings.xml、res/layout/activity_galgame_library.xml
+上述新增部分同样以 LGPL-2.1 发布。
+
+设计铁律（Plan §VIII.4）：不修改上游以下文件，以保持 rebase 友好：
+  Container.java / LocaleHelper.java / res/values/strings.xml 现有条目。
+
+3. 上游随附的第三方组件（未在本仓库内修改）
+-------------------------------------------
+运行期依赖（由上游 winlator-app 分发，本项目不改其源码）：
+- Wine                  — LGPL-2.1
+- Box86 / Box64         — MIT
+- Mesa (含 Turnip)      — MIT
+- DXVK                  — zlib
+- VKD3D                 — LGPL-2.1
+- zstd-jni              — BSD-2-Clause
+- XZ Utils (xz)         — Public Domain / 0BSD
+- Apache Commons Compress — Apache-2.0
+- AndroidX (appcompat / preference / lifecycle) — Apache-2.0
+- Material Components   — Apache-2.0
+
+注：以上组件的完整许可证文本随上游仓库/发行包提供；本项目仅在构建时引用，
+不修改、不再授权。
+
+4. 字体政策（A1 / RK-01）
+-------------------------
+- 本外壳 **不随包分发任何字体二进制**（框架-only 原则）。
+- 推荐用户自行提供开源日文/中文字体，例如：
+  - IPAex Gothic / IPAex Mincho（IPA Font License，可再分发）
+  - Noto Sans/Serif CJK（SIL OFL 1.1）
+- **严禁**捆绑商业字体（如 MS Gothic / Hiragino / 方正等）。
+- 用户放入的字体由其自行负责许可合规；本外壳仅做本地注入，不进行再分发。
+
+5. 原生播放器（B 路由，A4）
+---------------------------
+本外壳不内嵌任何第三方原生播放器，仅在用户显式操作时"唤起"已安装的应用：
+- Kirikiroid2 (org.tvp.kirikiri2)        — 开源，Tier-1
+- ONScripter (jp.ogapee.onscripter.release) — 开源，Tier-1
+- JoiPlay (cyou.joiplay)                 — 闭源聚合器，Tier-2（需显式开启 + 免责）
+- Tyranor (com.akira.tyranoemu)          — 闭源聚合器，Tier-2（需显式开启 + 免责）
+上述应用与其运行的游戏内容的版权/许可，由各自权利人负责。
+
+6. 游戏内容与加密（A5）
+-----------------------
+- 本外壳 **不提供**任何游戏本体、破解或解密能力。
+- 对加密特征仅做"检测 + 提示"（encryption_markers），绝不破解。
+- 用户应仅使用其合法拥有的游戏副本。
+
+7. 无担保
+---------
+本软件按"原样"提供，不附带任何明示或默示担保。使用风险自负。

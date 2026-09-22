@@ -60,6 +60,9 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         Button importButton = findViewById(R.id.BTImport);
         importButton.setOnClickListener(v -> showImportDialog());
 
+        Button aboutButton = findViewById(R.id.BTAbout);
+        aboutButton.setOnClickListener(v -> showAbout());
+
         refresh();
     }
 
@@ -291,6 +294,15 @@ public class GalgameLibraryActivity extends AppCompatActivity {
     }
 
     // ---- 工具 ----
+
+    /** 关于 / 源码获取（LGPL-2.1 源码提供义务，A6 / AC-18）。 */
+    private void showAbout() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_about)
+                .setMessage(R.string.galgame_about_message)
+                .setPositiveButton(R.string.galgame_ok, null)
+                .show();
+    }
 
     private static String gameIdOf(Container container) {
         String name = container.getName();
