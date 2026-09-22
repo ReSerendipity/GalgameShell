@@ -1,0 +1,43 @@
+name: GalgameShell CI
+
+# P0 CI（Plan §VIII.3）：rebase 友好 + 零改铁律校验 + 构建占位。
+# 当前环境无法拉取 winlator-app 上游大包，gradle 构建为占位，待上游 seed 后启用。
+
+on:
+  push:
+    branches: [galgame, main]
+  pull_request:
+    branches: [galgame]
+
+jobs:
+  rebase-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # 零改铁律（Plan §VIII.4）：本 fork 不得修改这些高频文件
+      - name: 零改铁律校验
+        run: |
+          echo "检查是否存在被禁修改的文件…"
+          FORBIDDEN="Container.java strings.xml"
+          # 仅当这些文件在本仓库被新增/改动时才报错；上游 rebase 带入不算
+          git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E "$FORBIDDEN" && {
+            echo "❌ 检测到对零改文件的提交，违反 §VIII.4 铁律"; exit 1
+          } || echo "✅ 零改铁律通过"
+      # engine_presets.json 必须是合法 JSON
+      - name: 校验 engine_presets.json
+        run: |
+          python3 -c "import json,sys; json.load(open('app/src/main/assets/engine_presets.json')); print('✅ engine_presets.json 合法')"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: rebase-guard
+    steps:
+      - uses: actions/checkout@v4
+      # 占位：上游 seed 后取消注释启用 Android 构建
+      # - uses: actions/setup-java@v4
+      #   with: { distribution: temurin, java-version: 17 }
+      # - run: ./gradlew assembleDebug
+      - name: 构建占位
+        run: echo "TODO: seed winlator-app upstream 后启用 gradle 构建 (Plan §VIII.3 P0)"

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalGame 外壳专用文案。全部新建，不修改官方 strings.xml（AC-19）。
+  优先级低项（外壳日文 UI）也放这里，独立于官方 3 语言菜单。
+-->
+<resources>
+    <!-- 应用/外壳 -->
+    <string name="galgame_app_name">GalgameShell</string>
+    <string name="galgame_tagline">GalGame Android Shell (Winlator-based)</string>
+
+    <!-- 导入即玩 (P1) -->
+    <string name="galgame_import_title">导入游戏</string>
+    <string name="galgame_import_pick_folder">选择游戏文件夹</string>
+    <string name="galgame_import_detecting">正在识别引擎…</string>
+    <string name="galgame_import_build_container">正在为「%1$s」创建独立容器…</string>
+    <string name="galgame_import_done">导入完成，点击开始</string>
+
+    <!-- 引擎识别 (B1) -->
+    <string name="galgame_engine_detected">识别引擎：%1$s</string>
+    <string name="galgame_route_a">模拟路由（Winlator 内核）</string>
+    <string name="galgame_route_b">原生路由：%1$s</string>
+    <string name="galgame_encrypted_warn">检测到加密特征（%1$s），暂不支持自动解密（A5）</string>
+
+    <!-- 日文化 (P2) -->
+    <string name="galgame_ja_locale_applied">已注入 ja_JP.UTF-8 区域与日文字体</string>
+
+    <!-- 存档 (B4) -->
+    <string name="galgame_save_autobackup_on">退出自动备份：开</string>
+    <string name="galgame_save_export">导出存档</string>
+    <string name="galgame_save_export_done">存档已导出至 Download/galgame-backup</string>
+    <string name="galgame_save_restored">存档已从备份恢复</string>
+
+    <!-- B 路由唤起免责 (A4 Tier-2) -->
+    <string name="galgame_broute_disclaimer">第三方原生播放器（JoiPlay / Tyranor）为闭源聚合器，仅按需唤起，使用风险自负</string>
+
+    <!-- 诊断向导 (Part I §I.6) -->
+    <string name="galgame_diag_title">诊断向导</string>
+    <string name="galgame_diag_gpu">GPU 驱动</string>
+    <string name="galgame_diag_runtime">运行库 / 字体</string>
+    <string name="galgame_diag_bitness">32/64 位</string>
+    <string name="galgame_diag_oom">内存不足</string>
+    <string name="galgame_diag_audio">音频后端</string>
+</resources>

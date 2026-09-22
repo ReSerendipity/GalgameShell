@@ -1,0 +1,33 @@
+{
+  "siglus": {
+    "locale": "ja_JP.UTF-8",
+    "font": "otf-ipafont.ttf",
+    "graphics_driver": "default",
+    "dxwrapper": "dxvk",
+    "box64_preset": "compatibility",
+    "wincomponents": "direct3d=1,directshow=1,wmdecoder=1,xaudio=1,vcrun2010=1",
+    "windows_version": "win7",
+    "startup_selection": 1,
+    "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"
+  },
+  "yrg": {
+    "dxwrapper": "dxvk",
+    "windows_version": "win7",
+    "env": "LC_ALL=ja_JP.UTF-8"
+  },
+  "artemis": {
+    "dxwrapper": "dxvk",
+    "windows_version": "winxp",
+    "env": "LC_ALL=ja_JP.UTF-8 MESA_EXTENSION_MAX_YEAR=2003"
+  },
+  "cat_system2": {
+    "dxwrapper": "dxvk",
+    "windows_version": "win7",
+    "env": "LC_ALL=ja_JP.UTF-8"
+  },
+  "unknown": {
+    "dxwrapper": "dxvk",
+    "windows_version": "win7",
+    "env": "LC_ALL=ja_JP.UTF-8"
+  }
+}
