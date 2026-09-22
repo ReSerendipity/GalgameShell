@@ -1,7 +1,8 @@
 {
   "siglus": {
     "locale": "ja_JP.UTF-8",
-    "font": "otf-ipafont.ttf",
+    "font": "ipaexg.ttf",
+    "font_face": "IPAexGothic",
     "graphics_driver": "default",
     "dxwrapper": "dxvk",
     "box64_preset": "compatibility",
@@ -11,23 +12,35 @@
     "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"
   },
   "yrg": {
+    "locale": "ja_JP.UTF-8",
+    "font_face": "IPAexGothic",
     "dxwrapper": "dxvk",
     "windows_version": "win7",
-    "env": "LC_ALL=ja_JP.UTF-8"
+    "startup_selection": 1,
+    "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"
   },
   "artemis": {
+    "locale": "ja_JP.UTF-8",
+    "font_face": "IPAexGothic",
     "dxwrapper": "dxvk",
     "windows_version": "winxp",
-    "env": "LC_ALL=ja_JP.UTF-8 MESA_EXTENSION_MAX_YEAR=2003"
+    "startup_selection": 1,
+    "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8 MESA_EXTENSION_MAX_YEAR=2003"
   },
   "cat_system2": {
+    "locale": "ja_JP.UTF-8",
+    "font_face": "IPAexGothic",
     "dxwrapper": "dxvk",
     "windows_version": "win7",
-    "env": "LC_ALL=ja_JP.UTF-8"
+    "startup_selection": 1,
+    "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"
   },
   "unknown": {
+    "locale": "ja_JP.UTF-8",
+    "font_face": "IPAexGothic",
     "dxwrapper": "dxvk",
     "windows_version": "win7",
-    "env": "LC_ALL=ja_JP.UTF-8"
+    "startup_selection": 1,
+    "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"
   }
 }
