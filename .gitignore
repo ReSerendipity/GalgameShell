@@ -1,15 +1,27 @@
+# Android / Gradle
 *.iml
-.gradle
+.gradle/
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# winlator-app 构建产物 / 大资源（运行时下载，不入库）
+*.apk
+*.aab
+app/src/main/assets/rootfs*.tar*
+app/src/main/assets/*.obb
+
+# 日志（诊断向导输出，不入库）
+*.log
+game_log.txt
+
+# 存档 / 备份（运行时生成）
+galgame-saves/
+galgame-backup/
+
+# OS
+Thumbs.db
