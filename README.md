@@ -1,72 +1,112 @@
 # GalgameShell — GalGame Android Shell
 
 基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（`main`，LGPL-2.1）的 galgame 专用外壳。
-路线 1：以 Winlator 为模拟层基座，做「引擎识别 + 原生(B)/模拟(A) 智能路由」的装修层。
+路线 1：以 Winlator 为模拟层基座，做「引擎识别 + 原生(B) / 模拟(A) 智能路由」的装修层。
 
-> 完整计划见 `Desktop/galgame-plan-complete.md`（Plan Part I–VIII，2026-09-20 收口）。
+> 完整计划见 `Desktop/galgame-plan-complete.md`（Plan Part I–VIII）。
+> 本仓库 fork：https://github.com/ReSerendipity/GalgameShell （工作分支 `galgame`）
 
-## 当前状态（P0 脚手架）
+## 当前状态
 
-✅ 已完成（不依赖上游即可产出）：
+| 阶段 | 内容 | 状态 |
+|------|------|------|
+| P0 | 脚手架：fork + 新包 + `galgame_strings.xml` + CI | ✅ |
+| P1 | 导入即玩：`EngineDetector` / `ImportFlow` / `EnginePreset` / A2 每游戏容器 / A3 复制 / B4 S: 盘 | ✅ |
+| P2 | 日文化：`GalgameLocaleInjector`（env + 区域注册表 + 日文字体）/ `GalgameFonts` | ✅ |
+| P3 | 视频解码：`GalgameVideoSupport`（强制 `directshow=1`/`wmdecoder=1`） | ✅ |
+| P4 | 存档：S: 盘 + Shell Folder 重定向 + 便携存档「先搬后链」+ 导出/恢复 | ✅ |
+| P5 | B 路由：`NativeRouteLauncher`（Tier-1 开源默认 / Tier-2 闭源需显式开启+免责） | ✅ |
+| — | 诊断向导 `GalgameDiagnostics` + 日志查看 `GalgameLogs` | ✅ |
+| — | 库 UI `GalgameLibraryActivity`（导入/启动/诊断/日志/存档/B 路由对话框） | ✅ |
+| P6 | 真机回归 R1–R17（Adreno + Mali 各一） | ⏳ 需真机 |
+| P7 | 许可合规（LICENSE/NOTICE/源码获取）+ rebase 硬化 | ✅（本文件 + `NOTICE`） |
 
-- `app/src/main/assets/engine_presets.json` — A 路由可信默认（Part IV §IV.6 定稿）
-- `app/src/main/res/values/galgame_strings.xml` — 外壳文案，全新文件不碰官方 strings.xml（AC-19）
-- `app/src/main/java/com/winlator/galgame/` — 新增专属包骨架
-  - `EngineDetector.java` — B1 引擎指纹 + A/B 路由（magic bytes 占位，待 P1 字节级）
-  - `GalgameSaveManager.java` — B4 存档 S: 盘逻辑
-  - `ImportFlow.java` — P1 导入即玩编排（A2 每游戏容器 + A3 复制）
-- `.gitignore` / `.github/workflows/ci.yml`（零改铁律校验 + 构建占位）
+> ⚠️ **本仓库按设计不含大二进制**：`app/src/main/assets/**/*.tzst`（wine/box64 运行时）与
+> `app/src/main/jniLibs/**/*.so` 未随仓分发（体积 + 计划口径「发框架、用户自取资源」）。
+> 因此**不能直接 `assembleDebug` 出完整 APK**，需先补齐二进制（见下）。
 
-⏳ 待补齐：官方 `winlator-app` 源码（见下方「拉取上游」）。本仓库目前是 **galgame 增量层**，
-尚未包含可构建的 Android 工程；Java 桩类需上游 `app/` 模块与 Android SDK 才能编译。
+## 模块一览（新增价值层）
 
-## 拉取上游（网络恢复后执行）
-
-> 注：本机沙箱环境对 GitHub 大包（git packfile）传输返回 502 / TLS 吊销失败，无法自动 clone。
-> 在可直连 GitHub 的网络下运行：
-
-```bash
-# 方案 A：干净 fork 工作流（推荐，保证 rebase 硬化 C3 可用）
-git clone --depth 1 --branch main https://github.com/brunodev85/winlator-app _upstream_tmp
-# 把上游 _upstream_tmp/app 等内容并入本仓库，再提交本仓库的 galgame 增量层
-# （或：直接在本仓库 git remote add origin <你的fork> 后 rebase）
-
-# 方案 B：直接把本仓库转为 winlator-app fork
-git remote add origin <你的 GitHub fork URL>
-git fetch upstream
-git rebase upstream/main        # 冲突应仅 3–4 文件小 diff
-git push --force-with-lease origin galgame
 ```
+app/src/main/java/com/winlator/galgame/
+  EngineDetector.java        B1 引擎指纹（magic bytes）+ A/B 路由 + A5 加密检测
+  EnginePreset.java          engine_presets.json 单条目解析
+  ImportFlow.java            P1 导入即玩编排（构造 Container data → stage 复制 + S: + P2 注入）
+  GalgameSaveManager.java    B4/P4 存档（S: 盘 + Shell Folder 重定向 + 先搬后链 + 导出/恢复）
+  GalgameLocaleInjector.java P2 日文化（env LC_ALL/LANG + 区域注册表 + 字体）
+  GalgameFonts.java          P2 日文字体定位（框架不分发字体）
+  GalgameVideoSupport.java   P3 视频解码（强制 directshow/wmdecoder）
+  NativeRouteLauncher.java   P5 B 路由唤起（Tier 分层 + 免责 + 扫描目录预置）
+  GalgameDiagnostics.java    诊断向导（GPU/日文/视频/位宽/音频/加密 检查表）
+  GalgameLogs.java           日志查看（logs.txt / stderr / dxvk + 要害行提取）
+  ui/
+    GalgameLibraryActivity.java  库 UI（导入/启动/诊断/日志/存档/B 路由）
+    GalgameSettings.java         Tier-2 开关（SharedPreferences）
+```
+
+新增资源：`assets/engine_presets.json`、`assets/galgame_fonts.json`、
+`res/values/galgame_strings.xml`、`res/layout/activity_galgame_library.xml`。
+
+## 构建
+
+1. 补齐上游大二进制（二选一）：
+   ```bash
+   # 从上游取回被排除的运行时资源与 native 库
+   git remote add upstream https://github.com/brunodev85/winlator-app   # 若尚未添加
+   git fetch upstream
+   git checkout upstream/main -- app/src/main/assets app/src/main/jniLibs
+   ```
+2. 配置 Android SDK（`local.properties` 的 `sdk.dir`），然后：
+   ```bash
+   ./gradlew assembleDebug
+   ```
+
+CI（`.github/workflows/ci.yml`）在无 SDK / 无二进制的条件下，用 `ci/stubs` 对
+`com.winlator.galgame` 与 `.ui` 两个包做 `javac -Xlint:all` 类型门禁 + 零改铁律校验 +
+资产合法性校验（详见 `ci/README.md`）。
 
 ## rebase 运维流（C3，Plan §VIII.4）
 
 ```bash
-git remote add upstream https://github.com/brunodev85/winlator-app
 git fetch upstream
-git rebase upstream/main
+git rebase upstream/main          # 冲突应仅 3–4 文件小 diff
+git push --force-with-lease origin galgame
 ```
 
-**零改铁律**：冲突面锁 3–4 文件，以下文件绝不直接改：
+**零改铁律**（CI 强制校验）——以下文件绝不直接改：
 
-- `Container.java`（`DEFAULT_DRIVES` / `DEFAULT_ENV_VARS` / `DEFAULT_WINCOMPONENTS`）
-- `LocaleHelper.supportedLocales`
-- `res/values/strings.xml` 现有条目
+- `app/src/main/java/com/winlator/container/Container.java`
+- `app/src/main/java/com/winlator/core/LocaleHelper.java`
+- `app/src/main/res/values/strings.xml` 现有条目
 
 所有 galgame 价值放新包 `com.winlator.galgame` + 新文件 `galgame_strings.xml`。
+已接受的**加法型**冲突面：`AndroidManifest.xml`（注册新 Activity + `<queries>`）、
+`res/layout/activity_galgame_library.xml`（全新建）。
 
 ## 决策锁定（A1–A6）
 
-- A1 字体：仅开源 CJK（IPAex Gothic+Mincho，OFL 备选 Noto），禁商业字体
-- A2 容器：每游戏独立容器
-- A3 导入：默认复制（可写），非引用挂载
-- A4 B 路由：默认唤起不内嵌；Tier-1 开源默认 / Tier-2 闭源显式开启+免责
-- A5 加密：仅检测+提示，不破解
-- A6 许可：LGPL-2.1，fork 公开 + LICENSE/NOTICE + 应用内源码获取
+- **A1 字体**：仅开源 CJK（IPAex / Noto，OFL）；**禁捆绑商业字体**；框架不分发字体。
+- **A2 容器**：每游戏独立容器（隔离 + 导入即玩）。
+- **A3 导入**：默认**复制（可写）**，非引用挂载（规避符号链接死结 RK-06）。
+- **A4 B 路由**：默认唤起不内嵌；Tier-1 开源默认 / Tier-2 闭源显式开启 + 免责。
+- **A5 加密**：仅检测 + 提示，不破解。
+- **A6 许可**：LGPL-2.1，fork 公开 + `LICENSE`/`NOTICE` + 应用内源码获取。
 
 ## 阶段路线图（P0–P7）
 
-P0 脚手架 → P1 导入即玩 → (P2 日文化, P3 视频解码 并行) → P4 存档 → P5 B 路由 → P6 真机 → P7 上线
+`P0 → P1 → (P2, P3 并行) → P4 → P5 → P6 → P7`
+
+P6（真机回归 R1–R17）为发布门禁，需 Adreno + Mali 各一台真机。
+
+## 商店说明要点（发布用）
+
+- 最低要求：Android 11+ (API 30) / ARM64 / Vulkan 1.1+；存储预留 8–16GB；建议 12GB+ RAM。
+- 规避无 Vulkan 设备（如 Kirin）；Mali 走 Vortek/VirGL 兜底。
+- 本应用不含游戏本体、不提供破解；用户需自备合法游戏副本。
+- 第三方原生播放器为可选唤起，使用风险自负。
+- 开源许可与源码获取方式见应用内「关于」及 `NOTICE`。
 
 ## 许可证
 
-LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布；字体许可文件随包。
+LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。
+第三方组件与字体政策详见 [`NOTICE`](NOTICE)。

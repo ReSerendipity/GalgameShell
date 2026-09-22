@@ -7,6 +7,7 @@ public final class R {
     public static final class id {
         public static final int LVGalgames = 2;
         public static final int BTImport = 3;
+        public static final int BTAbout = 4;
     }
     public static final class string {
         public static final int galgame_app_name = 100;
@@ -30,5 +31,7 @@ public final class R {
         public static final int galgame_logs_none = 117;
         public static final int galgame_ok = 118;
         public static final int galgame_cancel = 119;
+        public static final int galgame_about = 121;
+        public static final int galgame_about_message = 122;
     }
 }
