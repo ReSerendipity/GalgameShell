@@ -7,4 +7,9 @@
         android:id="@+id/menu_item_add"
         android:title="@string/add"
         app:showAsAction="ifRoom" />
+    <!-- GalgameShell 入口（新增，overflow 菜单；文案走 galgame_strings.xml） -->
+    <item
+        android:id="@+id/menu_item_galgame_library"
+        android:title="@string/galgame_library_title"
+        app:showAsAction="never" />
 </menu>
