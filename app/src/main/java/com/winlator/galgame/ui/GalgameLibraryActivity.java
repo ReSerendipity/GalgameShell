@@ -6,6 +6,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,12 +15,16 @@ import com.winlator.R;
 import com.winlator.XServerDisplayActivity;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
+import com.winlator.core.FileUtils;
 import com.winlator.galgame.EngineDetector;
 import com.winlator.galgame.GalgameDiagnostics;
 import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
 import com.winlator.galgame.ImportFlow;
 import com.winlator.galgame.NativeRouteLauncher;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -126,7 +131,27 @@ public class GalgameLibraryActivity extends AppCompatActivity {
     private void launchGame(Container container) {
         android.content.Intent intent = new android.content.Intent(this, XServerDisplayActivity.class);
         intent.putExtra("container_id", container.id);
+        // A 路由：从 galgame_overlay.json 取启动 exe，注入 exec_path，
+        // 让 XServerDisplayActivity boot 直接运行游戏（而非 fallback 到文件管理器桌面）。
+        String exe = readOverlayExe(container);
+        if (exe != null) intent.putExtra("exec_path", exe);
         startActivity(intent);
+    }
+
+    /** 读取容器根目录 galgame_overlay.json 的 exe 字段（unix 绝对路径），无则返回 null。 */
+    private static String readOverlayExe(Container container) {
+        try {
+            File f = new File(container.getRootDir(), "galgame_overlay.json");
+            if (!f.exists()) return null;
+            JSONObject o = new JSONObject(FileUtils.readString(f));
+            if (o.has("exe")) {
+                String exe = o.getString("exe");
+                return (exe != null && !exe.isEmpty()) ? exe : null;
+            }
+        } catch (Exception ignored) {
+            // overlay 缺失/损坏不阻断启动，按默认（文件管理器桌面）处理
+        }
+        return null;
     }
 
     // ---- 诊断 / 日志 / 存档 ----
@@ -209,6 +234,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         final ImportFlow.ImportResult result;
         try {
             result = ImportFlow.run(source, gameId, this);
+            Log.d("GalgameShell", "import engine=" + result.engine + " route=" + result.route + " gameId=" + gameId);
         }
         catch (Exception e) {
             Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
