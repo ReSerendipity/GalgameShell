@@ -188,6 +188,8 @@ public class ContainersFragment extends Fragment {
             Activity activity = getActivity();
             Intent intent = new Intent(activity, XServerDisplayActivity.class);
             intent.putExtra("container_id", container.id);
+            // GalgameShell：容器带 galgame_overlay.json 时直接运行游戏（免进 Windows 桌面找 exe）
+            com.winlator.galgame.GalgameLaunchHelper.injectExecPath(container, intent);
             activity.startActivity(intent);
         }
     }
