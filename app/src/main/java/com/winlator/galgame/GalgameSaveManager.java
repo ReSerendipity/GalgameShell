@@ -37,7 +37,7 @@ public final class GalgameSaveManager {
     /** 常见引擎的「便携存档」子目录名（大小写/命名不一，逐一匹配）。 */
     private static final String[] PORTABLE_SAVE_DIRS = {
             "savedata", "save", "saves", "Savedata", "sav", "SaveData",
-            "ysp_save", "save data", "savedata_", "Save"
+            "ysp_save", "save data", "savedata_", "Save", "SAVE"
     };
 
     private static final String SHELL_FOLDERS_KEY =
