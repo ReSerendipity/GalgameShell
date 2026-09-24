@@ -7,4 +7,5 @@ public class FileUtils {
     public static void symlink(File linkTarget, File linkFile) {}
     public static void symlink(String linkTarget, String linkFile) {}
     public static boolean delete(File targetFile) { return false; }
+    public static String readString(File file) { return null; }
 }
