@@ -87,7 +87,7 @@ public final class ImportFlow {
         r.saveDir = new File(saveManager.savePath());
 
         // 构造官方 ContainerManager 所需的 data JSONObject
-        r.containerData = buildContainerData(engine, gameId, preset, r.saveDir, encrypted, markers, r.language);
+        r.containerData = buildContainerData(engine, gameId, preset, r.saveDir, encrypted, markers, r.language, context);
         return r;
     }
 
@@ -155,7 +155,7 @@ public final class ImportFlow {
     private static JSONObject buildContainerData(EngineDetector.Engine engine, String gameId,
                                                   EnginePreset preset, File saveDir,
                                                   boolean encrypted, List<String> markers,
-                                                  String detectedLocale) {
+                                                  String detectedLocale, Context context) {
         try {
             JSONObject data = new JSONObject();
             data.put("name", "galgame-" + gameId);
@@ -184,10 +184,13 @@ public final class ImportFlow {
                 if (preset.dxwrapper != null) data.put("dxwrapper", preset.dxwrapper);
                 if (preset.box64Preset != null) data.put("box64Preset", preset.box64Preset);
                 data.put("startupSelection", preset.startupSelection);
-                // graphicsDriver: "default" 表示沿用 Container 默认，不覆盖
-                if (preset.graphicsDriver != null
-                        && !"default".equalsIgnoreCase(preset.graphicsDriver)) {
-                    data.put("graphicsDriver", preset.graphicsDriver);
+                // graphicsDriver: "default"/null 时按设备 GPU 自动选（M2：Mali→Vortek），
+                // 显式指定则沿用预设（不覆盖用户/预设选择）
+                String resolvedDriver = GalgameGpuProfiler.resolveGraphicsDriver(
+                        preset.graphicsDriver, GalgameGpuProfiler.detect(context));
+                if (resolvedDriver != null
+                        && !"default".equalsIgnoreCase(resolvedDriver)) {
+                    data.put("graphicsDriver", resolvedDriver);
                 }
             }
 

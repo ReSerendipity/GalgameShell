@@ -2,7 +2,6 @@ package com.winlator.galgame.ui;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -18,6 +17,7 @@ import com.winlator.container.ContainerManager;
 import com.winlator.galgame.EngineDetector;
 import com.winlator.galgame.GalgameDiagnostics;
 import com.winlator.galgame.GalgameLaunchHelper;
+import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
 import com.winlator.galgame.ImportFlow;
@@ -42,10 +42,9 @@ public class GalgameLibraryActivity extends AppCompatActivity {
     private static final String DEFAULT_IMPORT_PATH = "/sdcard/Download";
 
     private ContainerManager containerManager;
-    private ArrayAdapter<String> adapter;
+    private GalgameLibraryAdapter adapter;
 
-    private final List<Container> games = new ArrayList<>();
-    private final List<String> labels = new ArrayList<>();
+    private final List<GalgameLibraryAdapter.Item> items = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +53,14 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
         containerManager = new ContainerManager(this);
 
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, labels);
+        adapter = new GalgameLibraryAdapter(this, items);
         ListView list = findViewById(R.id.LVGalgames);
         list.setAdapter(adapter);
-        list.setOnItemClickListener((parent, view, position, id) -> showGameActions(position));
+        list.setOnItemClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < items.size()) {
+                showGameActions(items.get(position).container);
+            }
+        });
 
         Button importButton = findViewById(R.id.BTImport);
         importButton.setOnClickListener(v -> showImportDialog());
@@ -77,35 +80,36 @@ public class GalgameLibraryActivity extends AppCompatActivity {
     // ---- 列表 ----
 
     private void refresh() {
-        games.clear();
-        labels.clear();
+        items.clear();
 
         List<Container> containers = containerManager.getContainers();
         if (containers != null) {
             for (Container c : containers) {
                 String name = c.getName();
                 if (name != null && name.startsWith(CONTAINER_PREFIX)) {
-                    games.add(c);
+                    String gameId = name.substring(CONTAINER_PREFIX.length());
+                    File gameDir = new File(c.getRootDir(), ".wine/drive_c/galgame/" + gameId);
+                    File exe = overlayExe(c);
                     String engine = c.getExtra("galgame_engine", "?");
-                    labels.add(name.substring(CONTAINER_PREFIX.length()) + "  ·  " + engine);
+                    items.add(new GalgameLibraryAdapter.Item(c, gameId + "  ·  " + engine, gameDir, exe));
                 }
             }
         }
         adapter.notifyDataSetChanged();
 
-        if (labels.isEmpty()) {
+        if (items.isEmpty()) {
             Toast.makeText(this, R.string.galgame_library_empty, Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void showGameActions(int position) {
-        if (position < 0 || position >= games.size()) return;
-        final Container container = games.get(position);
+    private void showGameActions(Container container) {
+        if (container == null) return;
 
         String[] items = {
                 getString(R.string.galgame_action_launch),
                 getString(R.string.galgame_action_diagnose),
                 getString(R.string.galgame_action_export_save),
+                getString(R.string.galgame_action_import_save),
                 getString(R.string.galgame_action_logs),
         };
 
@@ -116,7 +120,8 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                         case 0: launchGame(container); break;
                         case 1: showDiagnostics(container); break;
                         case 2: exportSave(container); break;
-                        case 3: showLogs(container); break;
+                        case 3: importSave(container); break;
+                        case 4: showLogs(container); break;
                         default: break;
                     }
                 })
@@ -147,11 +152,32 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         }
         sb.append(report.summary());
 
-        new AlertDialog.Builder(this)
+        boolean needsReinject = false;
+        for (GalgameDiagnostics.Check check : report.checks) {
+            if (("locale".equals(check.id) || "font".equals(check.id))
+                    && (check.severity == GalgameDiagnostics.Severity.WARN
+                        || check.severity == GalgameDiagnostics.Severity.ERROR)) {
+                needsReinject = true;
+                break;
+            }
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(R.string.galgame_diag_title)
                 .setMessage(sb.toString())
-                .setPositiveButton(R.string.galgame_ok, null)
-                .show();
+                .setPositiveButton(R.string.galgame_ok, null);
+
+        if (needsReinject) {
+            builder.setNeutralButton(R.string.galgame_diag_reinject, (dialog, which) -> {
+                GalgameLocaleInjector.Report re = GalgameLocaleInjector.reapply(container, GalgameLibraryActivity.this);
+                Toast.makeText(GalgameLibraryActivity.this,
+                        re != null ? R.string.galgame_diag_reinject_done : R.string.galgame_diag_reinject_fail,
+                        Toast.LENGTH_SHORT).show();
+                showDiagnostics(container);
+            });
+        }
+
+        builder.show();
     }
 
     private void showLogs(Container container) {
@@ -182,6 +208,44 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         Toast.makeText(this,
                 ok ? R.string.galgame_save_export_done : R.string.galgame_save_export_fail,
                 Toast.LENGTH_SHORT).show();
+    }
+
+    /** 从备份目录恢复存档（M3）：列出本游戏的历史备份，选一则恢复到 S: 盘。 */
+    private void importSave(Container container) {
+        String gameId = gameIdOf(container);
+        GalgameSaveManager manager = new GalgameSaveManager(gameId);
+
+        File backupRoot = GalgameSaveManager.defaultBackupDir();
+        File[] all = backupRoot.listFiles();
+        if (all == null) {
+            Toast.makeText(this, R.string.galgame_save_no_backup, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<File> candidates = new ArrayList<>();
+        for (File f : all) {
+            if (f.isDirectory() && f.getName().startsWith(gameId + "-")) candidates.add(f);
+        }
+        if (candidates.isEmpty()) {
+            Toast.makeText(this, R.string.galgame_save_no_backup, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 按时间戳倒序（最新的在前）
+        candidates.sort((a, b) -> b.getName().compareTo(a.getName()));
+        String[] names = new String[candidates.size()];
+        for (int i = 0; i < candidates.size(); i++) names[i] = candidates.get(i).getName();
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_action_import_save)
+                .setItems(names, (dialog, which) -> {
+                    boolean ok = manager.restoreBackup(candidates.get(which));
+                    Toast.makeText(this,
+                            ok ? R.string.galgame_save_restored : R.string.galgame_save_export_fail,
+                            Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
     }
 
     // ---- 导入 ----
@@ -313,6 +377,24 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         String name = container.getName();
         if (name == null) return "";
         return name.startsWith(CONTAINER_PREFIX) ? name.substring(CONTAINER_PREFIX.length()) : name;
+    }
+
+    /** 读容器 galgame_overlay.json 的 exe 路径（供封面适配器提取 exe 图标）。 */
+    private static File overlayExe(Container container) {
+        File f = new File(container.getRootDir(), "galgame_overlay.json");
+        if (!f.isFile()) return null;
+        try (java.io.InputStream in = new java.io.FileInputStream(f)) {
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[1 << 13];
+            int n;
+            while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+            org.json.JSONObject o = new org.json.JSONObject(
+                    new String(bos.toByteArray(), java.nio.charset.StandardCharsets.UTF_8));
+            String exe = o.optString("exe", null);
+            return (exe != null && !exe.isEmpty()) ? new File(exe) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static String sanitize(String name) {

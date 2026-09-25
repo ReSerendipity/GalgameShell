@@ -7,7 +7,13 @@ import com.winlator.core.FileUtils;
 import com.winlator.core.WineRegistryEditor;
 import com.winlator.core.WineUtils;
 
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,6 +114,61 @@ public final class GalgameLocaleInjector {
         container.saveData();
 
         return report;
+    }
+
+    /**
+     * 重新注入（M4 诊断向导一键修复）：读容器 {@code galgame_overlay.json} 的语言，
+     * 对容器再次施加 locale/字体注入（幂等）。用于「重导入后丢语言/字体」或用户手动改坏后的补救。
+     *
+     * @return 注入报告；overlay 缺失或游戏目录不存在时返回 null（调用方提示）
+     */
+    public static Report reapply(Container container, Context context) {
+        if (container == null) return null;
+        JSONObject overlay = readOverlay(container);
+        if (overlay == null) return null;
+
+        String language = overlay.optString("language", "");
+        if (language == null || language.isEmpty()) {
+            JSONObject loc = overlay.optJSONObject("locale_injection");
+            if (loc != null) language = opt(loc, "locale");
+        }
+
+        String gameId = overlay.optString("game_id", "");
+        if (gameId == null || gameId.isEmpty()) {
+            String name = container.getName();
+            if (name != null && name.startsWith("galgame-")) gameId = name.substring("galgame-".length());
+        }
+
+        File gameDir = new File(container.getRootDir(),
+                ".wine/drive_c/galgame/" + (gameId != null ? gameId : ""));
+        if (!gameDir.isDirectory()) return null;
+
+        boolean chinese = language != null && language.startsWith("zh");
+        return apply(container, null, gameDir, context, language, chinese);
+    }
+
+    private static JSONObject readOverlay(Container container) {
+        File f = new File(container.getRootDir(), "galgame_overlay.json");
+        if (!f.isFile()) return null;
+        try (InputStream in = new FileInputStream(f)) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1 << 13];
+            int n;
+            while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+            return new JSONObject(new String(bos.toByteArray(), StandardCharsets.UTF_8));
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String opt(JSONObject o, String key) {
+        try {
+            return o != null && o.has(key) ? o.getString(key) : null;
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
     // ---- env ----
