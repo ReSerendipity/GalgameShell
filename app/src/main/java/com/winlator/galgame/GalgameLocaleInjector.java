@@ -143,8 +143,46 @@ public final class GalgameLocaleInjector {
                 ".wine/drive_c/galgame/" + (gameId != null ? gameId : ""));
         if (!gameDir.isDirectory()) return null;
 
+        // 旧容器（中文产品化 d798f16 之前导入）overlay 记录的 locale 可能是错的
+        //（如中文游戏被记为 ja_JP）。现场用 GalgameLanguageDetector 重检纠正：
+        // 保守判定下真日语游戏结果不变，中文游戏则被改为 zh_CN。
+        String exePath = overlay.optString("exe", "");
+        String detected = GalgameLanguageDetector.detectLocale(gameDir,
+                exePath == null ? "" : new File(exePath).getName());
+        if (detected != null && !detected.isEmpty()) language = detected;
+
         boolean chinese = language != null && language.startsWith("zh");
-        return apply(container, null, gameDir, context, language, chinese);
+        Report report = apply(container, null, gameDir, context, language, chinese);
+        // 回写 overlay：诊断向导读 galgame_overlay.json 判定状态，
+        // 不回写则重注入成功后诊断仍显示旧值（2026-09-25 真机回归发现）。
+        writeOverlayReport(container, language, report);
+        return report;
+    }
+
+    /** 把重注入结果回写 {@code galgame_overlay.json} 的 language / locale_injection。 */
+    private static void writeOverlayReport(Container container, String language, Report report) {
+        if (report == null) return;
+        File f = new File(container.getRootDir(), "galgame_overlay.json");
+        try {
+            JSONObject overlay = f.isFile() ? new JSONObject(
+                    new String(java.nio.file.Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8))
+                    : new JSONObject();
+            if (language != null && !language.isEmpty()) overlay.put("language", language);
+            JSONObject inj = new JSONObject();
+            inj.put("locale", report.locale);
+            inj.put("env_applied", true); // mergeEnv 幂等：已正确即视为已应用
+            if (report.fontFile != null) inj.put("font", report.fontFile);
+            if (report.fontFace != null) inj.put("font_face", report.fontFace);
+            if (report.warnings != null && !report.warnings.isEmpty()) {
+                inj.put("warnings", new org.json.JSONArray(report.warnings));
+            }
+            overlay.put("locale_injection", inj);
+            java.nio.file.Files.write(f.toPath(),
+                    overlay.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        catch (Exception e) {
+            // overlay 回写失败不影响注入本身
+        }
     }
 
     private static JSONObject readOverlay(Container container) {
@@ -178,8 +216,11 @@ public final class GalgameLocaleInjector {
         if (env == null) env = "";
         boolean changed = false;
 
+        // 键缺失则追加；键已存在但值≠目标 locale 则改值（旧容器残留 ja_JP 时重注入 zh 需覆盖）
         if (!containsKey(env, "LC_ALL")) { env = append(env, "LC_ALL=" + locale); changed = true; }
+        else if (!containsValue(env, "LC_ALL", locale)) { env = replaceValue(env, "LC_ALL", locale); changed = true; }
         if (!containsKey(env, "LANG"))   { env = append(env, "LANG=" + locale);   changed = true; }
+        else if (!containsValue(env, "LANG", locale)) { env = replaceValue(env, "LANG", locale); changed = true; }
 
         if (changed) container.setEnvVars(env);
         return changed;
@@ -187,6 +228,18 @@ public final class GalgameLocaleInjector {
 
     private static boolean containsKey(String env, String name) {
         return env.matches("(?s).*(^|\\s)" + name + "=.*");
+    }
+
+    /** env 串中 name 键的值是否恰为 value。 */
+    private static boolean containsValue(String env, String name, String value) {
+        String quoted = java.util.regex.Pattern.quote(value);
+        return env.matches("(?s).*(^|\\s)" + name + "=" + quoted + "(\\s|$).*");
+    }
+
+    /** 把 env 串中 name 键的值改为 value（键存在前提下的就地改写）。 */
+    private static String replaceValue(String env, String name, String value) {
+        return env.replaceAll("(?<=^|\\s)" + name + "=[^\\s]*",
+                java.util.regex.Matcher.quoteReplacement(name + "=" + value));
     }
 
     private static String append(String env, String kv) {

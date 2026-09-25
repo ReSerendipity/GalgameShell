@@ -40,6 +40,19 @@ public final class GalgameFonts {
             "sourcehansans", "sourcehanserif", "msyh", "microsoft yahei",
             "fangsong", "kaiti", "cjk"
     };
+
+    /**
+     * 中文路径专用严格 CJK 关键字（2026-09-25 真机回归修正）：
+     * DEFAULT_HINTS 的宽松词会误命中系统拉丁字体——Android 自带的
+     * {@code CarroisGothicSC-Regular.ttf} 含 "gothic"、{@code NotoSans-Regular.ttf} 含 "noto"，
+     * 且字典序靠前会在 /system/fonts 扫描中压过真正的 CJK 字体。中文模式只认下列
+     * 严格 CJK 词根（含 Android 内置 CJK 回退 DroidSansFallback）。
+     */
+    private static final String[] CHINESE_HINTS = {
+            "notosanscjk", "notoserifcjk", "sourcehansans", "sourcehanserif",
+            "sourcehan", "simsun", "nsimsun", "simhei", "yahei", "msyh",
+            "songti", "kaiti", "fangsong", "droidsansfallback", "cjk"
+    };
     private static final String[] DEFAULT_ALIASES = {
             "MS Gothic", "MS PGothic", "MS UI Gothic", "Yu Gothic", "Meiryo",
             "SimSun", "NSimSun", "宋体", "Microsoft YaHei", "微软雅黑",
@@ -91,7 +104,10 @@ public final class GalgameFonts {
             }
         }
 
-        List<String> hints = hints(context);
+        // 中文（allowSystemFonts=true）改用严格 CJK 关键字，防止拉丁字体误命中
+        // （见 CHINESE_HINTS 注释）；日语路径维持原 hints 零影响。
+        List<String> hints = allowSystemFonts
+                ? Arrays.asList(CHINESE_HINTS) : hints(context);
         for (File dir : dirs) {
             File f = bestMatch(dir, extensions, hints, true);
             if (f != null) return f;
