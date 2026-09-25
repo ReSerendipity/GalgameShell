@@ -1,35 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 游戏库：顶栏（标题 + 导入/关于）+ 网格封面墙 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:background="?android:attr/colorBackground">
 
+    <!-- 顶栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp">
 
-        <Button
-            android:id="@+id/BTImport"
+        <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/galgame_import_title" />
+            android:text="@string/galgame_library_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
+
+        <Button
+            android:id="@+id/BTImport"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/galgame_import_title"
+            android:textColor="?android:attr/textColorPrimary" />
 
         <Button
             android:id="@+id/BTAbout"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/galgame_about" />
+            android:layout_marginStart="4dp"
+            android:text="@string/galgame_about"
+            android:textColor="?android:attr/textColorSecondary" />
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/LVGalgames"
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#2A2E34" />
+
+    <!-- 网格封面墙 -->
+    <GridView
+        android:id="@+id/GVGalgames"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="8dp" />
+        android:numColumns="auto_fit"
+        android:columnWidth="150dp"
+        android:horizontalSpacing="10dp"
+        android:verticalSpacing="10dp"
+        android:padding="10dp"
+        android:clipToPadding="false"
+        android:scrollbars="none"
+        android:stretchMode="columnWidth" />
+
+    <!-- 空态 -->
+    <TextView
+        android:id="@+id/TVEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:visibility="gone"
+        android:text="@string/galgame_library_empty"
+        android:textSize="15sp"
+        android:textColor="?android:attr/textColorSecondary" />
 
 </LinearLayout>

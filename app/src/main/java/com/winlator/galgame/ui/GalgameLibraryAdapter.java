@@ -23,17 +23,19 @@ import java.util.List;
  */
 public final class GalgameLibraryAdapter extends BaseAdapter {
 
-    /** 单行数据。 */
+    /** 单项数据（封面卡片：主标题 + 副标题）。 */
     public static final class Item {
         public final Container container;
         public final String label;
+        public final String sub;   // 副标题（引擎等元信息）
         public final File gameDir;
         public final File exe;
         public File cover;   // 懒计算并缓存
 
-        Item(Container container, String label, File gameDir, File exe) {
+        Item(Container container, String label, String sub, File gameDir, File exe) {
             this.container = container;
             this.label = label;
+            this.sub = sub;
             this.gameDir = gameDir;
             this.exe = exe;
         }
@@ -67,8 +69,10 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
 
         Item item = items.get(position);
         TextView tv = view.findViewById(R.id.TVLabel);
+        TextView sub = view.findViewById(R.id.TVSub);
         ImageView iv = view.findViewById(R.id.IVCover);
         tv.setText(item.label);
+        sub.setText(item.sub);
 
         // 懒加载封面（缓存）
         if (item.cover == null) {
@@ -80,7 +84,7 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         }
 
         if (item.cover != null && item.cover.isFile()) {
-            Bitmap bmp = BitmapFactory.decodeFile(item.cover.getAbsolutePath());
+            Bitmap bmp = decodeSampled(item.cover.getAbsolutePath(), 512);
             if (bmp != null) {
                 iv.setImageBitmap(bmp);
             } else {
@@ -91,5 +95,17 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         }
 
         return view;
+    }
+
+    /** 按目标边长采样解码，避免大图整幅载入内存。 */
+    private static Bitmap decodeSampled(String path, int target) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, o);
+        int sample = 1;
+        while ((o.outWidth / (sample * 2) >= target) || (o.outHeight / (sample * 2) >= target)) sample *= 2;
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = sample;
+        return BitmapFactory.decodeFile(path, o2);
     }
 }
