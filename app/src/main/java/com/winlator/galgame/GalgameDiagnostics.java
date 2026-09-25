@@ -133,25 +133,28 @@ public final class GalgameDiagnostics {
         String locale = container != null ? container.getExtra("galgame_locale", null) : null;
         if (locale == null && loc != null) locale = opt(loc, "locale");
 
-        if (locale == null || !locale.startsWith("ja")) {
-            r.checks.add(new Check("locale", Severity.WARN, "日文区域",
-                    "未检测到 ja_JP 注入（当前：" + (locale == null ? "无" : locale) + "）",
-                    "重新导入以注入 ja_JP.UTF-8；或在容器 EnvVars 手加 LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"));
+        // 中文产品化后：ja_JP 与 zh_CN 均视为正确注入，其余（或无）判 WARN
+        boolean okLocale = locale != null && (locale.startsWith("ja") || locale.startsWith("zh"));
+        if (!okLocale) {
+            r.checks.add(new Check("locale", Severity.WARN, "语言区域",
+                    "未检测到 ja_JP / zh_CN 注入（当前：" + (locale == null ? "无" : locale) + "）",
+                    "重新导入以注入区域；或点「重新注入语言/字体」；也可在容器 EnvVars 手加 LC_ALL/LANG"));
         }
         else {
-            r.checks.add(new Check("locale", Severity.OK, "日文区域", "已注入 " + locale, ""));
+            r.checks.add(new Check("locale", Severity.OK, "语言区域", "已注入 " + locale, ""));
         }
 
         String font = container != null ? container.getExtra("galgame_font", null) : null;
         if ((font == null || font.isEmpty()) && loc != null) font = opt(loc, "font_face");
 
         if (font == null || font.isEmpty()) {
-            r.checks.add(new Check("font", Severity.WARN, "日文字体",
-                    "未注入日文字体，可能出现豆腐块（□□□）",
-                    "把 .ttf/.otf 放入 " + GalgameFonts.dropInDir().getAbsolutePath() + " 后重新导入"));
+            r.checks.add(new Check("font", Severity.WARN, "字体",
+                    "未注入显示字体，可能出现豆腐块（□□□）",
+                    "把 .ttf/.otf 放入 " + GalgameFonts.dropInDir().getAbsolutePath()
+                            + " 后「重新注入语言/字体」"));
         }
         else {
-            r.checks.add(new Check("font", Severity.OK, "日文字体", "已注册字体：" + font, ""));
+            r.checks.add(new Check("font", Severity.OK, "字体", "已注册字体：" + font, ""));
         }
     }
 

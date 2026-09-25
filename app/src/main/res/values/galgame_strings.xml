@@ -18,6 +18,7 @@
     <string name="galgame_action_launch">启动</string>
     <string name="galgame_action_diagnose">诊断</string>
     <string name="galgame_action_export_save">导出存档</string>
+    <string name="galgame_action_import_save">导入存档</string>
     <string name="galgame_action_logs">查看日志</string>
 
     <!-- 导入即玩 (P1) -->
@@ -43,8 +44,9 @@
     <string name="galgame_save_autobackup_on">退出自动备份：开</string>
     <string name="galgame_save_export">导出存档</string>
     <string name="galgame_save_export_done">存档已导出至 Download/galgame-backup</string>
-    <string name="galgame_save_export_fail">存档导出失败</string>
+    <string name="galgame_save_export_fail">存档导出/恢复失败</string>
     <string name="galgame_save_restored">存档已从备份恢复</string>
+    <string name="galgame_save_no_backup">没有找到该游戏的存档备份</string>
 
     <!-- B 路由唤起免责 (A4 Tier-2) -->
     <string name="galgame_broute_enable">我已了解风险，启用闭源播放器</string>
@@ -57,6 +59,9 @@
     <string name="galgame_diag_bitness">32/64 位</string>
     <string name="galgame_diag_oom">内存不足</string>
     <string name="galgame_diag_audio">音频后端</string>
+    <string name="galgame_diag_reinject">重新注入语言/字体</string>
+    <string name="galgame_diag_reinject_done">已重新注入语言与字体</string>
+    <string name="galgame_diag_reinject_fail">重新注入失败</string>
 
     <!-- 日志查看 -->
     <string name="galgame_logs_none">未找到日志文件</string>
