@@ -48,6 +48,13 @@ public final class GalgameInputHelper {
         attachedRef = new WeakReference<>(view);
     }
 
+    /** 当前容器是否处于直接触控模式（非 galgame 容器返回 false）。 */
+    public static boolean isDirect() {
+        Container container = currentContainer;
+        return container != null && GalgameLaunchHelper.isGalgameContainer(container)
+                && MODE_DIRECT.equals(container.getExtra(EXTRA_TOUCH_MODE, MODE_DIRECT));
+    }
+
     /**
      * 运行时切换 direct/touchpad（游戏内抽屉菜单触发），持久化到容器 extra。
      * @return 新模式；非 galgame 容器返回 null（调用方提示不支持）

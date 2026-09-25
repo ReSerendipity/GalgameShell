@@ -61,9 +61,9 @@
             android:exported="false"
             android:screenOrientation="sensor" />
 
-        <!-- GalgameShell 游戏库（全新 Activity，P1/P2/P4/P5 前端入口） -->
+        <!-- GalgameShell 游戏库（全新 Activity，P1/P2/P4/P5 前端入口）；亮色主题 + v29 关闭 Force Dark（系统深色模式强转暗色的根因） -->
         <activity android:name="com.winlator.galgame.ui.GalgameLibraryActivity"
-            android:theme="@style/AppThemeDark"
+            android:theme="@style/GalgameLibraryTheme"
             android:exported="false"
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
