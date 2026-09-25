@@ -56,6 +56,9 @@
         <item name="preloaderBackground">@drawable/preloader_background_dark</item>
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
+    <!-- 游戏库亮色主题别名：v29 起关闭 Force Dark（系统深色模式会强转暗色） -->
+    <style name="GalgameLibraryTheme" parent="@style/AppThemeLight" />
+
     <style name="AppThemeFullscreenLight" parent="@style/AppThemeLight">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>

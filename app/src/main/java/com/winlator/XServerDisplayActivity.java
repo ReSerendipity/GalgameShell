@@ -372,6 +372,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                         : com.winlator.galgame.GalgameInputHelper.MODE_DIRECT.equals(mode)
                             ? R.string.galgame_touch_direct : R.string.galgame_touch_touchpad;
                 android.widget.Toast.makeText(this, resId, android.widget.Toast.LENGTH_SHORT).show();
+                item.setChecked(mode != null && com.winlator.galgame.GalgameInputHelper.MODE_DIRECT.equals(mode));
                 drawerLayout.closeDrawers();
                 break;
             }
@@ -641,6 +642,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         // GalgameShell：galgame 容器接入直接触控层（零改上游；overlay/外接鼠标时自动放行上游链）
         com.winlator.galgame.GalgameInputHelper.attach(rootView, xServer, container);
+        // 抽屉「触控模式」菜单项勾选态与容器实际模式同步
+        NavigationView navView = findViewById(R.id.NavigationView);
+        android.view.MenuItem touchItem = navView.getMenu().findItem(R.id.menu_item_galgame_touch);
+        if (touchItem != null) touchItem.setChecked(com.winlator.galgame.GalgameInputHelper.isDirect());
     }
 
     private void showInputControlsDialog() {

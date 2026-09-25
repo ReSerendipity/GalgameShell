@@ -58,10 +58,18 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         adapter = new GalgameLibraryAdapter(this, items);
         GridView grid = findViewById(R.id.GVGalgames);
         grid.setAdapter(adapter);
+        // 点封面即玩（对标 GameNative）；长按弹操作菜单
         grid.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
-                showGameActions(items.get(position).container);
+                launchGame(items.get(position).container);
             }
+        });
+        grid.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < items.size()) {
+                showGameActions(items.get(position).container);
+                return true;
+            }
+            return false;
         });
 
         Button importButton = findViewById(R.id.BTImport);
@@ -277,47 +285,102 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         }
 
         final String gameId = sanitize(source.getName());
+        showProgressDialog(getString(R.string.galgame_import_step_detect));
 
-        final ImportFlow.ImportResult result;
-        try {
-            result = ImportFlow.run(source, gameId, this);
-            Log.d("GalgameShell", "import engine=" + result.engine + " route=" + result.route + " gameId=" + gameId);
-        }
-        catch (Exception e) {
-            Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
+        // ImportFlow.run（引擎检测）与 stageGameFiles（复制游戏文件）都是重 IO，
+        // 移到后台线程执行，主线程只做对话框/Toast/refresh（此前会卡死主线程）。
+        final java.util.concurrent.ExecutorService exec =
+                java.util.concurrent.Executors.newSingleThreadExecutor();
+        final android.content.Context appCtx = getApplicationContext();
 
-        // B 路由：原生播放器唤起
-        if (result.route == EngineDetector.Route.B) {
-            showNativeRouteDialog(result, source);
-            return;
-        }
-
-        // A 路由：建每游戏容器 → stage（A3 复制 + B4 S: + P2 日文化）→ P4 存档重定向
-        containerManager.createContainerAsync(result.containerData, (container) -> {
-            if (container == null) {
-                Toast.makeText(this, R.string.galgame_import_failed, Toast.LENGTH_LONG).show();
-                return;
-            }
+        exec.execute(() -> {
+            final ImportFlow.ImportResult result;
             try {
-                ImportFlow.stageGameFiles(container, result, source, this);
-
-                GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
-                saveManager.redirectShellFolders(container);
-                File stagedGameDir = new File(container.getRootDir(),
-                        ".wine/drive_c/galgame/" + gameId);
-                saveManager.symlinkPortableSaves(stagedGameDir);
-
-                Toast.makeText(this, R.string.galgame_import_done, Toast.LENGTH_LONG).show();
-                refresh();
+                result = ImportFlow.run(source, gameId, appCtx);
+                Log.d("GalgameShell", "import engine=" + result.engine + " route=" + result.route + " gameId=" + gameId);
             }
             catch (Exception e) {
-                Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                runOnUiThread(() -> {
+                    dismissProgressDialog();
+                    Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+                return;
             }
+
+            // B 路由：原生播放器唤起
+            if (result.route == EngineDetector.Route.B) {
+                runOnUiThread(() -> {
+                    dismissProgressDialog();
+                    showNativeRouteDialog(result, source);
+                });
+                return;
+            }
+
+            runOnUiThread(() -> setProgressText(getString(R.string.galgame_import_step_create)));
+
+            // A 路由：建每游戏容器 → stage（A3 复制 + B4 S: + P2 日文化）→ P4 存档重定向
+            containerManager.createContainerAsync(result.containerData, (container) -> {
+                if (container == null) {
+                    runOnUiThread(() -> {
+                        dismissProgressDialog();
+                        Toast.makeText(this, R.string.galgame_import_failed, Toast.LENGTH_LONG).show();
+                    });
+                    return;
+                }
+                exec.execute(() -> {
+                    try {
+                        runOnUiThread(() -> setProgressText(getString(R.string.galgame_import_step_copy)));
+                        ImportFlow.stageGameFiles(container, result, source, appCtx);
+
+                        GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
+                        saveManager.redirectShellFolders(container);
+                        File stagedGameDir = new File(container.getRootDir(),
+                                ".wine/drive_c/galgame/" + gameId);
+                        saveManager.symlinkPortableSaves(stagedGameDir);
+
+                        runOnUiThread(() -> {
+                            dismissProgressDialog();
+                            Toast.makeText(this, R.string.galgame_import_done, Toast.LENGTH_LONG).show();
+                            refresh();
+                        });
+                    }
+                    catch (Exception e) {
+                        runOnUiThread(() -> {
+                            dismissProgressDialog();
+                            Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        });
+                    }
+                });
+            });
         });
+    }
+
+    // ---- 导入进度对话框 ----
+
+    private AlertDialog progressDialog;
+    private TextView progressTextView;
+
+    private void showProgressDialog(String text) {
+        View view = android.view.LayoutInflater.from(this).inflate(R.layout.galgame_progress_dialog, null);
+        progressTextView = view.findViewById(R.id.TVProgressText);
+        progressTextView.setText(text);
+        progressDialog = new AlertDialog.Builder(this)
+                .setView(view)
+                .setCancelable(false)
+                .create();
+        progressDialog.show();
+    }
+
+    private void setProgressText(String text) {
+        if (progressTextView != null) progressTextView.setText(text);
+    }
+
+    private void dismissProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
+        progressDialog = null;
+        progressTextView = null;
     }
 
     // ---- B 路由对话框（Tier 分层 + 免责）----
