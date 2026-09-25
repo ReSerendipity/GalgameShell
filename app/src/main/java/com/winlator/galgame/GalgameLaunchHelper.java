@@ -1,9 +1,11 @@
 package com.winlator.galgame;
 
+import android.app.Activity;
 import android.content.Intent;
 
 import com.winlator.container.Container;
 import com.winlator.core.FileUtils;
+import com.winlator.galgame.ui.GalgameLibraryActivity;
 
 import org.json.JSONObject;
 
@@ -48,5 +50,25 @@ public final class GalgameLaunchHelper {
             // overlay 缺失/损坏不阻断启动，按默认（文件管理器桌面）处理
         }
         return null;
+    }
+
+    /** 容器是否为 galgame 容器（以 galgame_overlay.json 存在与否判定）。 */
+    public static boolean isGalgameContainer(Container container) {
+        return container != null
+                && new File(container.getRootDir(), "galgame_overlay.json").isFile();
+    }
+
+    /**
+     * 游戏退出（进程结束 / 菜单「退出」）后重启应用并**直接落回游戏库**。
+     *
+     * 背景（2026-09-25 用户反馈）：上游 exit() 走 {@code AppUtils.restartApplication}，
+     * 固定重启到 MainActivity（带 exec_path 时还会落到容器文件管理器），玩家打完一局
+     * 回不到游戏库。此处复用同一重启原语（makeRestartActivityTask + exit），仅把
+     * 任务根组件换成 GalgameLibraryActivity；非 galgame 容器不受影响。
+     */
+    public static void restartToLibrary(Activity activity) {
+        Intent library = new Intent(activity, GalgameLibraryActivity.class);
+        activity.startActivity(Intent.makeRestartActivityTask(library.getComponent()));
+        Runtime.getRuntime().exit(0);
     }
 }
