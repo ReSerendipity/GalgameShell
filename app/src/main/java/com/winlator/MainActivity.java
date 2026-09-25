@@ -186,6 +186,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         switch (item.getItemId()) {
+            case R.id.menu_item_galgame_library:
+                // GalgameShell：主界面抽屉一级入口（此前藏在容器页 overflow 菜单，入口不清晰）
+                startActivity(new android.content.Intent(this, com.winlator.galgame.ui.GalgameLibraryActivity.class));
+                // 游戏库是独立 Activity 非 fragment：恢复抽屉勾选到当前实际页面
+                int checkedId = currentFragment instanceof ShortcutsFragment ? R.id.menu_item_shortcuts
+                        : currentFragment instanceof InputControlsFragment ? R.id.menu_item_input_controls
+                        : currentFragment instanceof SettingsFragment ? R.id.menu_item_settings
+                        : R.id.menu_item_containers;
+                ((NavigationView) findViewById(R.id.NavigationView)).setCheckedItem(checkedId);
+                break;
             case R.id.menu_item_shortcuts:
                 preferences.edit().putBoolean("show_shortcuts_first", true).apply();
                 showFragment(new ShortcutsFragment());

@@ -365,6 +365,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 showInputControlsDialog();
                 drawerLayout.closeDrawers();
                 break;
+            case R.id.menu_item_galgame_touch: {
+                // GalgameShell：直接触控 ⇄ 触摸板 运行时切换（持久化到容器 extra）
+                String mode = com.winlator.galgame.GalgameInputHelper.toggle();
+                int resId = (mode == null) ? R.string.galgame_touch_na
+                        : com.winlator.galgame.GalgameInputHelper.MODE_DIRECT.equals(mode)
+                            ? R.string.galgame_touch_direct : R.string.galgame_touch_touchpad;
+                android.widget.Toast.makeText(this, resId, android.widget.Toast.LENGTH_SHORT).show();
+                drawerLayout.closeDrawers();
+                break;
+            }
             case R.id.menu_item_toggle_fullscreen:
                 renderer.toggleFullscreen();
                 drawerLayout.closeDrawers();
@@ -429,10 +439,17 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         Intent intent = getIntent();
         if (intent.hasExtra("exec_path")) {
-            AppUtils.RestartApplicationOptions options = new AppUtils.RestartApplicationOptions();
-            options.containerId = container.id;
-            options.startPath = FileUtils.getDirname(intent.getStringExtra("exec_path"));
-            AppUtils.restartApplication(this, options);
+            // GalgameShell：galgame 容器退出（游戏进程结束/菜单退出）后重启落回游戏库，
+            // 而非上游默认的 MainActivity/容器文件管理器（用户反馈「退出游戏回不到库页面」）。
+            if (com.winlator.galgame.GalgameLaunchHelper.isGalgameContainer(container)) {
+                com.winlator.galgame.GalgameLaunchHelper.restartToLibrary(this);
+            }
+            else {
+                AppUtils.RestartApplicationOptions options = new AppUtils.RestartApplicationOptions();
+                options.containerId = container.id;
+                options.startPath = FileUtils.getDirname(intent.getStringExtra("exec_path"));
+                AppUtils.restartApplication(this, options);
+            }
         }
         else AppUtils.restartApplication(this);
         ForegroundService.stopSession(this);
@@ -621,6 +638,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         if (MainActivity.DEBUG_MODE) rootView.addView(AppUtils.createDebugMsgTextView(this));
         AppUtils.observeSoftKeyboardVisibility(drawerLayout, renderer::setScreenOffsetYRelativeToCursor);
+
+        // GalgameShell：galgame 容器接入直接触控层（零改上游；overlay/外接鼠标时自动放行上游链）
+        com.winlator.galgame.GalgameInputHelper.attach(rootView, xServer, container);
     }
 
     private void showInputControlsDialog() {

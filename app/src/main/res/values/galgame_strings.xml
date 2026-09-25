@@ -18,6 +18,12 @@
     <string name="galgame_action_launch">启动</string>
     <string name="galgame_action_diagnose">诊断</string>
     <string name="galgame_action_export_save">导出存档</string>
+
+    <!-- 触控模式（游戏内抽屉菜单切换；galgame 容器默认直接触控） -->
+    <string name="galgame_touch_mode">触控模式</string>
+    <string name="galgame_touch_direct">已切换：直接触控（点按＝点击，拖动＝拖拽，双指＝右键）</string>
+    <string name="galgame_touch_touchpad">已切换：触摸板（手指拖动光标，轻点＝点击）</string>
+    <string name="galgame_touch_na">非游戏容器不支持触控模式切换</string>
     <string name="galgame_action_import_save">导入存档</string>
     <string name="galgame_action_logs">查看日志</string>
 
