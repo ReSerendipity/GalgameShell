@@ -45,10 +45,23 @@ public final class GalgameLocaleInjector {
      * @param context   读取 assets 清单用
      * @return 注入报告（供诊断向导 / overlay 记录）
      */
+    /** 兼容旧调用：委托到增强版（无 locale 覆盖、非中文自动字体）。 */
     public static Report apply(Container container, EnginePreset preset, File gameDir, Context context) {
+        return apply(container, preset, gameDir, context, null, false);
+    }
+
+    /**
+     * 增强版：支持显式 locale 覆盖（中文检测）与中文自动字体选择。
+     * @param overrideLocale 非空则取代 preset.locale/默认 ja_JP（如 zh_CN.UTF-8）；真正生效的是注册表 Locale（00000804）
+     * @param chineseFont    为 true 时忽略 preset 的日文 preferredName，按 hints 自动选 CJK 字体并回退 /system/fonts
+     */
+    public static Report apply(Container container, EnginePreset preset, File gameDir, Context context,
+                               String overrideLocale, boolean chineseFont) {
         Report report = new Report();
-        String locale = (preset != null && preset.locale != null && !preset.locale.isEmpty())
-                ? preset.locale : DEFAULT_LOCALE;
+        String locale = (overrideLocale != null && !overrideLocale.isEmpty())
+                ? overrideLocale
+                : (preset != null && preset.locale != null && !preset.locale.isEmpty())
+                    ? preset.locale : DEFAULT_LOCALE;
         report.locale = locale;
 
         // 1) env 级
@@ -59,11 +72,13 @@ public final class GalgameLocaleInjector {
         try (WineRegistryEditor reg = new WineRegistryEditor(userReg)) {
             writeInternational(reg, locale);
 
-            File font = GalgameFonts.locate(context, gameDir, preset != null ? preset.font : null);
+            // 中文时忽略 preset 的日文 preferredName，强制按 hints 自动选 CJK 字体
+            String preferredName = (chineseFont || preset == null) ? null : preset.font;
+            File font = GalgameFonts.locate(context, gameDir, preferredName, chineseFont);
             if (font != null) {
                 File installed = installFont(container, font, report);
                 if (installed != null) {
-                    String face = faceName(preset, font);
+                    String face = faceName(preset, font, chineseFont);
                     registerFont(reg, face, installed);
                     WineUtils.setSystemFont(reg, face);
 
@@ -79,7 +94,7 @@ public final class GalgameLocaleInjector {
                 }
             }
             else {
-                report.warnings.add("未找到日文字体，请将 .ttf/.otf 放入 "
+                report.warnings.add("未找到" + (chineseFont ? "中文" : "日文") + "字体，请将 .ttf/.otf/.ttc 放入 "
                         + GalgameFonts.dropInDir().getAbsolutePath() + "（框架不分发字体）");
             }
         }
@@ -200,8 +215,11 @@ public final class GalgameLocaleInjector {
         reg.setStringValue(FONT_KEY_WIN, face + " (TrueType)", value);
     }
 
-    private static String faceName(EnginePreset preset, File font) {
-        if (preset != null && preset.fontFace != null && !preset.fontFace.isEmpty()) return preset.fontFace;
+    private static String faceName(EnginePreset preset, File font, boolean chineseFont) {
+        // 中文时不用 preset 的日文 fontFace，改取字体文件名（如 NotoSansCJK-Regular）
+        if (!chineseFont && preset != null && preset.fontFace != null && !preset.fontFace.isEmpty()) {
+            return preset.fontFace;
+        }
         String name = font.getName();
         int dot = name.lastIndexOf('.');
         return dot > 0 ? name.substring(0, dot) : name;

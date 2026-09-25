@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -34,10 +35,15 @@ public final class GalgameFonts {
 
     private static final String[] DEFAULT_HINTS = {
             "ipa", "gothic", "mincho", "noto", "meiryo", "yugoth", "msgothic",
-            "kochi", "takao", "sourcehan", "source-han", "japan"
+            "kochi", "takao", "sourcehan", "source-han", "japan",
+            "simsun", "yahei", "songti", "simhei", "notosanscjk", "notoserifcjk",
+            "sourcehansans", "sourcehanserif", "msyh", "microsoft yahei",
+            "fangsong", "kaiti", "cjk"
     };
     private static final String[] DEFAULT_ALIASES = {
-            "MS Gothic", "MS PGothic", "MS UI Gothic", "Yu Gothic", "Meiryo"
+            "MS Gothic", "MS PGothic", "MS UI Gothic", "Yu Gothic", "Meiryo",
+            "SimSun", "NSimSun", "宋体", "Microsoft YaHei", "微软雅黑",
+            "SimHei", "黑体", "KaiTi", "楷体", "FangSong", "仿宋"
     };
     private static final String[] DEFAULT_EXTENSIONS = {"ttf", "otf", "ttc"};
 
@@ -55,9 +61,26 @@ public final class GalgameFonts {
      * @return 字体文件；找不到返回 null（调用方告警，不阻断）
      */
     public static File locate(Context context, File gameDir, String preferredName) {
+        return locate(context, gameDir, preferredName, false);
+    }
+
+    /**
+     * 定位字体。
+     * allowSystemFonts=true 时额外回退 {@code /system/fonts}（设备 CJK 字体世界可读，
+     * 如 NotoSansCJK-Regular.ttc），供中文游戏在 drop-in/游戏目录均无 CJK 字体时取系统字体
+     * （此前靠 run-as 手动补丁，现产品化）。
+     *
+     * @param allowSystemFonts 是否允许回退系统字体（中文游戏为 true，日语游戏保持 false 以零影响）
+     */
+    public static File locate(Context context, File gameDir, String preferredName,
+                              boolean allowSystemFonts) {
         List<File> dirs = new ArrayList<>();
         dirs.add(dropInDir());
         if (gameDir != null) dirs.add(gameDir);
+        if (allowSystemFonts) {
+            File sf = new File("/system/fonts");
+            if (sf.isDirectory()) dirs.add(sf);
+        }
 
         List<String> extensions = extensions(context);
 
@@ -75,7 +98,20 @@ public final class GalgameFonts {
         }
 
         // 兜底：仅 drop-in 目录取任意字体，避免误抓游戏目录里的西文字体
-        return bestMatch(dropInDir(), extensions, hints, false);
+        File dropAny = bestMatch(dropInDir(), extensions, hints, false);
+        if (dropAny != null) return dropAny;
+
+        // 再兜底：系统字体目录用 CJK 专属关键字精确匹配（NotoSansCJK / NotoSerifCJK / SourceHan 等）
+        if (allowSystemFonts) {
+            File sf = new File("/system/fonts");
+            if (sf.isDirectory()) {
+                List<String> cjkHints = Arrays.asList(
+                        "notosanscjk", "notoserifcjk", "cjk", "sourcehansans", "sourcehanserif");
+                File f = bestMatch(sf, extensions, cjkHints, true);
+                if (f != null) return f;
+            }
+        }
+        return null;
     }
 
     /** 需要注册为别名的常用日文字体名（让按名取字体的游戏也能命中）。 */

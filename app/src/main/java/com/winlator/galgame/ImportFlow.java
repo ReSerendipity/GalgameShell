@@ -62,6 +62,8 @@ public final class ImportFlow {
         r.engine = engine;
         r.route = route;
         r.gameId = gameId;
+        // 语言检测（中文游戏 → zh_CN.UTF-8，否则维持预设 ja_JP）
+        r.language = GalgameLanguageDetector.detectLocale(sourceFolder, null);
         r.encrypted = encrypted;
         r.encryptionMarkers = markers.isEmpty() ? Collections.<String>emptyList()
                                                  : new ArrayList<>(markers);
@@ -85,7 +87,7 @@ public final class ImportFlow {
         r.saveDir = new File(saveManager.savePath());
 
         // 构造官方 ContainerManager 所需的 data JSONObject
-        r.containerData = buildContainerData(engine, gameId, preset, r.saveDir, encrypted, markers);
+        r.containerData = buildContainerData(engine, gameId, preset, r.saveDir, encrypted, markers, r.language);
         return r;
     }
 
@@ -129,9 +131,17 @@ public final class ImportFlow {
 
         result.gameExe = findExecutable(gameDir, result.engine);
 
-        // P2：日文化注入（LC_ALL/LANG + 区域注册表 + 日文字体）；缺失字体只告警不阻断
+        // P2：日/中文化注入（locale 由检测结果决定；中文时自动选 CJK 字体并回退 /system/fonts）
         if (context != null) {
-            result.localeReport = GalgameLocaleInjector.apply(container, result.preset, gameDir, context);
+            // 复检语言（结合 exe 名，提升中文识别率）
+            if (result.language == null || !result.language.startsWith("zh")) {
+                String reDetect = GalgameLanguageDetector.detectLocale(
+                        gameDir, result.gameExe != null ? result.gameExe.getName() : null);
+                if (reDetect.startsWith("zh")) result.language = reDetect;
+            }
+            boolean chinese = result.language != null && result.language.startsWith("zh");
+            result.localeReport = GalgameLocaleInjector.apply(
+                    container, result.preset, gameDir, context, result.language, chinese);
         }
 
         // 写 galgame_overlay.json（不修改官方 .container，供前端/启动器读取）
@@ -144,7 +154,8 @@ public final class ImportFlow {
 
     private static JSONObject buildContainerData(EngineDetector.Engine engine, String gameId,
                                                   EnginePreset preset, File saveDir,
-                                                  boolean encrypted, List<String> markers) {
+                                                  boolean encrypted, List<String> markers,
+                                                  String detectedLocale) {
         try {
             JSONObject data = new JSONObject();
             data.put("name", "galgame-" + gameId);
@@ -154,6 +165,10 @@ public final class ImportFlow {
             if (preset != null) {
                 String append = preset.envVarsAppend();
                 if (!append.isEmpty()) env += " " + append;
+            }
+            // 中文覆盖：把预设写死的 ja_JP.UTF-8 替换为检测到的 locale（避免日语代码页误读 GBK 出问号）
+            if (detectedLocale != null && detectedLocale.startsWith("zh")) {
+                env = env.replace("ja_JP.UTF-8", detectedLocale);
             }
             data.put("envVars", env);
 
@@ -279,6 +294,7 @@ public final class ImportFlow {
             o.put("engine", result.engine.name());
             o.put("route", result.route.name());
             o.put("encrypted", result.encrypted);
+            o.put("language", result.language != null ? result.language : "");
             o.put("game_dir", gameDir.getAbsolutePath());
             if (result.saveDir != null) o.put("save_dir", result.saveDir.getAbsolutePath());
             if (result.gameExe != null) o.put("exe", result.gameExe.getAbsolutePath());
@@ -310,6 +326,7 @@ public final class ImportFlow {
     public static final class ImportResult {
         public EngineDetector.Engine engine;
         public EngineDetector.Route route;
+        public String language;         // 检测到的 locale（zh_CN.UTF-8 / ja_JP.UTF-8），run 阶段填
         public String gameId;
         public boolean encrypted;
         public List<String> encryptionMarkers = Collections.emptyList();
