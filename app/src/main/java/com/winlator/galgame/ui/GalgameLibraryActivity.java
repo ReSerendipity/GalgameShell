@@ -1,11 +1,13 @@
 package com.winlator.galgame.ui;
 
 import android.app.AlertDialog;
+import android.view.View;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.GridView;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -54,9 +56,9 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         containerManager = new ContainerManager(this);
 
         adapter = new GalgameLibraryAdapter(this, items);
-        ListView list = findViewById(R.id.LVGalgames);
-        list.setAdapter(adapter);
-        list.setOnItemClickListener((parent, view, position, id) -> {
+        GridView grid = findViewById(R.id.GVGalgames);
+        grid.setAdapter(adapter);
+        grid.setOnItemClickListener((parent, view, position, id) -> {
             if (position >= 0 && position < items.size()) {
                 showGameActions(items.get(position).container);
             }
@@ -91,15 +93,17 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                     File gameDir = new File(c.getRootDir(), ".wine/drive_c/galgame/" + gameId);
                     File exe = overlayExe(c);
                     String engine = c.getExtra("galgame_engine", "?");
-                    items.add(new GalgameLibraryAdapter.Item(c, gameId + "  ·  " + engine, gameDir, exe));
+                    items.add(new GalgameLibraryAdapter.Item(c, gameId, engine, gameDir, exe));
                 }
             }
         }
         adapter.notifyDataSetChanged();
 
-        if (items.isEmpty()) {
-            Toast.makeText(this, R.string.galgame_library_empty, Toast.LENGTH_SHORT).show();
-        }
+        TextView empty = findViewById(R.id.TVEmpty);
+        GridView grid = findViewById(R.id.GVGalgames);
+        boolean isEmpty = items.isEmpty();
+        empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        grid.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
     }
 
     private void showGameActions(Container container) {
