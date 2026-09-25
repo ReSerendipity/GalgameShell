@@ -13,8 +13,10 @@ import java.util.Locale;
  *
  * 在导入阶段**自动**为 Mali（联发科天玑 / 麒麟 Xclipse）设备选择 Vortek 图形驱动，
  * 因为 Turnip 是 Adreno 专用、在 Mali 上会导致黑屏/秒退（见 learning-projects.md
- * 「WinlatorMali 条目」与 GalgameDiagnostics 闪退排查）。Adreno / 其它设备沿用预设或
- * 官方自动选择，不强制覆盖。
+ * 「WinlatorMali 条目」与 GalgameDiagnostics 闪退排查）；**同时**为 Adreno 设备选择
+ * Turnip（即 Winlator 官方 Adreno 默认驱动 {@code turnip,gladio}），避免沿用 stock
+ * 默认 {@code vortek,gladio}（Mali 驱动）在 Adreno 上误用导致渲染失败。其它（未知）
+ * GPU 不强制，沿用官方默认。
  *
  * 检测用**多信号启发式**，不依赖 GL 上下文（导入期不一定有），失败也有兜底：
  *   1) {@link GPUHelper#getAdrenoModelId}（Adreno 专用）
@@ -91,10 +93,15 @@ public final class GalgameGpuProfiler {
             }
         }
 
-        // Mali → 推荐 Vortek（Mali/MediaTek/Xclipse 优化，禁 Turnip）
+        // 推荐驱动：
+        //  - Mali    → Vortek（Mali/MediaTek/Xclipse 优化，禁 Turnip）
+        //  - Adreno  → Turnip（Winlator 官方 Adreno 默认，禁在 Adreno 上误用 Mali 的 Vortek）
+        //  - 其它    → 不强制，沿用官方默认（stock 为 vortek,gladio）
         String driver = null;
         if (vendor == Vendor.MALI) {
             driver = GraphicsDrivers.VORTEK + "," + GraphicsDrivers.GLADIO;
+        } else if (vendor == Vendor.ADRENO) {
+            driver = GraphicsDrivers.TURNIP + "," + GraphicsDrivers.GLADIO;
         }
 
         return new Profile(vendor, model, driver);
