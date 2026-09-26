@@ -3,6 +3,8 @@ package com.winlator.galgame.ui;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,21 +18,28 @@ import com.winlator.galgame.GalgameCoverProvider;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * M1 游戏库封面适配器：每行显示封面缩略图 + 名称。
- * 封面由 {@link GalgameCoverProvider} 提供（目录图扫描优先，exe 图标兜底），结果按项缓存避免重复解析。
+ * M1 游戏库封面适配器：封面墙卡片（大封面 + 名称 + 引擎 chip）。
+ *
+ * <p>封面由 {@link GalgameCoverProvider} 提供（目录图扫描优先，exe 图标兜底）。
+ * 解码为**后台异步 + 淡入**：避免主线程解码造成滚动卡顿，并给出现代加载观感；
+ * 结果按项缓存（{@link Item#coverBitmap}）避免重复解码；用 tag 校验防止列表回收错图。
  */
 public final class GalgameLibraryAdapter extends BaseAdapter {
 
-    /** 单项数据（封面卡片：主标题 + 副标题）。 */
+    /** 单项数据（封面卡片：主标题 + 副标题 + 懒加载封面）。 */
     public static final class Item {
         public final Container container;
         public final String label;
         public final String sub;   // 副标题（引擎等元信息）
         public final File gameDir;
         public final File exe;
-        public File cover;   // 懒计算并缓存
+        public File cover;          // 封面文件（懒解析并缓存）
+        public Bitmap coverBitmap;  // 解码后的位图缓存
+        public boolean coverResolved;
 
         Item(Container container, String label, String sub, File gameDir, File exe) {
             this.container = container;
@@ -41,12 +50,12 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         }
     }
 
-    private final Context context;
     private final LayoutInflater inflater;
     private final List<Item> items;
+    private final ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final Handler main = new Handler(Looper.getMainLooper());
 
     public GalgameLibraryAdapter(Context context, List<Item> items) {
-        this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.items = items;
     }
@@ -62,10 +71,8 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View view = convertView;
-        if (view == null) {
-            view = inflater.inflate(R.layout.item_galgame, parent, false);
-        }
+        View view = convertView != null
+                ? convertView : inflater.inflate(R.layout.item_galgame, parent, false);
 
         Item item = items.get(position);
         TextView tv = view.findViewById(R.id.TVLabel);
@@ -74,27 +81,44 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         tv.setText(item.label);
         sub.setText(item.sub);
 
-        // 懒加载封面（缓存）
-        if (item.cover == null) {
-            try {
-                item.cover = GalgameCoverProvider.coverFor(item.gameDir, item.exe);
-            } catch (Throwable ignored) {
-                item.cover = null;
-            }
-        }
+        // 绑定标记：用于异步回调时校验视图未被回收复用
+        iv.setTag(R.id.IVCover, item);
 
-        if (item.cover != null && item.cover.isFile()) {
-            Bitmap bmp = decodeSampled(item.cover.getAbsolutePath(), 512);
-            if (bmp != null) {
-                iv.setImageBitmap(bmp);
-            } else {
-                iv.setImageResource(android.R.drawable.ic_menu_gallery);
-            }
+        if (item.coverBitmap != null) {
+            iv.setImageBitmap(item.coverBitmap);
+            iv.setAlpha(1f);
         } else {
             iv.setImageResource(android.R.drawable.ic_menu_gallery);
+            iv.setAlpha(0.55f);
+            loadCoverAsync(item, iv);
         }
-
         return view;
+    }
+
+    /** 后台解析 + 解码封面，完成后淡入。 */
+    private void loadCoverAsync(final Item item, final ImageView iv) {
+        if (item.coverResolved) return;
+        item.coverResolved = true;
+
+        executor.execute(() -> {
+            try {
+                if (item.cover == null) {
+                    item.cover = GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                }
+                if (item.cover != null && item.cover.isFile()) {
+                    item.coverBitmap = decodeSampled(item.cover.getAbsolutePath(), 512);
+                }
+            } catch (Throwable ignored) { /* 降级为占位图 */ }
+
+            main.post(() -> {
+                if (iv.getTag(R.id.IVCover) != item) return;   // 已被回收给其它项
+                if (item.coverBitmap != null) {
+                    iv.setImageBitmap(item.coverBitmap);
+                    iv.setAlpha(0f);
+                    iv.animate().alpha(1f).setDuration(220).start();
+                }
+            });
+        });
     }
 
     /** 按目标边长采样解码，避免大图整幅载入内存。 */

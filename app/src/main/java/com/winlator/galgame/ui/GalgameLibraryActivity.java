@@ -1,16 +1,21 @@
 package com.winlator.galgame.ui;
 
+import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.os.Bundle;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.GridView;
-import android.util.Log;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import com.winlator.R;
 import com.winlator.XServerDisplayActivity;
@@ -45,6 +50,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     private ContainerManager containerManager;
     private GalgameLibraryAdapter adapter;
+    private FloatingActionButton fabImport;
 
     private final List<GalgameLibraryAdapter.Item> items = new ArrayList<>();
 
@@ -72,11 +78,20 @@ public class GalgameLibraryActivity extends AppCompatActivity {
             return false;
         });
 
-        Button importButton = findViewById(R.id.BTImport);
-        importButton.setOnClickListener(v -> showImportDialog());
+        // 导入 FAB（现代主行动）+ 空态行动按钮
+        fabImport = findViewById(R.id.FABImport);
+        fabImport.setOnClickListener(v -> showImportDialog());
+        // FAB 入场：缩放淡入
+        fabImport.setScaleX(0f);
+        fabImport.setScaleY(0f);
+        fabImport.setAlpha(0f);
+        fabImport.animate().scaleX(1f).scaleY(1f).alpha(1f).setStartDelay(180).setDuration(260).start();
 
-        Button aboutButton = findViewById(R.id.BTAbout);
+        View aboutButton = findViewById(R.id.BTAbout);
         aboutButton.setOnClickListener(v -> showAbout());
+
+        View importEmpty = findViewById(R.id.BTImportEmpty);
+        importEmpty.setOnClickListener(v -> showImportDialog());
 
         refresh();
     }
@@ -107,11 +122,24 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         }
         adapter.notifyDataSetChanged();
 
-        TextView empty = findViewById(R.id.TVEmpty);
+        TextView subtitle = findViewById(R.id.TVSubtitle);
+        if (subtitle != null && !items.isEmpty()) {
+            subtitle.setText(getString(R.string.galgame_library_count, items.size()));
+        }
+
+        View empty = findViewById(R.id.LEmpty);
         GridView grid = findViewById(R.id.GVGalgames);
         boolean isEmpty = items.isEmpty();
         empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         grid.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        // 空态已有「导入游戏」按钮，FAB 隐藏避免重复行动点
+        if (fabImport != null) {
+            fabImport.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        }
+        if (!isEmpty) {
+            // 每次刷新重放错峰入场动画（衔接感）
+            grid.startLayoutAnimation();
+        }
     }
 
     private void showGameActions(Container container) {
@@ -143,11 +171,16 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     /** 启动游戏：复用官方 XServerDisplayActivity（A 路由容器）。 */
     private void launchGame(Container container) {
+        // 友好提示：告知正在启动哪个游戏（现代 Snackbar 代替 Toast）
+        snack(getString(R.string.galgame_launching, gameIdOf(container)));
+
         android.content.Intent intent = new android.content.Intent(this, XServerDisplayActivity.class);
         intent.putExtra("container_id", container.id);
         // A 路由：注入 overlay 的 exe，boot 直接运行游戏（与容器页启动共用同一接线）
         GalgameLaunchHelper.injectExecPath(container, intent);
         startActivity(intent);
+        // 界面切换过渡（淡入淡出，配合主题 windowAnimationStyle）
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     // ---- 诊断 / 日志 / 存档 ----
@@ -182,9 +215,8 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         if (needsReinject) {
             builder.setNeutralButton(R.string.galgame_diag_reinject, (dialog, which) -> {
                 GalgameLocaleInjector.Report re = GalgameLocaleInjector.reapply(container, GalgameLibraryActivity.this);
-                Toast.makeText(GalgameLibraryActivity.this,
-                        re != null ? R.string.galgame_diag_reinject_done : R.string.galgame_diag_reinject_fail,
-                        Toast.LENGTH_SHORT).show();
+                snack(getString(re != null ? R.string.galgame_diag_reinject_done
+                        : R.string.galgame_diag_reinject_fail));
                 showDiagnostics(container);
             });
         }
@@ -195,7 +227,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
     private void showLogs(Container container) {
         List<File> files = GalgameLogs.candidates(container);
         if (files.isEmpty()) {
-            Toast.makeText(this, R.string.galgame_logs_none, Toast.LENGTH_SHORT).show();
+            snack(getString(R.string.galgame_logs_none));
             return;
         }
 
@@ -217,9 +249,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         String gameId = gameIdOf(container);
         GalgameSaveManager manager = new GalgameSaveManager(gameId);
         boolean ok = manager.exportBackup(GalgameSaveManager.defaultBackupDir());
-        Toast.makeText(this,
-                ok ? R.string.galgame_save_export_done : R.string.galgame_save_export_fail,
-                Toast.LENGTH_SHORT).show();
+        snack(getString(ok ? R.string.galgame_save_export_done : R.string.galgame_save_export_fail));
     }
 
     /** 从备份目录恢复存档（M3）：列出本游戏的历史备份，选一则恢复到 S: 盘。 */
@@ -230,7 +260,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         File backupRoot = GalgameSaveManager.defaultBackupDir();
         File[] all = backupRoot.listFiles();
         if (all == null) {
-            Toast.makeText(this, R.string.galgame_save_no_backup, Toast.LENGTH_SHORT).show();
+            snack(getString(R.string.galgame_save_no_backup));
             return;
         }
 
@@ -239,7 +269,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
             if (f.isDirectory() && f.getName().startsWith(gameId + "-")) candidates.add(f);
         }
         if (candidates.isEmpty()) {
-            Toast.makeText(this, R.string.galgame_save_no_backup, Toast.LENGTH_SHORT).show();
+            snack(getString(R.string.galgame_save_no_backup));
             return;
         }
 
@@ -252,9 +282,8 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 .setTitle(R.string.galgame_action_import_save)
                 .setItems(names, (dialog, which) -> {
                     boolean ok = manager.restoreBackup(candidates.get(which));
-                    Toast.makeText(this,
-                            ok ? R.string.galgame_save_restored : R.string.galgame_save_export_fail,
-                            Toast.LENGTH_SHORT).show();
+                    snack(getString(ok ? R.string.galgame_save_restored
+                            : R.string.galgame_save_export_fail));
                 })
                 .setNegativeButton(R.string.galgame_cancel, null)
                 .show();
@@ -280,7 +309,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     private void startImport(final File source) {
         if (!source.isDirectory()) {
-            Toast.makeText(this, R.string.galgame_import_invalid, Toast.LENGTH_SHORT).show();
+            snack(getString(R.string.galgame_import_invalid));
             return;
         }
 
@@ -302,8 +331,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
             catch (Exception e) {
                 runOnUiThread(() -> {
                     dismissProgressDialog();
-                    Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    snackLong(getString(R.string.galgame_import_failed) + ": " + e.getMessage());
                 });
                 return;
             }
@@ -317,20 +345,20 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 return;
             }
 
-            runOnUiThread(() -> setProgressText(getString(R.string.galgame_import_step_create)));
+            runOnUiThread(() -> setProgress(40, getString(R.string.galgame_import_step_create)));
 
             // A 路由：建每游戏容器 → stage（A3 复制 + B4 S: + P2 日文化）→ P4 存档重定向
             containerManager.createContainerAsync(result.containerData, (container) -> {
                 if (container == null) {
                     runOnUiThread(() -> {
                         dismissProgressDialog();
-                        Toast.makeText(this, R.string.galgame_import_failed, Toast.LENGTH_LONG).show();
+                        snackLong(getString(R.string.galgame_import_failed));
                     });
                     return;
                 }
                 exec.execute(() -> {
                     try {
-                        runOnUiThread(() -> setProgressText(getString(R.string.galgame_import_step_copy)));
+                        runOnUiThread(() -> setProgress(70, getString(R.string.galgame_import_step_copy)));
                         ImportFlow.stageGameFiles(container, result, source, appCtx);
 
                         GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
@@ -340,16 +368,16 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                         saveManager.symlinkPortableSaves(stagedGameDir);
 
                         runOnUiThread(() -> {
+                            setProgress(100, getString(R.string.galgame_import_step_done));
                             dismissProgressDialog();
-                            Toast.makeText(this, R.string.galgame_import_done, Toast.LENGTH_LONG).show();
+                            snackLong(getString(R.string.galgame_import_done));
                             refresh();
                         });
                     }
                     catch (Exception e) {
                         runOnUiThread(() -> {
                             dismissProgressDialog();
-                            Toast.makeText(this, getString(R.string.galgame_import_failed) + ": " + e.getMessage(),
-                                    Toast.LENGTH_LONG).show();
+                            snackLong(getString(R.string.galgame_import_failed) + ": " + e.getMessage());
                         });
                     }
                 });
@@ -357,30 +385,77 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         });
     }
 
-    // ---- 导入进度对话框 ----
+    // ---- 导入进度对话框（确定进度条 + 百分比 + 平滑推进）----
 
     private AlertDialog progressDialog;
     private TextView progressTextView;
+    private TextView progressPercentView;
+    private ProgressBar progressBar;
 
     private void showProgressDialog(String text) {
         View view = android.view.LayoutInflater.from(this).inflate(R.layout.galgame_progress_dialog, null);
         progressTextView = view.findViewById(R.id.TVProgressText);
+        progressPercentView = view.findViewById(R.id.TVProgressPercent);
+        progressBar = view.findViewById(R.id.PBImport);
         progressTextView.setText(text);
+        if (progressBar != null) progressBar.setProgress(0);
+        if (progressPercentView != null) progressPercentView.setText("0%");
+
         progressDialog = new AlertDialog.Builder(this)
                 .setView(view)
                 .setCancelable(false)
                 .create();
         progressDialog.show();
+        // 去掉 AlertDialog 默认的方角背景，露出自定义圆角
+        if (progressDialog.getWindow() != null) {
+            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        setProgressSmooth(12);
+    }
+
+    /** 推进到指定阶段：更新文案并平滑推进进度条（避免生硬跳变）。 */
+    private void setProgress(int percent, String text) {
+        if (progressTextView != null && text != null) progressTextView.setText(text);
+        setProgressSmooth(percent);
     }
 
     private void setProgressText(String text) {
         if (progressTextView != null) progressTextView.setText(text);
     }
 
+    /** 进度条平滑动画：从当前值补间到目标值，同步刷新百分比文本。 */
+    private void setProgressSmooth(int target) {
+        if (progressBar == null) return;
+        int from = progressBar.getProgress();
+        ValueAnimator animator = ValueAnimator.ofInt(from, target);
+        animator.setDuration(450);
+        animator.addUpdateListener(a -> {
+            int v = (Integer) a.getAnimatedValue();
+            progressBar.setProgress(v);
+            if (progressPercentView != null) progressPercentView.setText(v + "%");
+        });
+        animator.start();
+    }
+
     private void dismissProgressDialog() {
         if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
         progressDialog = null;
         progressTextView = null;
+        progressPercentView = null;
+        progressBar = null;
+    }
+
+    /** 友好提示条（现代 Snackbar，替代 Toast）。 */
+    private void snack(String message) {
+        View root = findViewById(android.R.id.content);
+        if (root == null) return;
+        Snackbar.make(root, message, Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void snackLong(String message) {
+        View root = findViewById(android.R.id.content);
+        if (root == null) return;
+        Snackbar.make(root, message, Snackbar.LENGTH_LONG).show();
     }
 
     // ---- B 路由对话框（Tier 分层 + 免责）----

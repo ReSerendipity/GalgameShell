@@ -57,7 +57,18 @@
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
     <!-- 游戏库亮色主题别名：v29 起关闭 Force Dark（系统深色模式会强转暗色） -->
-    <style name="GalgameLibraryTheme" parent="@style/AppThemeLight" />
+    <style name="GalgameLibraryTheme" parent="@style/AppThemeLight">
+        <!-- 现代过渡：界面切换淡入淡出，并启用内容转场 -->
+        <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
+
+    <style name="GalgameWindowAnim" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
+    </style>
 
     <style name="AppThemeFullscreenLight" parent="@style/AppThemeLight">
         <item name="android:windowFullscreen">true</item>
