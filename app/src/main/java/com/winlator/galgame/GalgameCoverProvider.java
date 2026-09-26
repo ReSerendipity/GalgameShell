@@ -216,35 +216,47 @@ public final class GalgameCoverProvider {
         // GRPICONDIR: Reserved(2)+Type(2)+Count(2)+ entries(每个 14)
         int count = readLE16(all, raw + 4);
         if (count <= 0) return null;
-        // 找最大的图标条目（BytesInRes 最大，优先 32 位）
-        int bestIdx = 0;
-        int bestSize = 0;
+        // 收集每个图标条目（BytesInRes 最大优先，优先 32 位），并记录其 RT_ICON id
         int[] idRefs = new int[count];
+        int[] sizes = new int[count];
+        Integer[] order = new Integer[count];
         for (int i = 0; i < count; i++) {
             int e = raw + 6 + i * 14;
             // Width(1) Height(1) ColorCount(1) Reserved(1) Planes(2) BitCount(2) BytesInRes(4) Id(2)
-            int bsize = readLE32(all, e + 8);
+            sizes[i] = readLE32(all, e + 8);
             idRefs[i] = readLE16(all, e + 12);
-            if (bsize > bestSize) { bestSize = bsize; bestIdx = i; }
+            order[i] = i;
         }
-        // 在 RT_ICON(3) 目录找对应 Id 的数据
+        // 按 BytesInRes 降序：优先最大图标；某条目损坏时自动降级到次大
+        java.util.Arrays.sort(order, (a, b) -> Integer.compare(sizes[b], sizes[a]));
+
+        // 在 RT_ICON(3) 目录找对应 Id 的数据（标准 PE 资源为 Type→Name→Language→Data 四级树）
         int iconDir = findResourceEntry(all, resRaw, resRaw, 3); // RT_ICON 顶层
         if (iconDir < 0) return null;
         int iconCount = readLE16(all, iconDir + 12) + readLE16(all, iconDir + 14);
-        for (int i = 0; i < iconCount; i++) {
-            int e = iconDir + 16 + i * 8;
-            int nameOrId = readLE32(all, e);
-            int id = nameOrId & 0x7FFFFFFF;
-            if (id != idRefs[bestIdx]) continue;
-            int off = readLE32(all, e + 4);
-            int dataEntry2 = (off & 0x7FFFFFFF) + resRaw;
-            int rva = readLE32(all, dataEntry2);
-            int sz = readLE32(all, dataEntry2 + 4);
-            int r = rvaToRaw(all, secOff, numSections, rva);
-            if (r < 0 || sz <= 0 || r + sz > all.length) continue;
-            byte[] out = new byte[sz];
-            System.arraycopy(all, r, out, 0, sz);
-            return out;
+
+        for (int oi : order) {
+            int wantId = idRefs[oi];
+            for (int i = 0; i < iconCount; i++) {
+                int e = iconDir + 16 + i * 8;
+                int id = readLE32(all, e) & 0x7FFFFFFF;   // 高位置位表示字符串名，非数字 id 则跳过
+                if (id != wantId) continue;
+                int off = readLE32(all, e + 4);
+                int langDir = (off & 0x7FFFFFFF) + resRaw;  // Name 条目指向 Language 子目录
+                int langCount = readLE16(all, langDir + 12) + readLE16(all, langDir + 14);
+                for (int L = 0; L < langCount; L++) {
+                    int le = langDir + 16 + L * 8;
+                    int dataOff = readLE32(all, le + 4);
+                    int dataEntry2 = (dataOff & 0x7FFFFFFF) + resRaw; // 下钻到真实图标数据
+                    int rva = readLE32(all, dataEntry2);
+                    int sz = readLE32(all, dataEntry2 + 4);
+                    int r = rvaToRaw(all, secOff, numSections, rva);
+                    if (r < 0 || sz <= 0 || r + sz > all.length) continue;
+                    byte[] out = new byte[sz];
+                    System.arraycopy(all, r, out, 0, sz);
+                    return out;
+                }
+            }
         }
         return null;
     }
