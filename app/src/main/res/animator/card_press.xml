@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 封面卡片按压反馈：轻微缩放 + 抬升（现代触感） -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueTo="0.955"
+                android:valueType="floatType"
+                android:duration="120" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueTo="0.955"
+                android:valueType="floatType"
+                android:duration="120" />
+            <objectAnimator
+                android:propertyName="translationZ"
+                android:valueTo="6"
+                android:valueType="floatType"
+                android:duration="120" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueTo="1"
+                android:valueType="floatType"
+                android:duration="140" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueTo="1"
+                android:valueType="floatType"
+                android:duration="140" />
+            <objectAnimator
+                android:propertyName="translationZ"
+                android:valueTo="0"
+                android:valueType="floatType"
+                android:duration="140" />
+        </set>
+    </item>
+</selector>

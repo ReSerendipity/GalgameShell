@@ -15,6 +15,10 @@
     <!-- 库 UI -->
     <string name="galgame_library_title">游戏库</string>
     <string name="galgame_library_empty">还没有导入游戏，点击上方「导入游戏」开始</string>
+    <string name="galgame_library_count">共 %1$d 个游戏</string>
+    <string name="galgame_empty_title">游戏库还是空的</string>
+    <string name="galgame_empty_hint">导入一个游戏文件夹，之后在封面墙上点一下就能直接启动</string>
+    <string name="galgame_launching">正在启动「%1$s」…</string>
     <string name="galgame_action_launch">启动</string>
     <string name="galgame_action_diagnose">诊断</string>
     <string name="galgame_action_export_save">导出存档</string>
@@ -23,6 +27,7 @@
     <string name="galgame_import_step_detect">正在检测引擎与语言…</string>
     <string name="galgame_import_step_create">正在创建游戏容器…</string>
     <string name="galgame_import_step_copy">正在复制游戏文件（大目录可能较慢）…</string>
+    <string name="galgame_import_step_done">导入完成，正在刷新游戏库…</string>
     <string name="galgame_import_cannot_cancel">导入进行中，请稍候</string>
 
     <!-- 触控模式（游戏内抽屉菜单切换；galgame 容器默认直接触控） -->

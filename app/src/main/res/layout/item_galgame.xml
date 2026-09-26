@@ -1,48 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 游戏库封面卡片（网格封面墙）：大封面 + 名称 + 引擎副标题 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  游戏库封面卡片（现代 Material 卡片）：大封面 + 粗体名 + 引擎 chip，
+  带按压缩放反馈与 Material 涟漪。
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/galgame_card_bg"
-    android:foreground="?selectableItemBackground"
+    android:layout_margin="2dp"
     android:clickable="true"
     android:focusable="true"
-    android:padding="6dp">
+    android:foreground="?attr/selectableItemBackground"
+    android:stateListAnimator="@animator/card_press"
+    app:cardBackgroundColor="#FFFFFFFF"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#FFE6E9F0"
+    app:strokeWidth="1dp">
 
-    <ImageView
-        android:id="@+id/IVCover"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:scaleType="centerCrop"
-        android:background="#EDEFF2"
-        android:contentDescription="@string/galgame_library_title"
-        android:src="@android:drawable/ic_menu_gallery" />
-
-    <TextView
-        android:id="@+id/TVLabel"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="?android:attr/textColorPrimary" />
+        android:orientation="vertical"
+        android:padding="8dp">
 
-    <TextView
-        android:id="@+id/TVSub"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:textSize="11sp"
-        android:textColor="?android:attr/textColorSecondary" />
+        <ImageView
+            android:id="@+id/IVCover"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:scaleType="centerCrop"
+            android:background="#FFEDEFF2"
+            android:contentDescription="@string/galgame_library_title"
+            android:src="@android:drawable/ic_menu_gallery" />
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/TVLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FF1F2430" />
+
+        <TextView
+            android:id="@+id/TVSub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/galgame_chip_bg"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#FF5A6ACF" />
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

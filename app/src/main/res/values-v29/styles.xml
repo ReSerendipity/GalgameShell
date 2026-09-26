@@ -3,5 +3,7 @@
 <resources>
     <style name="GalgameLibraryTheme" parent="@style/AppThemeLight">
         <item name="android:forceDarkAllowed">false</item>
+        <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
+        <item name="android:windowActivityTransitions">true</item>
     </style>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 网格错峰入场：按行列依次延迟，形成瀑布式衔接 -->
+<gridLayoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    android:columnDelay="0.14"
+    android:rowDelay="0.14"
+    android:directionPriority="column"
+    android:direction="top_to_bottom|left_to_right"
+    android:animation="@anim/item_slide_up" />
