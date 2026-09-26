@@ -68,13 +68,6 @@
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
 
-        <!-- 调试启动桥：仅用于真机无头回归（adb am start 拉起游戏容器）。新增类，零改上游。 -->
-        <activity android:name="com.winlator.galgame.debug.GalgameDebugLaunchActivity"
-            android:theme="@style/AppThemeFullscreenDark"
-            android:exported="true"
-            android:excludeFromRecents="true"
-            android:noHistory="true" />
-
         <!-- Needed for keep the container alive when in background or the device is locked. -->
         <service
             android:name="com.winlator.services.ForegroundService"
