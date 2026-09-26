@@ -18,7 +18,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
             ndk {
-                abiFilters 'arm64-v8a'
+                // 默认 arm64-v8a（发布基线，勿改）。
+                // UI 调试构建：-PgalgameUiAbi=x86_64 → x86_64 模拟器专用（arm64 预编译库被过滤，
+                // cmake 另编 x86_64 原生库）。用途：模拟器无法安装 arm64-only APK
+                // （INSTALL_FAILED_NO_MATCHING_ABIS），该模式仅供 UI 层（游戏库/主题/布局）调试，
+                // 游戏运行时（wine/box64 rootfs）不可用。不传该属性时构建产物与原先完全一致。
+                abiFilters (project.findProperty('galgameUiAbi') ?: 'arm64-v8a')
             }
         }
     }
@@ -29,10 +34,14 @@ android {
 
     ndkVersion '24.0.8215888'
 
-    externalNativeBuild {
-        cmake {
-            version '3.22.1'
-            path 'src/main/cpp/CMakeLists.txt'
+    // UI 调试构建（-PgalgameUiAbi=x86_64）跳过原生编译：模拟器仅用于 UI 层调试，
+    // 无需任何 .so；默认构建（不传该属性）保持 externalNativeBuild 原样。
+    if (!project.hasProperty('galgameUiAbi')) {
+        externalNativeBuild {
+            cmake {
+                version '3.22.1'
+                path 'src/main/cpp/CMakeLists.txt'
+            }
         }
     }
 }
