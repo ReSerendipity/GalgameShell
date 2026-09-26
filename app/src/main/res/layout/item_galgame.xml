@@ -5,6 +5,9 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/galgame_card_bg"
+    android:foreground="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     android:padding="6dp">
 
     <ImageView
