@@ -53,10 +53,18 @@
                     android:textColor="?attr/colorSecondaryText" />
             </LinearLayout>
 
-            <ImageView
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:src="@mipmap/ic_launcher" />
+            <!-- GalgameShell: 品牌紫圆底盘托起应用图标，与容器卡片图标语言统一 -->
+            <FrameLayout
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:background="@drawable/galgame_icon_circle"
+                android:padding="7dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@mipmap/ic_launcher" />
+            </FrameLayout>
         </LinearLayout>
 
         <View style="@style/HorizontalLine" />
