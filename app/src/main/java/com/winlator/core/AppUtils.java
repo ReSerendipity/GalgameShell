@@ -34,8 +34,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.tabs.TabLayout;
+import com.winlator.ControlsEditorActivity;
 import com.winlator.R;
 import com.winlator.SettingsFragment;
+import com.winlator.XServerDisplayActivity;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -377,12 +379,20 @@ public abstract class AppUtils {
 
     public static void setActivityTheme(Activity activity) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
-        int appTheme = preferences.getInt("app_theme", SettingsFragment.APP_THEME_DARK);
+        // GalgameShell：外壳默认亮色（品牌紫主题）；游戏运行屏/控件编辑器维持上游默认深色
+        int appTheme = preferences.getInt("app_theme", isGameScreen(activity)
+            ? SettingsFragment.APP_THEME_DARK : SettingsFragment.APP_THEME_LIGHT);
+        // GalgameShell：外壳界面主题品牌化——亮→GalgameMainTheme（紫）、深→GalgameMainThemeDark（紫黑）；
+        // 游戏运行屏（XServerDisplay）/控件编辑器（ControlsEditor）保持上游原主题不变
         if (appTheme == SettingsFragment.APP_THEME_LIGHT) {
-            activity.setTheme(R.style.AppThemeLight);
+            activity.setTheme(isGameScreen(activity) ? R.style.AppThemeLight : R.style.GalgameMainTheme);
         }
         else if (appTheme == SettingsFragment.APP_THEME_DARK) {
-            activity.setTheme(R.style.AppThemeDark);
+            activity.setTheme(isGameScreen(activity) ? R.style.AppThemeDark : R.style.GalgameMainThemeDark);
         }
+    }
+
+    private static boolean isGameScreen(Activity activity) {
+        return activity instanceof XServerDisplayActivity || activity instanceof ControlsEditorActivity;
     }
 }

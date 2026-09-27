@@ -70,6 +70,56 @@
         <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
     </style>
 
+    <!-- GalgameShell 外壳主题：紫色品牌（与游戏库一致）+ 亮色界面，替代上游 AppThemeDark -->
+    <style name="GalgameMainTheme" parent="@style/AppThemeBase">
+        <item name="colorAccent">#FF6A5AE0</item>
+        <item name="colorPrimary">#FF6A5AE0</item>
+        <item name="colorPrimaryDark">#FF4B3DBF</item>
+        <item name="colorControlNormal">#FFC9C4EE</item>
+        <item name="colorPrimaryText">#FF1F2430</item>
+        <item name="colorSecondaryText">#FF6B7280</item>
+        <item name="colorPrimarySurface">#FFF7F8FC</item>
+        <item name="colorSecondarySurface">#FFFFFFFF</item>
+        <item name="colorPrimaryVariant">#FF6A5AE0</item>
+        <item name="colorSecondaryVariant">#FFE6E9F0</item>
+        <item name="colorError">#FFEF5350</item>
+        <item name="popupMenuBackground">@drawable/content_dialog_background_light</item>
+        <item name="toolboxBackground">@drawable/toolbox_light</item>
+        <item name="panelBackground">@drawable/panel_background_light</item>
+        <item name="preloaderBackground">@drawable/preloader_background_light</item>
+        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_light</item>
+        <!-- 上游 AppThemeBase 的 android:windowBackground=?attr/colorPrimarySurface 实测解析失败（窗口退化为纯黑），
+             这里用字面量颜色覆盖，确保淡紫背景真正生效 -->
+        <item name="android:windowBackground">#FFF7F8FC</item>
+        <item name="android:colorBackground">#FFF7F8FC</item>
+        <item name="android:statusBarColor">#FF4B3DBF</item>
+        <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
+    </style>
+
+    <!-- GalgameShell 外壳深色主题：紫黑品牌色（设置里选「深色」时使用） -->
+    <style name="GalgameMainThemeDark" parent="@style/AppThemeBase">
+        <item name="colorAccent">#FF8B7BF0</item>
+        <item name="colorPrimary">#FF32305A</item>
+        <item name="colorPrimaryDark">#FF23203F</item>
+        <item name="colorControlNormal">#FF5A5780</item>
+        <item name="colorPrimaryText">#FFF2F3F7</item>
+        <item name="colorSecondaryText">#FF9CA3AF</item>
+        <item name="colorPrimarySurface">#FF17161F</item>
+        <item name="colorSecondarySurface">#FF232230</item>
+        <item name="colorPrimaryVariant">#FF8B7BF0</item>
+        <item name="colorSecondaryVariant">#FF3A3950</item>
+        <item name="colorError">#FFEF5350</item>
+        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
+        <item name="toolboxBackground">@drawable/toolbox_dark</item>
+        <item name="panelBackground">@drawable/panel_background_dark</item>
+        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
+        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
+        <item name="android:windowBackground">#FF17161F</item>
+        <item name="android:colorBackground">#FF17161F</item>
+        <item name="android:statusBarColor">#FF23203F</item>
+        <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
+    </style>
+
     <style name="AppThemeFullscreenLight" parent="@style/AppThemeLight">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>

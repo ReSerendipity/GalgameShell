@@ -19,10 +19,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -65,10 +63,7 @@ public class ContainersFragment extends Fragment {
         Context context = recyclerView.getContext();
         emptyTextView = frameLayout.findViewById(R.id.TVEmptyText);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
-
-        DividerItemDecoration itemDecoration = new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL);
-        itemDecoration.setDrawable(ContextCompat.getDrawable(context, R.drawable.list_item_divider));
-        recyclerView.addItemDecoration(itemDecoration);
+        // GalgameShell：列表项已卡片化（自带上/下间距），不再需要分隔线
         return frameLayout;
     }
 
