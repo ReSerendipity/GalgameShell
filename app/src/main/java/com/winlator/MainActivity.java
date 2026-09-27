@@ -54,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.main_activity);
 
         drawerLayout = findViewById(R.id.DrawerLayout);
+        // GalgameShell：抽屉开合遮罩品牌紫半透，过渡更精致
+        drawerLayout.setScrimColor(0x336A5AE0);
         NavigationView navigationView = findViewById(R.id.NavigationView);
         navigationView.setNavigationItemSelectedListener(this);
 

@@ -28,6 +28,7 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
     </LinearLayout>
 
+    <!-- GalgameShell: 抽屉品牌化——图标间距 + 浮起高度（品牌遮罩 scrimColor 设在 DrawerLayout 根） -->
     <com.google.android.material.navigation.NavigationView
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
@@ -43,6 +44,8 @@
         app:itemShapeInsetEnd="10dp"
         app:itemShapeInsetTop="4dp"
         app:itemShapeInsetBottom="4dp"
+        app:itemIconPadding="14dp"
+        android:elevation="10dp"
         android:background="?attr/colorSecondarySurface"
         app:menu="@menu/main_menu"/>
 </androidx.drawerlayout.widget.DrawerLayout>
