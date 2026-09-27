@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <!-- GalgameShell: 前景改自有品牌矢量（白「窗口+酒杯」字形） -->
+    <foreground android:drawable="@drawable/galgame_launcher_foreground"/>
 </adaptive-icon>
