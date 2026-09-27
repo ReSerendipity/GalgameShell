@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Winlator</string>
+    <!-- GalgameShell: 应用标签品牌化（启动器名称/通知标题），原值 Winlator -->
+    <string name="app_name">GalgameShell</string>
     <string name="run">Run</string>
     <string name="edit">Edit</string>
     <string name="remove">Remove</string>

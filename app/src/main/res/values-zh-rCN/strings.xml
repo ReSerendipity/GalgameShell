@@ -4,7 +4,8 @@
   术语约定：Container=容器，Profile=配置文件，Preset=预设，Binding=绑定，Drive=磁盘。
 -->
 <resources>
-    <string name="app_name">Winlator</string>
+    <!-- GalgameShell: 应用标签品牌化 -->
+    <string name="app_name">GalgameShell</string>
     <string name="run">运行</string>
     <string name="edit">编辑</string>
     <string name="remove">移除</string>
