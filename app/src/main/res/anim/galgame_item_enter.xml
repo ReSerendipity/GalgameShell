@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 列表项入场动画：淡入 + 轻微上移。
+  纯 XML 资源，不触碰任何上游 Java，零合并债。
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="320"
+    android:interpolator="@android:anim/decelerate_interpolator">
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0" />
+    <translate
+        android:fromYDelta="16dp"
+        android:toYDelta="0dp" />
+</set>

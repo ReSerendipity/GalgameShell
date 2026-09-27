@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 列表布局动画控制器：逐项 stagger（12% 延迟）。
+  纯 XML 资源，不触碰任何上游 Java，零合并债。
+-->
+<layoutAnimation xmlns:android="http://schemas.android.com/apk/res/android"
+    android:animation="@anim/galgame_item_enter"
+    android:animationOrder="normal"
+    android:delay="12%" />
