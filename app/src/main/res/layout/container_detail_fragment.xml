@@ -561,6 +561,6 @@
         android:tint="#ffffff"
         android:src="@drawable/icon_confirm"
         android:layout_margin="16dp"
-        app:backgroundTint="#FF6A5AE0"
+        app:backgroundTint="?attr/colorAccent"
         app:rippleColor="#FFFFFFFF" />
 </FrameLayout>
