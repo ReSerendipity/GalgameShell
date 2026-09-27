@@ -107,7 +107,7 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
             iv.setImageBitmap(item.coverBitmap);
             iv.setAlpha(1f);
         } else {
-            iv.setImageResource(android.R.drawable.ic_menu_gallery);
+            iv.setImageResource(R.drawable.galgame_placeholder); // GalgameShell：品牌占位插画
             iv.setAlpha(0.55f);
             loadCoverAsync(item, iv);
         }
