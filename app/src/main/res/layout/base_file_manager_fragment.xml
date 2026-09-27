@@ -16,8 +16,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="@string/no_items_to_display"
-        android:textSize="24sp"
+        android:padding="32dp"
+        android:drawableTop="@drawable/galgame_empty_state_icon"
+        android:drawablePadding="18dp"
+        android:lineSpacingExtra="4dp"
+        android:text="@string/galgame_empty_files"
+        android:textSize="15sp"
+        android:textColor="?attr/colorSecondaryText"
         android:visibility="gone" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

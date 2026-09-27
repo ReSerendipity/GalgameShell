@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 设计系统：品牌色板 token。
+  亮/深两档由主题属性（?attr/colorXxx）承载；这里只放品牌常量，
+  供 drawable（渐变/chip/按钮）与主题共用，避免颜色散落硬编码。
+-->
+<resources>
+    <!-- 品牌紫（与游戏库顶栏渐变一致：6A5AE0 → 9B5DE8） -->
+    <color name="gp_purple">#FF6A5AE0</color>
+    <color name="gp_purple_mid">#FF9B5DE8</color>
+    <color name="gp_purple_dark">#FF4B3DBF</color>
+
+    <!-- 亮色档表面 -->
+    <color name="gp_light_bg">#FFF7F8FC</color>
+    <color name="gp_light_surface">#FFFFFFFF</color>
+    <color name="gp_light_stroke">#FFE6E9F0</color>
+    <color name="gp_light_text_primary">#FF1F2430</color>
+    <color name="gp_light_text_secondary">#FF6B7280</color>
+    <color name="gp_light_control">#FFC9C4EE</color>
+
+    <!-- 深色档表面（紫黑） -->
+    <color name="gp_night_bg">#FF17161F</color>
+    <color name="gp_night_surface">#FF232230</color>
+    <color name="gp_night_stroke">#FF3A3950</color>
+    <color name="gp_night_text_primary">#FFF2F3F7</color>
+    <color name="gp_night_text_secondary">#FF9CA3AF</color>
+    <color name="gp_night_control">#FF5A5780</color>
+    <color name="gp_night_accent">#FF8B7BF0</color>
+
+    <!-- 通用点缀 -->
+    <color name="gp_chip_bg">#FFEAE0FD</color>
+    <color name="gp_chip_text">#FF5A6ACF</color>
+    <color name="gp_empty_icon">#FFB9BFCC</color>
+    <color name="gp_error">#FFEF5350</color>
+</resources>
