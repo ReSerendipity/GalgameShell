@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GalgameShell: 设置分组之间的透明间距，配合 LinearLayout showDividers=middle -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <size android:height="12dp" />
+    <solid android:color="@android:color/transparent" />
+</shape>

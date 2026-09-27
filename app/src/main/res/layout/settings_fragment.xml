@@ -8,11 +8,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- GalgameShell: 分组卡片间距（透明 12dp 占位，showDividers=middle） -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:divider="@drawable/galgame_section_gap"
+            android:showDividers="middle">
 
             <FrameLayout
                 android:layout_width="match_parent"
