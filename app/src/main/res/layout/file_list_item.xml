@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  文件/快捷方式列表项：Material 卡片（与容器卡片同一视觉语言），
-  颜色全部走主题属性，亮=白卡 / 深=紫黑卡。
+  文件/快捷方式列表项：与容器卡片同一视觉语言——图标置于品牌紫圆形底盘。
+  保留全部上游 id（ImageView / TVTitle / TVSubtitle / BTRun / BTMenu）。
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingLeft="14dp"
+        android:paddingLeft="12dp"
         android:paddingRight="10dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
@@ -33,14 +33,23 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginRight="12dp"
-            android:orientation="horizontal">
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <ImageView
-                android:id="@+id/ImageView"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_marginRight="10dp" />
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginRight="12dp"
+                android:background="@drawable/galgame_icon_circle">
+
+                <ImageView
+                    android:id="@+id/ImageView"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  文件/快捷方式网格项：Material 竖卡（与容器/列表卡片同一视觉语言）。
+  文件/快捷方式网格项：与容器卡片同一视觉语言——图标置于品牌紫圆形底盘。
+  保留全部上游 id（ImageView / TVTitle / TVSubtitle / BTRun / BTMenu）。
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -22,12 +23,20 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <ImageView
-            android:id="@+id/ImageView"
-            android:layout_width="58dp"
-            android:layout_height="58dp"
+        <FrameLayout
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:layout_marginTop="6dp"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/galgame_icon_circle">
+
+            <ImageView
+                android:id="@+id/ImageView"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:layout_gravity="center"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/TVTitle"
