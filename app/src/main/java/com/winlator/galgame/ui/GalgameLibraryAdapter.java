@@ -30,6 +30,12 @@ import java.util.concurrent.Executors;
  */
 public final class GalgameLibraryAdapter extends BaseAdapter {
 
+    /** 卡片交互回调：单击＝启动，长按＝操作菜单（挂在 item view 自身，见 getView）。 */
+    public interface OnGameActionListener {
+        void onGameClick(Container container);
+        void onGameLongClick(Container container);
+    }
+
     /** 单项数据（封面卡片：主标题 + 副标题 + 懒加载封面）。 */
     public static final class Item {
         public final Container container;
@@ -54,11 +60,14 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
     private final List<Item> items;
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final Handler main = new Handler(Looper.getMainLooper());
+    private OnGameActionListener actionListener;
 
     public GalgameLibraryAdapter(Context context, List<Item> items) {
         this.inflater = LayoutInflater.from(context);
         this.items = items;
     }
+
+    public void setOnGameActionListener(OnGameActionListener l) { this.actionListener = l; }
 
     @Override
     public int getCount() { return items.size(); }
@@ -80,6 +89,16 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         ImageView iv = view.findViewById(R.id.IVCover);
         tv.setText(item.label);
         sub.setText(item.sub);
+
+        // 交互必须挂在 item view 自身：卡片根为 clickable（涟漪需要），
+        // 会吞掉触摸事件，GridView 的 onItemClick/onItemLongClick 不会触发。
+        view.setOnClickListener(v -> {
+            if (actionListener != null) actionListener.onGameClick(item.container);
+        });
+        view.setOnLongClickListener(v -> {
+            if (actionListener != null) actionListener.onGameLongClick(item.container);
+            return true;
+        });
 
         // 绑定标记：用于异步回调时校验视图未被回收复用
         iv.setTag(R.id.IVCover, item);

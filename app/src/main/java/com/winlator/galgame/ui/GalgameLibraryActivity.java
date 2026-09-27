@@ -62,21 +62,18 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         containerManager = new ContainerManager(this);
 
         adapter = new GalgameLibraryAdapter(this, items);
+        // 点封面即玩（对标 GameNative）；长按弹操作菜单。
+        // 监听挂在 item view 自身（适配器内）——卡片根 clickable（涟漪）会吞掉
+        // GridView 级别的 onItemClick/onItemLongClick，故不能挂在 GridView 上。
+        adapter.setOnGameActionListener(new GalgameLibraryAdapter.OnGameActionListener() {
+            @Override
+            public void onGameClick(Container container) { launchGame(container); }
+
+            @Override
+            public void onGameLongClick(Container container) { showGameActions(container); }
+        });
         GridView grid = findViewById(R.id.GVGalgames);
         grid.setAdapter(adapter);
-        // 点封面即玩（对标 GameNative）；长按弹操作菜单
-        grid.setOnItemClickListener((parent, view, position, id) -> {
-            if (position >= 0 && position < items.size()) {
-                launchGame(items.get(position).container);
-            }
-        });
-        grid.setOnItemLongClickListener((parent, view, position, id) -> {
-            if (position >= 0 && position < items.size()) {
-                showGameActions(items.get(position).container);
-                return true;
-            }
-            return false;
-        });
 
         // 导入 FAB（现代主行动）+ 空态行动按钮
         fabImport = findViewById(R.id.FABImport);
