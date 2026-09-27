@@ -220,6 +220,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void showFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
+            // GalgameShell：fragment 切换淡入淡出（复用游戏库的现代过渡动画）
+            .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
             .replace(R.id.FLFragmentContainer, fragment)
             .commit();
 

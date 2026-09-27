@@ -17,6 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
             android:id="@+id/Toolbar"
+            android:background="?attr/colorPrimary"
             app:layout_scrollFlags="enterAlways|scroll"
             app:title="@string/app_name" />
 
@@ -36,6 +37,12 @@
         app:headerLayout="@layout/main_menu_header"
         app:itemIconTint="?attr/colorAccent"
         app:itemTextColor="?attr/colorPrimaryText"
+        app:itemShapeAppearanceOverlay="@style/GalgameDrawerItemShape"
+        app:itemShapeFillColor="@drawable/galgame_drawer_item_bg"
+        app:itemShapeInsetStart="10dp"
+        app:itemShapeInsetEnd="10dp"
+        app:itemShapeInsetTop="4dp"
+        app:itemShapeInsetBottom="4dp"
         android:background="?attr/colorSecondarySurface"
         app:menu="@menu/main_menu"/>
 </androidx.drawerlayout.widget.DrawerLayout>
