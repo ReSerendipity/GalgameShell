@@ -105,11 +105,15 @@ public class ContainersFragment extends Fragment {
             private final ImageView menuButton;
             private final ImageView imageView;
             private final TextView title;
+            private final TextView subtitle;
+            private final TextView badge;
 
             private ViewHolder(View view) {
                 super(view);
                 this.imageView = view.findViewById(R.id.ImageView);
                 this.title = view.findViewById(R.id.TVTitle);
+                this.subtitle = view.findViewById(R.id.TVSubtitle);
+                this.badge = view.findViewById(R.id.TVBadge);
                 this.runButton = view.findViewById(R.id.BTRun);
                 this.menuButton = view.findViewById(R.id.BTMenu);
             }
@@ -129,6 +133,24 @@ public class ContainersFragment extends Fragment {
             final Container item = data.get(position);
             holder.imageView.setImageResource(R.drawable.icon_container);
             holder.title.setText(item.getName());
+
+            // GalgameShell：副标题显示图形驱动 + 分辨率，让卡片信息更完整（消除简陋感）
+            String driver = item.getGraphicsDriver();
+            if (driver != null && driver.contains(",")) driver = driver.substring(0, driver.indexOf(','));
+            String screen = item.getScreenSize();
+            if (screen != null) screen = screen.replace('x', '×');
+            holder.subtitle.setText(((driver != null ? driver : "") + "  ·  " + (screen != null ? screen : "")).trim());
+
+            // 引擎 badge（从容器 extraData 读取 galgame_engine；非 galgame 容器隐藏）
+            String engine = item.getExtra("galgame_engine", "");
+            if (engine != null && !engine.isEmpty()) {
+                holder.badge.setVisibility(View.VISIBLE);
+                holder.badge.setText(engine);
+            }
+            else {
+                holder.badge.setVisibility(View.GONE);
+            }
+
             holder.runButton.setOnClickListener((view) -> runContainer(item));
             holder.menuButton.setOnClickListener((view) -> showListItemMenu(view, item));
         }

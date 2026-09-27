@@ -27,12 +27,21 @@
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="?attr/colorPrimaryVariant"
-                    android:text="@string/app_name" />
+                    android:text="@string/galgame_app_name" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="13sp"
+                    android:textColor="?attr/colorSecondaryText"
+                    android:text="@string/galgame_tagline" />
 
                 <TextView
                     android:id="@+id/TVWebpage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:textSize="14sp"
                     android:textColor="?attr/colorAccent" />
 
