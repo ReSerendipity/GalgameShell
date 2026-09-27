@@ -3,13 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- GalgameShell: 列表/网格入场 stagger 动画，复用 P6 的 galgame_layout_enter -->
     <androidx.recyclerview.widget.RecyclerView
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/RecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical"
-        app:layoutManager="LinearLayoutManager" />
+        app:layoutManager="LinearLayoutManager"
+        android:layoutAnimation="@anim/galgame_layout_enter" />
 
     <TextView
         android:id="@+id/TVEmptyText"
