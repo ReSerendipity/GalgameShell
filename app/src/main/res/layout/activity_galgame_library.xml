@@ -89,11 +89,11 @@
             android:padding="32dp"
             android:visibility="gone">
 
+            <!-- GalgameShell: 品牌占位插画（替换系统 ic_menu_gallery） -->
             <ImageView
                 android:layout_width="72dp"
                 android:layout_height="72dp"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:tint="#FFB9BFCC"
+                android:src="@drawable/galgame_placeholder"
                 android:contentDescription="@string/galgame_library_title" />
 
             <TextView
