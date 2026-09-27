@@ -301,6 +301,8 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             }
 
             if (type == FileInfo.Type.FILE) {
+                // GalgameShell：文件图标保留本色（真实文件位图），不用白描边
+                holder.imageView.clearColorFilter();
                 holder.imageView.setImageResource(R.drawable.container_file);
                 LoadIconTask loadIconTask = (LoadIconTask)holder.imageView.getTag();
                 if (loadIconTask != null) loadIconTask.cancel();
@@ -309,7 +311,11 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
                 loadIconTask.loadAsync(item);
                 holder.imageView.setTag(loadIconTask);
             }
-            else holder.imageView.setImageResource((Integer)getIconForFile(item));
+            else {
+                // GalgameShell：文件夹/盘符矢量图标着白色，落在品牌紫圆底盘上更清晰
+                holder.imageView.setColorFilter(android.graphics.Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN);
+                holder.imageView.setImageResource((Integer)getIconForFile(item));
+            }
 
             holder.imageView.setOnClickListener((v) -> openFile(item));
             holder.runButton.setOnClickListener((v) -> openFile(item));
