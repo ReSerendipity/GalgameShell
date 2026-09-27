@@ -83,7 +83,8 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
         if (itemDecoration == null) {
             Context context = getContext();
             itemDecoration = new DividerItemDecoration(context, DividerItemDecoration.VERTICAL);
-            itemDecoration.setDrawable(ContextCompat.getDrawable(context, R.drawable.list_item_divider));
+            // GalgameShell：列表项卡片化后改用透明间距，不再画可见分隔线
+            itemDecoration.setDrawable(ContextCompat.getDrawable(context, R.drawable.list_item_spacer));
         }
         return rootView;
     }

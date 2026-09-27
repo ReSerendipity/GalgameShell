@@ -1,70 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  文件/快捷方式列表项：Material 卡片（与容器卡片同一视觉语言），
+  颜色全部走主题属性，亮=白卡 / 深=紫黑卡。
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:gravity="center_vertical">
+    android:layout_marginLeft="12dp"
+    android:layout_marginRight="12dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="5dp"
+    app:cardBackgroundColor="?attr/colorSecondarySurface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp"
+    app:strokeColor="?attr/colorSecondaryVariant"
+    app:strokeWidth="1dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:clickable="true"
-        android:focusable="true"
-        android:layout_marginRight="12dp"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:id="@+id/ImageView"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
+        android:orientation="horizontal"
+        android:paddingLeft="14dp"
+        android:paddingRight="10dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:gravity="center_vertical">
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginRight="12dp"
+            android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/TVTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="?attr/colorPrimaryVariant"
-                android:textStyle="bold"
-                android:ellipsize="end"
-                android:maxLines="1" />
+            <ImageView
+                android:id="@+id/ImageView"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginRight="10dp" />
 
-            <TextView
-                android:id="@+id/TVSubtitle"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textColor="?attr/colorSecondaryText"
-                android:ellipsize="end"
-                android:maxLines="1" />
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/TVTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorPrimaryText"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:id="@+id/TVSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="?attr/colorSecondaryText"
+                    android:textSize="12sp"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                style="@style/LeftSideButton"
+                android:id="@+id/BTRun"
+                android:layout_marginRight="2dp"
+                android:src="@drawable/icon_run" />
+
+            <ImageView
+                style="@style/RightSideButton"
+                android:id="@+id/BTMenu"
+                android:layout_marginLeft="2dp"
+                android:src="@drawable/icon_list_item_menu" />
         </LinearLayout>
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <ImageView
-            style="@style/LeftSideButton"
-            android:id="@+id/BTRun"
-            android:layout_marginRight="2dp"
-            android:src="@drawable/icon_run" />
-
-        <ImageView
-            style="@style/RightSideButton"
-            android:id="@+id/BTMenu"
-            android:layout_marginLeft="2dp"
-            android:src="@drawable/icon_list_item_menu" />
-    </LinearLayout>
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

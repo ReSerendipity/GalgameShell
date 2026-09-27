@@ -40,6 +40,10 @@
 
     <!-- 导入即玩 (P1) -->
     <string name="galgame_import_title">导入游戏</string>
+
+    <!-- 外壳空态（容器页 / 文件管理器 / 快捷方式）：单 TextView 标题+提示一体 -->
+    <string name="galgame_empty_containers">还没有容器\n点击右上角的 +，导入或创建一个游戏容器</string>
+    <string name="galgame_empty_files">这里空空如也\n内容会以卡片形式显示在这里</string>
     <string name="galgame_import_pick_folder">选择游戏文件夹</string>
     <string name="galgame_import_hint">游戏文件夹路径（如 /sdcard/Download/MyGame）</string>
     <string name="galgame_import_detecting">正在识别引擎…</string>
