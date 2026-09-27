@@ -176,6 +176,9 @@ public class ShortcutsFragment extends BaseFileManagerFragment<Shortcut> {
             holder.imageView.setOnClickListener((v) -> runFromShortcut(item));
             holder.runButton.setOnClickListener((v) -> runFromShortcut(item));
             holder.menuButton.setOnClickListener((v) -> showListItemMenu(v, item));
+
+            // GalgameShell：点整行进入目录（文件夹）/ 启动快捷方式；子按钮各自消费点击，互不冲突
+            holder.itemView.setOnClickListener((v) -> runFromShortcut(item));
         }
 
         @Override
