@@ -560,5 +560,7 @@
         android:layout_gravity="right|bottom"
         android:tint="#ffffff"
         android:src="@drawable/icon_confirm"
-        android:layout_margin="16dp" />
+        android:layout_margin="16dp"
+        app:backgroundTint="#FF6A5AE0"
+        app:rippleColor="#FFFFFFFF" />
 </FrameLayout>
