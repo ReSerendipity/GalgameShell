@@ -14,8 +14,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import com.winlator.R;
+import com.winlator.SettingsFragment;
 import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 
@@ -26,12 +28,21 @@ public class ContentDialog extends Dialog {
     private Runnable onCancelCallback;
     private final View contentView;
 
+    // GalgameShell：与 AppUtils.setActivityTheme 同源判断（app_theme 偏好，外壳默认亮色）。
+    // 不用 attr 探测：attachBaseContext 的 createConfigurationContext 包裹会让 getTheme() 不可靠。
+    private static boolean isDarkTheme(Context context) {
+        int appTheme = PreferenceManager.getDefaultSharedPreferences(context)
+            .getInt("app_theme", SettingsFragment.APP_THEME_LIGHT);
+        return appTheme == SettingsFragment.APP_THEME_DARK;
+    }
+
     public ContentDialog(@NonNull Context context) {
         this(context, 0);
     }
 
     public ContentDialog(@NonNull Context context, int layoutResId) {
-        super(context, R.style.ContentDialog);
+        // GalgameShell：对话框主题独立于 Activity，按当前界面实际明暗选择亮/深两套品牌主题
+        super(context, isDarkTheme(context) ? R.style.ContentDialogDark : R.style.ContentDialog);
         contentView = LayoutInflater.from(context).inflate(R.layout.content_dialog, null);
 
         if (layoutResId > 0) {

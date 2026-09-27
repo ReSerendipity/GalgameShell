@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 抽屉菜单项选中底色：品牌紫 8% 透明 pill（配合 itemShapeAppearance 圆角） -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:color="#146A5AE0" />
+    <item android:color="#00000000" />
+</selector>

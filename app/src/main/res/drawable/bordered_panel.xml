@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  表单分组卡背景（FieldSet / CPU 列表 / 任务管理器 / 图片选择选中态）：
+  圆角卡片 + 主题化描边（亮=淡灰紫 / 深=紫黑描边）。
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <corners android:radius="4dp" />
-    <stroke android:width="1dp" android:color="?attr/colorPrimaryVariant" />
+    <corners android:radius="14dp" />
+    <solid android:color="?attr/colorSecondarySurface" />
+    <stroke android:width="1dp" android:color="?attr/colorSecondaryVariant" />
 </shape>

@@ -54,12 +54,13 @@
             android:layout_marginRight="16dp"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/TVMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/TVMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textColor="?attr/colorPrimaryText"
+                android:visibility="gone" />
     </LinearLayout>
 
     <EditText
@@ -126,7 +127,7 @@
                 android:id="@+id/BTCancel" />
 
             <Button
-                style="@style/ButtonNeutral"
+                style="@style/ButtonPositive"
                 android:text="@string/ok"
                 android:id="@+id/BTConfirm" />
         </LinearLayout>

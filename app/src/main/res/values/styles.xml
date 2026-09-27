@@ -70,6 +70,12 @@
         <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
     </style>
 
+    <!-- 抽屉菜单项 pill 圆角形状（Material NavigationView itemShapeAppearanceOverlay） -->
+    <style name="GalgameDrawerItemShape">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">14dp</item>
+    </style>
+
     <!-- GalgameShell 外壳主题：紫色品牌（与游戏库一致）+ 亮色界面，替代上游 AppThemeDark -->
     <style name="GalgameMainTheme" parent="@style/AppThemeBase">
         <item name="colorAccent">#FF6A5AE0</item>
@@ -180,7 +186,25 @@
     <style name="ContentDialog" parent="@android:style/Theme.Dialog">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="android:windowBackground">?attr/popupMenuBackground</item>
+        <!-- GalgameShell：上游 ?attr/popupMenuBackground 在本主题无解析来源（背景从未生效）。
+             对话框主题独立于 Activity，这里显式补齐品牌属性并按亮/深由代码选择 -->
+        <item name="android:windowBackground">@drawable/galgame_dialog_bg</item>
+        <item name="colorAccent">#FF6A5AE0</item>
+        <item name="colorPrimaryVariant">#FF6A5AE0</item>
+        <item name="colorSecondaryVariant">#FFE6E9F0</item>
+        <item name="colorPrimaryText">#FF1F2430</item>
+        <item name="colorSecondaryText">#FF6B7280</item>
+    </style>
+    <!-- GalgameShell：ContentDialog 深色档（ContentDialog 构造按 Activity 主题亮度选择） -->
+    <style name="ContentDialogDark" parent="@android:style/Theme.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@drawable/galgame_dialog_bg_dark</item>
+        <item name="colorAccent">#FF8B7BF0</item>
+        <item name="colorPrimaryVariant">#FF8B7BF0</item>
+        <item name="colorSecondaryVariant">#FF3A3950</item>
+        <item name="colorPrimaryText">#FFF2F3F7</item>
+        <item name="colorSecondaryText">#FF9CA3AF</item>
     </style>
     <style name="EditText">
         <item name="android:layout_width">match_parent</item>
@@ -234,7 +258,7 @@
     </style>
     <style name="ButtonNeutral" parent="BaseButton">
         <item name="android:background">@drawable/button_neutral</item>
-        <item name="android:textColor">#ffffff</item>
+        <item name="android:textColor">?attr/colorAccent</item>
     </style>
     <style name="ButtonPositive" parent="BaseButton">
         <item name="android:background">@drawable/button_positive</item>

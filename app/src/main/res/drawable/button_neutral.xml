@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:state_pressed="true" android:drawable="@drawable/button_neutral_pressed" />
-    <item android:state_focused="true" android:drawable="@drawable/button_neutral_normal" />
-    <item android:drawable="@drawable/button_neutral_normal" />
-</selector>
+<!--
+  次按钮：描边 + 按压涟漪（替代上游灰色 9-patch）。
+  颜色走主题属性：亮色档=白底紫描边，深色档=紫黑底浅紫描边。
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#336A5AE0">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSecondarySurface" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="?attr/colorPrimaryVariant" />
+        </shape>
+    </item>
+</ripple>
