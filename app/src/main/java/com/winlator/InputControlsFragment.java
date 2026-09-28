@@ -39,6 +39,8 @@ import com.winlator.inputcontrols.InputControlsManager;
 import com.winlator.widget.InputControlsView;
 import com.winlator.widget.SeekBar;
 
+import com.winlator.GalgameHost;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -225,8 +227,8 @@ public class InputControlsFragment extends Fragment {
     }
 
     private void downloadSelectedProfiles(final Spinner sProfile, String[] items, final ArrayList<Integer> positions) {
-        final MainActivity activity = (MainActivity)getActivity();
-        activity.preloaderDialog.show(R.string.downloading_file);
+        final GalgameHost activity = (GalgameHost)getActivity();
+        activity.getPreloaderDialog().show(R.string.downloading_file);
         currentProfile = null;
         final AtomicInteger processedItemCount = new AtomicInteger();
 
@@ -237,8 +239,8 @@ public class InputControlsFragment extends Fragment {
                 }
                 catch (JSONException e) {}
                 if (processedItemCount.incrementAndGet() == positions.size()) {
-                    activity.runOnUiThread(() -> {
-                        activity.preloaderDialog.close();
+                    requireActivity().runOnUiThread(() -> {
+                        activity.getPreloaderDialog().close();
                         loadProfileSpinner(sProfile);
                         updateLayout.run();
                     });
@@ -248,19 +250,19 @@ public class InputControlsFragment extends Fragment {
     }
 
     private void downloadProfileList(final Spinner sProfile) {
-        final MainActivity activity = (MainActivity)getActivity();
-        activity.preloaderDialog.show(R.string.loading);
-        HttpUtils.download(String.format(INPUT_CONTROLS_URL, "index.txt"), (content) -> activity.runOnUiThread(() -> {
-            activity.preloaderDialog.close();
+        final GalgameHost activity = (GalgameHost)getActivity();
+        activity.getPreloaderDialog().show(R.string.loading);
+        HttpUtils.download(String.format(INPUT_CONTROLS_URL, "index.txt"), (content) -> requireActivity().runOnUiThread(() -> {
+            activity.getPreloaderDialog().close();
             if (content != null) {
                 final String[] items = content.split("\n");
-                ContentDialog.showSelectionList(activity, R.string.import_profile, items, true, (positions) -> {
+                ContentDialog.showSelectionList(requireActivity(), R.string.import_profile, items, true, (positions) -> {
                     if (!positions.isEmpty()) {
-                        ContentDialog.confirm(activity, R.string.do_you_want_to_download_the_selected_profiles, () -> downloadSelectedProfiles(sProfile, items, positions));
+                        ContentDialog.confirm(requireActivity(), R.string.do_you_want_to_download_the_selected_profiles, () -> downloadSelectedProfiles(sProfile, items, positions));
                     }
                 });
             }
-            else AppUtils.showToast(activity, R.string.a_network_error_occurred);
+            else AppUtils.showToast(requireActivity(), R.string.a_network_error_occurred);
         }));
     }
 

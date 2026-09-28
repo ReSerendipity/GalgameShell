@@ -47,7 +47,8 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         public Bitmap coverBitmap;  // 解码后的位图缓存
         public boolean coverResolved;
 
-        Item(Container container, String label, String sub, File gameDir, File exe) {
+        // GalgameShell R2：构造器对包外开放（GalgameHomeFragment 在 com.winlator 重建列表项）
+        public Item(Container container, String label, String sub, File gameDir, File exe) {
             this.container = container;
             this.label = label;
             this.sub = sub;

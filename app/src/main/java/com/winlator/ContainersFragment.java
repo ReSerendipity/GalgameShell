@@ -31,6 +31,8 @@ import com.winlator.contentdialog.StorageInfoDialog;
 import com.winlator.core.PreloaderDialog;
 import com.winlator.xenvironment.RootFS;
 
+import com.winlator.GalgameHost;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -161,8 +163,9 @@ public class ContainersFragment extends Fragment {
         }
 
         private void showListItemMenu(View anchorView, Container container) {
-            MainActivity activity = (MainActivity)getActivity();
-            PopupMenu listItemMenu = new PopupMenu(activity, anchorView);
+            // GalgameShell R2：宿主契约化（抽屉壳 / 新底部导航壳共用）
+            GalgameHost activity = (GalgameHost)getActivity();
+            PopupMenu listItemMenu = new PopupMenu(getActivity(), anchorView);
             listItemMenu.inflate(R.menu.container_popup_menu);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) listItemMenu.setForceShowIcon(true);
 
@@ -193,7 +196,7 @@ public class ContainersFragment extends Fragment {
                         });
                         break;
                     case R.id.menu_item_info:
-                        (new StorageInfoDialog(activity, container)).show();
+                        (new StorageInfoDialog(getActivity(), container)).show();
                         break;
                 }
                 return true;

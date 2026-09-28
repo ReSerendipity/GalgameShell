@@ -25,6 +25,10 @@ import com.winlator.core.ImageUtils;
 import com.winlator.core.UnitUtils;
 import com.winlator.core.WineThemeManager;
 
+import com.winlator.GalgameHost;
+
+import androidx.fragment.app.FragmentActivity;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,17 +126,18 @@ public class ImagePickerView extends View implements View.OnClickListener {
 
         View browseButton = view.findViewById(R.id.BTBrowse);
         browseButton.setOnClickListener((v) -> {
-            MainActivity activity = (MainActivity)context;
+            // GalgameShell R2：宿主契约化（抽屉壳 / 新底部导航壳共用）
+            GalgameHost host = (GalgameHost)context;
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
-            activity.setOpenFileCallback((data) -> {
+            host.setOpenFileCallback((data) -> {
                 Bitmap bitmap = ImageUtils.getBitmapFromUri(context, data, 1280);
                 if (bitmap == null) return;
 
                 ImageUtils.save(bitmap, userWallpaperFile, Bitmap.CompressFormat.PNG, 100);
                 popupWindow[0].dismiss();
             });
-            activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+            ((FragmentActivity)context).startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
         });
 
         popupWindow[0] = AppUtils.showPopupWindow(anchor, view, 0, 200);

@@ -3,8 +3,8 @@ package com.winlator.xenvironment;
 import android.content.Context;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 
-import com.winlator.MainActivity;
 import com.winlator.R;
 import com.winlator.SettingsFragment;
 import com.winlator.container.Container;
@@ -44,7 +44,8 @@ public abstract class RootFSInstaller {
         }
     }
 
-    public static void install(final MainActivity activity) {
+    // GalgameShell R2：宿主契约化——参数由 MainActivity 降级为 FragmentActivity
+    public static void install(final FragmentActivity activity) {
         AppUtils.keepScreenOn(activity);
         RootFS rootFS = RootFS.find(activity);
         final File rootDir = rootFS.getRootDir();
@@ -77,7 +78,7 @@ public abstract class RootFSInstaller {
         });
     }
 
-    public static void installIfNeeded(final MainActivity activity) {
+    public static void installIfNeeded(final FragmentActivity activity) {
         RootFS rootFS = RootFS.find(activity);
         if (!rootFS.isValid() || rootFS.getVersion() < LATEST_VERSION) install(activity);
     }

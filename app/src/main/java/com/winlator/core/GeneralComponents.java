@@ -14,6 +14,10 @@ import com.winlator.R;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.xenvironment.RootFS;
 
+import com.winlator.GalgameHost;
+
+import androidx.fragment.app.FragmentActivity;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -272,7 +276,10 @@ public abstract class GeneralComponents {
         FileUtils.delete(tempDir);
     }
 
-    private static void openFileForInstall(final MainActivity activity, final Type type, final Spinner spinner, final String defaultItem) {
+    // GalgameShell R2：宿主契约化——参数由 MainActivity 降级为 GalgameHost
+    private static void openFileForInstall(final GalgameHost activity, final Type type, final Spinner spinner, final String defaultItem) {
+        // 宿主必为 FragmentActivity 实现；Context / startActivityForResult 走 fa
+        final FragmentActivity fa = (FragmentActivity)activity;
         activity.setOpenFileCallback((uri) -> {
             String path = FileUtils.getFilePathFromUri(uri);
             if (path == null) return;
@@ -282,7 +289,7 @@ public abstract class GeneralComponents {
                 switch (type) {
                     case SOUNDFONT: {
                         String filename = FileUtils.getName(path);
-                        File destination = new File(getComponentDir(type, activity), filename);
+                        File destination = new File(getComponentDir(type, fa), filename);
                         if (destination.isFile()) FileUtils.delete(destination);
                         if (FileUtils.copy(source, destination)) loadSpinner(type, spinner, parseDisplayText(type, filename), defaultItem);
                         break;
@@ -292,8 +299,8 @@ public abstract class GeneralComponents {
                         if (manifestData != null) {
                             JSONObject manifestJSONObject = new JSONObject(new String(manifestData));
                             String filename = manifestJSONObject.optString("name", manifestJSONObject.optString("libraryName", ""));
-                            File destination = new File(getComponentDir(type, activity), filename);
-                            if (destination.isDirectory()) FileUtils.delete(destination);
+                        File destination = new File(getComponentDir(type, fa), filename);
+                        if (destination.isDirectory()) FileUtils.delete(destination);
                             destination.mkdirs();
                             if (ZipUtils.extract(source, destination)) loadSpinner(type, spinner, filename, defaultItem);
                         }
@@ -310,7 +317,7 @@ public abstract class GeneralComponents {
                             JSONArray filesJSONArray = manifestJSONObject.optJSONArray("files");
 
                             if (contentType.equals(type.name()) && !identifier.isEmpty() && filesJSONArray != null) {
-                                installFromPackagedFile(activity, compressedType, type, source, identifier, filesJSONArray);
+                                installFromPackagedFile(fa, compressedType, type, source, identifier, filesJSONArray);
                                 loadSpinner(type, spinner, identifier, defaultItem);
                             }
                         }
@@ -324,7 +331,7 @@ public abstract class GeneralComponents {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
-        activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
+        fa.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
     }
 
     private static void showDownloadableListDialog(Type type, final Spinner spinner, final String defaultItem) {
@@ -361,7 +368,7 @@ public abstract class GeneralComponents {
                     showDownloadableListDialog(type, spinner, defaultItem);
                     break;
                 case FILE:
-                    openFileForInstall((MainActivity)context, type, spinner, defaultItem);
+                    openFileForInstall((GalgameHost)context, type, spinner, defaultItem);
                     break;
                 case BOTH:
                     PopupMenu popupMenu = new PopupMenu(context, v);
@@ -370,7 +377,7 @@ public abstract class GeneralComponents {
                     popupMenu.setOnMenuItemClickListener((menuItem) -> {
                         int itemId = menuItem.getItemId();
                         if (itemId == R.id.menu_item_open_file) {
-                            openFileForInstall((MainActivity)context, type, spinner, defaultItem);
+                            openFileForInstall((GalgameHost)context, type, spinner, defaultItem);
                         }
                         else if (itemId == R.id.menu_item_download_file) {
                             showDownloadableListDialog(type, spinner, defaultItem);
