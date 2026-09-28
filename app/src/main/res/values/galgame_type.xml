@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 设计系统：字阶 token（R1）。
+  五档：Display24 / Title18 / Body15 / Secondary13 / Caption11。
+  颜色一律走 ?attr 主题 token，禁硬编码。
+-->
+<resources>
+    <style name="GalTextDisplay" parent="@android:style/TextAppearance">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorPrimaryText</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <style name="GalTextTitle" parent="@android:style/TextAppearance">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorPrimaryText</item>
+    </style>
+
+    <style name="GalTextBody" parent="@android:style/TextAppearance">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">?attr/colorPrimaryText</item>
+    </style>
+
+    <style name="GalTextSecondary" parent="@android:style/TextAppearance">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">?attr/colorSecondaryText</item>
+    </style>
+
+    <style name="GalTextCaption" parent="@android:style/TextAppearance">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">?attr/colorSecondaryText</item>
+    </style>
+</resources>
