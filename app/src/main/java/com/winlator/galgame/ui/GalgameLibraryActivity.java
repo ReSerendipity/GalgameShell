@@ -168,6 +168,12 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     /** 启动游戏：复用官方 XServerDisplayActivity（A 路由容器）。 */
     private void launchGame(Container container) {
+        // B 修复（2026-09-28）：启动前校验启动 exe 是否落盘；缺失则提示并取消启动。
+        if (GalgameLaunchHelper.isExecMissing(container)) {
+            snack(getString(R.string.galgame_exe_missing));
+            return;
+        }
+
         // 友好提示：告知正在启动哪个游戏（现代 Snackbar 代替 Toast）
         snack(getString(R.string.galgame_launching, gameIdOf(container)));
 
@@ -364,10 +370,13 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                                 ".wine/drive_c/galgame/" + gameId);
                         saveManager.symlinkPortableSaves(stagedGameDir);
 
+                        // C 修复（2026-09-28）：拷贝完成但找不到启动 exe 时，明确告警而非假成功。
+                        final boolean exeFound = result.gameExe != null;
                         runOnUiThread(() -> {
                             setProgress(100, getString(R.string.galgame_import_step_done));
                             dismissProgressDialog();
-                            snackLong(getString(R.string.galgame_import_done));
+                            snackLong(exeFound ? getString(R.string.galgame_import_done)
+                                              : getString(R.string.galgame_import_no_exe));
                             refresh();
                         });
                     }
