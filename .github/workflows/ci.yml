@@ -63,5 +63,5 @@ jobs:
           rm -rf /tmp/stubs-out /tmp/check
           mkdir -p /tmp/stubs-out /tmp/check
           javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
-          javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check app/src/main/java/com/winlator/galgame/*.java app/src/main/java/com/winlator/galgame/ui/*.java
-          echo "OK: com.winlator.galgame (+ .ui) compiles clean (-Xlint:all)"
+          javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
+          echo "OK: com.winlator.galgame (whole tree) compiles clean (-Xlint:all)"

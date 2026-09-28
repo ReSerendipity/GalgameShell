@@ -16,4 +16,7 @@ public class Intent {
     public Intent putExtra(String name, boolean value) { return this; }
     public Intent putExtra(String name, int value) { return this; }
     public String getAction() { return null; }
+    public ComponentName getComponent() { return null; }
+    public Intent setComponent(ComponentName component) { return this; }
+    public static Intent makeRestartActivityTask(ComponentName mainActivityClassName) { return new Intent(); }
 }

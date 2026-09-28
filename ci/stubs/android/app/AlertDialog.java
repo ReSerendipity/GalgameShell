@@ -4,6 +4,8 @@ import android.content.DialogInterface;
 public class AlertDialog implements DialogInterface {
     public void show() {}
     public void dismiss() {}
+    public boolean isShowing() { return false; }
+    public android.view.Window getWindow() { return new android.view.Window(); }
     public static class Builder {
         public Builder(Context context) {}
         public Builder setTitle(CharSequence title) { return this; }
@@ -15,6 +17,8 @@ public class AlertDialog implements DialogInterface {
         public Builder setPositiveButton(CharSequence text, DialogInterface.OnClickListener l) { return this; }
         public Builder setPositiveButton(int textId, DialogInterface.OnClickListener l) { return this; }
         public Builder setNegativeButton(CharSequence text, DialogInterface.OnClickListener l) { return this; }
+        public Builder setNeutralButton(CharSequence text, DialogInterface.OnClickListener l) { return this; }
+        public Builder setNeutralButton(int textId, DialogInterface.OnClickListener l) { return this; }
         public Builder setNegativeButton(int textId, DialogInterface.OnClickListener l) { return this; }
         public Builder setCancelable(boolean cancelable) { return this; }
         public AlertDialog create() { return new AlertDialog(); }
