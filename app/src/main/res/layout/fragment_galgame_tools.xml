@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GalgameShell R2 工具 Tab：工具入口列表（快捷方式/输入控制/外部控制器/关于）。 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <ListView
+        android:id="@+id/galgameToolsList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="@null"
+        android:padding="8dp"
+        android:scrollbars="none" />
+</FrameLayout>

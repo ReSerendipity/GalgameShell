@@ -32,7 +32,15 @@
         android:allowAudioPlaybackCapture="true"
         android:label="@string/app_name">
 
+        <!-- GalgameShell R2：旧抽屉壳保留但不再作为 launcher（GalgameMainActivity 接管启动入口） -->
         <activity android:name="com.winlator.MainActivity"
+            android:theme="@style/GalgameMainTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
+
+        <!-- GalgameShell R2：新底部导航壳，启动即游戏库（游戏库/容器/工具/设置 4 Tab） -->
+        <activity android:name="com.winlator.GalgameMainActivity"
             android:theme="@style/GalgameMainTheme"
             android:exported="true"
             android:screenOrientation="sensor"
