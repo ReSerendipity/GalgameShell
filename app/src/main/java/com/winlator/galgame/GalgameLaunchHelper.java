@@ -5,7 +5,7 @@ import android.content.Intent;
 
 import com.winlator.container.Container;
 import com.winlator.core.FileUtils;
-import com.winlator.galgame.ui.GalgameLibraryActivity;
+import com.winlator.GalgameMainActivity;
 
 import org.json.JSONObject;
 
@@ -63,12 +63,35 @@ public final class GalgameLaunchHelper {
      *
      * 背景（2026-09-25 用户反馈）：上游 exit() 走 {@code AppUtils.restartApplication}，
      * 固定重启到 MainActivity（带 exec_path 时还会落到容器文件管理器），玩家打完一局
-     * 回不到游戏库。此处复用同一重启原语（makeRestartActivityTask + exit），仅把
-     * 任务根组件换成 GalgameLibraryActivity；非 galgame 容器不受影响。
+     * 回不到游戏库。此处复用同一重启原语（makeRestartActivityTask + exit），仅把任务根
+     * 组件换成 R 新壳 GalgameMainActivity（其 onCreate 默认选中游戏库 Tab）；非 galgame
+     * 容器不受影响。
      */
     public static void restartToLibrary(Activity activity) {
-        Intent library = new Intent(activity, GalgameLibraryActivity.class);
+        Intent library = new Intent(activity, GalgameMainActivity.class);
         activity.startActivity(Intent.makeRestartActivityTask(library.getComponent()));
         Runtime.getRuntime().exit(0);
+    }
+
+    /**
+     * 校验 galgame 容器的启动 exe 是否真实落盘（overlay 记录的 exe 文件存在）。
+     * overlay 存的是宿主绝对路径（见 {@link #readOverlayExe}），故直接按本地文件判定。
+     * 用于启动前拦截「exe 缺失」场景，避免静默弹回游戏库（见 {@link #injectExecPath}）。
+     */
+    public static boolean isExecPathPresent(Container container) {
+        String exe = readOverlayExe(container);
+        return exe != null && new File(exe).exists();
+    }
+
+    /**
+     * 启动前拦截判定：容器是 galgame 容器（带 galgame_overlay.json），但其记录的启动 exe
+     * 未落盘。此时若强行启动，wine 会跑空路径立即退出并经 {@link #restartToLibrary} 静默弹回
+     * 游戏库（这正是「打开游戏进不去」的根因）。true 表示应拦截并提示用户重新导入。
+     *
+     * <p>非 galgame 容器（无 overlay）一律返回 false —— 不拦截，普通 Winlator 容器照常走
+     * 文件管理器桌面，行为不变。
+     */
+    public static boolean isExecMissing(Container container) {
+        return isGalgameContainer(container) && !isExecPathPresent(container);
     }
 }

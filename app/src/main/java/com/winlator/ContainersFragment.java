@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.Toast;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -202,6 +203,14 @@ public class ContainersFragment extends Fragment {
         }
 
         private void runContainer(Container container) {
+            // B 修复（2026-09-28）：galgame 容器若启动 exe 缺失，提示并取消启动，
+            // 避免 wine 跑空路径立即退出后静默弹回游戏库（「打开游戏进不去」根因）。
+            // 非 galgame 容器（无 overlay）不拦截，照常走文件管理器。
+            if (com.winlator.galgame.GalgameLaunchHelper.isExecMissing(container)) {
+                Toast.makeText(getActivity(), getString(R.string.galgame_exe_missing), Toast.LENGTH_LONG).show();
+                return;
+            }
+
             Activity activity = getActivity();
             Intent intent = new Intent(activity, XServerDisplayActivity.class);
             intent.putExtra("container_id", container.id);

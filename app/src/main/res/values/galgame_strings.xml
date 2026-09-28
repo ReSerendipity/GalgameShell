@@ -22,6 +22,8 @@
     <string name="galgame_empty_title">游戏库还是空的</string>
     <string name="galgame_empty_hint">导入一个游戏文件夹，之后在封面墙上点一下就能直接启动</string>
     <string name="galgame_launching">正在启动「%1$s」…</string>
+    <string name="galgame_exe_missing">游戏文件缺失，请重新导入（容器未包含启动 exe）</string>
+    <string name="galgame_import_no_exe">已在容器内复制文件，但未找到启动 exe（无法自动定位启动程序）。请检查源文件夹结构：启动程序（如 SiglusEngine.exe / Game.EXE）应位于所选文件夹顶层，而非子目录内。</string>
     <string name="galgame_action_launch">启动</string>
     <string name="galgame_action_diagnose">诊断</string>
     <string name="galgame_action_export_save">导出存档</string>
