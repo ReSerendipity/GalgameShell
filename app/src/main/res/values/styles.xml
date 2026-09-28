@@ -5,6 +5,11 @@
         <item name="tabTextColor">?attr/colorSecondaryText</item>
         <item name="android:windowBackground">?attr/colorPrimarySurface</item>
         <item name="android:colorBackground">?attr/colorPrimarySurface</item>
+        <!-- GalgameShell：在公共祖先补 Material Components 基础属性，消除所有派生主题下 Material 控件
+             （底部导航/FAB/Snackbar）inflate 时反复刷屏的 "Failed to resolve attribute colorOnSurface" 告警；
+             引用既有 token，亮/深档随子主题自动继承 -->
+        <item name="colorSurface">?attr/colorPrimarySurface</item>
+        <item name="colorOnSurface">?attr/colorPrimaryText</item>
         <item name="android:textViewStyle">@style/TextView</item>
         <item name="android:checkboxStyle">@style/CheckBox</item>
         <item name="android:listPopupWindowStyle">@style/ListPopupWindow</item>
@@ -61,6 +66,10 @@
         <!-- 现代过渡：界面切换淡入淡出，并启用内容转场 -->
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
         <item name="android:windowActivityTransitions">true</item>
+        <!-- GalgameShell：补 Material Components 属性，消除该主题下 Material 控件 inflate 时
+             "Failed to resolve attribute colorOnSurface" 的反复告警 -->
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF1F2430</item>
     </style>
 
     <style name="GalgameWindowAnim" parent="@android:style/Animation.Activity">
@@ -104,6 +113,10 @@
         <item name="colorHairline">#FFEAEAF2</item>
         <item name="colorTextDisabled">#FFB6BCC8</item>
         <item name="colorOnAccent">#FFFFFFFF</item>
+        <!-- GalgameShell：补 Material Components 属性（库已声明 attr，主题此前未给值），消除底部导航/FAB/Snackbar
+             等控件 inflate 时反复刷屏的 "Failed to resolve attribute colorOnSurface" 告警 -->
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF1F2430</item>
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
     </style>
 
@@ -133,6 +146,9 @@
         <item name="colorHairline">#FF33324A</item>
         <item name="colorTextDisabled">#FF6B7280</item>
         <item name="colorOnAccent">#FFFFFFFF</item>
+        <!-- GalgameShell：补 Material Components 属性，消除 "Failed to resolve attribute colorOnSurface" 反复告警 -->
+        <item name="colorSurface">#FF232230</item>
+        <item name="colorOnSurface">#FFF2F3F7</item>
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
     </style>
 
