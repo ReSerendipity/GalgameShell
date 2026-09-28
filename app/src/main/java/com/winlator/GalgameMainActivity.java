@@ -107,7 +107,8 @@ public class GalgameMainActivity extends AppCompatActivity implements GalgameHos
             showTabFragment(new GalgameToolsFragment(), true, R.string.galgame_tools_title);
         }
         else if (itemId == R.id.nav_galgame_settings) {
-            showTabFragment(new SettingsFragment(), true, R.string.settings);
+            // GalgameShell R3：设置 Tab 改用自有 GalgameSettingsFragment（解耦上游抽屉 IA）
+            showTabFragment(new GalgameSettingsFragment(), true, R.string.settings);
         }
         return true;
     }
