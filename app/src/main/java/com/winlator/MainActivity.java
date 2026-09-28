@@ -32,7 +32,7 @@ import com.winlator.core.LocaleHelper;
 import com.winlator.core.PreloaderDialog;
 import com.winlator.xenvironment.RootFSInstaller;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, GalgameHost {
     public static final boolean DEBUG_MODE = false; // FIXME change to false
     public static final @IntRange(from = 1, to = 19) byte CONTAINER_PATTERN_COMPRESSION_LEVEL = 9;
     public static final byte PERMISSION_WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 1;
@@ -144,6 +144,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void setOpenFileCallback(Callback<Uri> openFileCallback) {
         this.openFileCallback = openFileCallback;
+    }
+
+    // GalgameShell R2：实现 GalgameHost 契约（抽屉壳与新底部导航壳共用）
+    @Override
+    public PreloaderDialog getPreloaderDialog() {
+        return preloaderDialog;
     }
 
     private boolean requestAppPermissions() {
