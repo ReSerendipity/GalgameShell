@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -84,11 +83,9 @@ public class ContainersFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         if (menuItem.getItemId() == R.id.menu_item_add) {
             if (!RootFS.find(getContext()).isValid()) return false;
-            FragmentManager fragmentManager = getParentFragmentManager();
-            fragmentManager.beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.FLFragmentContainer, new ContainerDetailFragment())
-                .commit();
+            // GalgameShell R4：经 GalgameHost 路由到正确 Fragment 容器（新壳 galgameFragmentContainer /
+            // 旧壳 FLFragmentContainer），避免硬编码 R.id.FLFragmentContainer 在新壳布局中不存在而崩溃
+            ((GalgameHost)getActivity()).showFragment(new ContainerDetailFragment());
             return true;
         }
         else if (menuItem.getItemId() == R.id.menu_item_galgame_library) {
