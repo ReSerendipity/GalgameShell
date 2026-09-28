@@ -10,10 +10,10 @@
         android:title="@string/containers" />
     <item
         android:id="@+id/nav_galgame_tools"
-        android:icon="@android:drawable/ic_menu_manage"
+        android:icon="@drawable/ic_galgame_tools"
         android:title="@string/galgame_tools_title" />
     <item
         android:id="@+id/nav_galgame_settings"
-        android:icon="@android:drawable/ic_menu_preferences"
+        android:icon="@drawable/ic_galgame_settings"
         android:title="@string/settings" />
 </menu>
