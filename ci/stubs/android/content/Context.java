@@ -10,4 +10,5 @@ public abstract class Context {
     public String getString(int resId) { return ""; }
     public String getString(int resId, Object... formatArgs) { return ""; }
     public SharedPreferences getSharedPreferences(String name, int mode) { return null; }
+    public Context getApplicationContext() { return this; }
 }

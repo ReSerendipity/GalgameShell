@@ -21,4 +21,6 @@ public class Activity extends Context {
     public AssetManager getAssets() { return null; }
     public PackageManager getPackageManager() { return null; }
     public String getPackageName() { return ""; }
+    public Context getApplicationContext() { return null; }
+    public void overridePendingTransition(int enterAnim, int exitAnim) {}
 }
