@@ -182,6 +182,13 @@ public class GalgameHomeFragment extends Fragment {
 
     /** 启动游戏：复用官方 XServerDisplayActivity（A 路由容器）。 */
     private void launchGame(Container container) {
+        // B 修复（2026-09-28）：启动前校验启动 exe 是否落盘；缺失则提示并取消启动，
+        // 避免 wine 跑空路径立即退出后静默弹回游戏库（「打开游戏进不去」根因）。
+        if (GalgameLaunchHelper.isExecMissing(container)) {
+            snack(getString(R.string.galgame_exe_missing));
+            return;
+        }
+
         snack(getString(R.string.galgame_launching, gameIdOf(container)));
 
         Intent intent = new Intent(requireActivity(), XServerDisplayActivity.class);
@@ -378,10 +385,14 @@ public class GalgameHomeFragment extends Fragment {
                                 ".wine/drive_c/galgame/" + gameId);
                         saveManager.symlinkPortableSaves(stagedGameDir);
 
+                        // C 修复（2026-09-28）：拷贝完成但找不到启动 exe 时，明确告警而非假成功。
+                        // 否则 overlay 无 exe → 启动静默弹回文件管理器（或经 B 修复拦截），用户无从知晓。
+                        final boolean exeFound = result.gameExe != null;
                         host.runOnUiThread(() -> {
                             setProgress(100, getString(R.string.galgame_import_step_done));
                             dismissProgressDialog();
-                            snackLong(getString(R.string.galgame_import_done));
+                            snackLong(exeFound ? getString(R.string.galgame_import_done)
+                                              : getString(R.string.galgame_import_no_exe));
                             refresh();
                         });
                     }
