@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 设计系统：组件样式（R1）。
+  自有屏统一弃用上游 FieldSet 范式，改用语义 token（?attr）+ 圆角卡。
+  所有颜色一律 ?attr 引用主题 token，禁硬编码。
+-->
+<resources>
+    <!-- 顶部品牌工具栏（替代上游 Toolbar 范式） -->
+    <style name="GalToolbar" parent="@android:style/Widget.Toolbar">
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:minHeight">?attr/actionBarSize</item>
+        <item name="titleTextColor">?attr/colorOnAccent</item>
+        <item name="android:titleTextAppearance">@style/GalTextTitle</item>
+    </style>
+
+    <!-- 分区标题（小号、accent 色、字距收紧） -->
+    <style name="GalSectionHeader">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/colorAccent</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:paddingTop">@dimen/gal_space_4</item>
+        <item name="android:paddingBottom">@dimen/gal_space_2</item>
+        <item name="android:paddingStart">@dimen/gal_space_2</item>
+    </style>
+
+    <!-- 圆角卡（主题感知：填充=colorSecondarySurface，描边=colorSecondaryVariant；?attr 在活动上下文可靠） -->
+    <style name="GalCard">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/galgame_card_bg</item>
+        <item name="android:padding">@dimen/gal_space_4</item>
+    </style>
+
+    <!-- 设置行容器（标题+说明+控件横向排布） -->
+    <style name="GalSettingRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingStart">@dimen/gal_space_4</item>
+        <item name="android:paddingEnd">@dimen/gal_space_4</item>
+    </style>
+
+    <!-- 主操作按钮（复用品牌紫 button_positive，文字转 on_accent） -->
+    <style name="GalPrimaryButton" parent="@style/BaseButton">
+        <item name="android:background">@drawable/button_positive</item>
+        <item name="android:textColor">?attr/colorOnAccent</item>
+    </style>
+
+    <!-- 标签 chip（pill，填充=colorSurfaceVariant，文字=colorAccent） -->
+    <style name="GalChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/galgame_chip_pill</item>
+        <item name="android:textColor">?attr/colorAccent</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/gal_space_3</item>
+        <item name="android:paddingEnd">@dimen/gal_space_3</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- 空态容器（图标+文案居中） -->
+    <style name="GalEmptyState">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">@dimen/gal_space_8</item>
+    </style>
+
+    <!-- 底部导航（4 Tab，背景=colorSecondarySurface；R2 精细化 item 色调） -->
+    <style name="GalBottomNav">
+        <item name="android:background">?attr/colorSecondarySurface</item>
+        <item name="android:elevation">@dimen/gal_space_1</item>
+    </style>
+</resources>

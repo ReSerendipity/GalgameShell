@@ -99,6 +99,11 @@
         <item name="android:windowBackground">#FFF7F8FC</item>
         <item name="android:colorBackground">#FFF7F8FC</item>
         <item name="android:statusBarColor">#FF4B3DBF</item>
+        <!-- GalgameShell R1 语义 token（亮档） -->
+        <item name="colorSurfaceVariant">#FFF2F4FA</item>
+        <item name="colorHairline">#FFEAEAF2</item>
+        <item name="colorTextDisabled">#FFB6BCC8</item>
+        <item name="colorOnAccent">#FFFFFFFF</item>
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
     </style>
 
@@ -123,6 +128,11 @@
         <item name="android:windowBackground">#FF17161F</item>
         <item name="android:colorBackground">#FF17161F</item>
         <item name="android:statusBarColor">#FF23203F</item>
+        <!-- GalgameShell R1 语义 token（深档） -->
+        <item name="colorSurfaceVariant">#FF2A2938</item>
+        <item name="colorHairline">#FF33324A</item>
+        <item name="colorTextDisabled">#FF6B7280</item>
+        <item name="colorOnAccent">#FFFFFFFF</item>
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
     </style>
 

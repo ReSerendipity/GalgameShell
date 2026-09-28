@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 设计系统：间距 / 圆角 token（R1）。
+  间距梯度 4–32dp；圆角 16/20/24。弃用上游随屏各造的魔数。
+-->
+<resources>
+    <!-- 间距梯度 -->
+    <dimen name="gal_space_1">4dp</dimen>
+    <dimen name="gal_space_2">8dp</dimen>
+    <dimen name="gal_space_3">12dp</dimen>
+    <dimen name="gal_space_4">16dp</dimen>
+    <dimen name="gal_space_5">20dp</dimen>
+    <dimen name="gal_space_6">24dp</dimen>
+    <dimen name="gal_space_8">32dp</dimen>
+
+    <!-- 圆角 -->
+    <dimen name="gal_radius_sm">16dp</dimen>
+    <dimen name="gal_radius_md">20dp</dimen>
+    <dimen name="gal_radius_lg">24dp</dimen>
+</resources>

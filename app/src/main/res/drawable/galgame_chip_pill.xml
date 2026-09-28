@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GalgameShell chip 背景（R1 设计系统）：pill，填充=colorSurfaceVariant（主题感知）。
+     与 P 系列 galgame_chip_bg（8dp 圆角、硬编码）区分，自有屏专用。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="?attr/colorSurfaceVariant" />
+    <corners android:radius="999dp" />
+</shape>

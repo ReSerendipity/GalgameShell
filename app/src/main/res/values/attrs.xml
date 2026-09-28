@@ -8,6 +8,10 @@
     <attr name="colorPrimaryText" format="color" />
     <attr name="colorSecondaryText" format="color" />
     <attr name="colorSecondarySurface" format="color" />
+    <attr name="colorSurfaceVariant" format="color" />
+    <attr name="colorHairline" format="color" />
+    <attr name="colorTextDisabled" format="color" />
+    <attr name="colorOnAccent" format="color" />
     <attr name="toolboxBackground" format="reference" />
     <attr name="preloaderBackground" format="reference" />
     <attr name="progressBarIndeterminateImage" format="reference" />
