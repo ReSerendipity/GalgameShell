@@ -57,9 +57,14 @@ public class GalgameToolsFragment extends Fragment {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                // GalgameShell R5：super.getView() 会用 ToolEntry.toString() 填 R.id.title，
+                // 须显式写入 title 字段，否则行内显示对象哈希串
                 View row = super.getView(position, convertView, parent);
+                ToolEntry entry = entries.get(position);
                 ImageView icon = row.findViewById(R.id.icon);
-                icon.setImageResource(entries.get(position).icon);
+                icon.setImageResource(entry.icon);
+                TextView title = row.findViewById(R.id.title);
+                title.setText(entry.title);
                 return row;
             }
         });
