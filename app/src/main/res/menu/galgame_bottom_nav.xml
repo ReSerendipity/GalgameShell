@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_galgame_library"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="@string/galgame_library_title" />
+    <item
+        android:id="@+id/nav_galgame_containers"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="@string/containers" />
+    <item
+        android:id="@+id/nav_galgame_tools"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="@string/galgame_tools_title" />
+    <item
+        android:id="@+id/nav_galgame_settings"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/settings" />
+</menu>

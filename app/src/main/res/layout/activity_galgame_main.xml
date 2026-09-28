@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell R2 底部导航壳布局：顶部 AppBar（分区标题）+ 内容容器 + 底部导航 4 Tab。
+  启动即游戏库（首页 Tab 隐藏顶部 AppBar，库自带品牌头部）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/galgameToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="#FFFFFFFF" />
+
+    <FrameLayout
+        android:id="@+id/galgameFragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="?android:attr/colorBackground" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/galgameBottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/colorBackground"
+        app:menu="@menu/galgame_bottom_nav"
+        app:itemIconTint="@color/galgame_nav_item"
+        app:itemTextColor="@color/galgame_nav_item"
+        app:labelVisibilityMode="labeled" />
+
+</LinearLayout>

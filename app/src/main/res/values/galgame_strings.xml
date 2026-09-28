@@ -8,6 +8,9 @@
     <string name="galgame_app_name">GalgameShell</string>
     <string name="galgame_tagline">GalGame Android Shell (Winlator-based)</string>
 
+    <!-- 底部导航 Tab -->
+    <string name="galgame_tools_title">工具</string>
+
     <!-- 通用 -->
     <string name="galgame_ok">确定</string>
     <string name="galgame_cancel">取消</string>

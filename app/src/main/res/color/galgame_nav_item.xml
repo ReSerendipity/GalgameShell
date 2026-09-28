@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 底部导航选中/未选中配色：选中跟随品牌强调色，未选中跟随禁用文字色。
+  两个 token 均在 GalgameMainTheme / GalgameMainThemeDark 中定义。
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorAccent" android:state_checked="true" />
+    <item android:color="?attr/colorTextDisabled" android:state_checked="false" />
+</selector>

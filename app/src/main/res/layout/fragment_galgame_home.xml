@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  游戏库首页 Fragment 布局（R2）：结构同 activity_galgame_library，但 FAB / 空态按钮
+  backgroundTint 改为 ?attr/colorAccent、根背景改为 ?android:attr/colorBackground，
+  消除 P11「硬编码品牌紫」例外，使库随 app_theme（亮/深）自适应。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- 顶栏（品牌头部，首页 Tab 隐藏壳的 AppBar 故此处自承标题） -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/galgame_header_bg"
+            android:elevation="6dp"
+            android:paddingStart="18dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp">
+
+            <ImageView
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/galgame_placeholder"
+                android:tint="#FFFFFFFF"
+                android:contentDescription="@string/galgame_app_name" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/galgame_library_title"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFFFF" />
+
+                <TextView
+                    android:id="@+id/TVSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="12sp"
+                    android:textColor="#D9FFFFFF" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/BTAbout"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_info_details"
+                android:tint="#FFFFFFFF"
+                android:contentDescription="@string/galgame_about" />
+        </LinearLayout>
+
+        <!-- 网格封面墙 -->
+        <GridView
+            android:id="@+id/GVGalgames"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:numColumns="auto_fit"
+            android:columnWidth="150dp"
+            android:horizontalSpacing="12dp"
+            android:verticalSpacing="12dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="92dp"
+            android:clipToPadding="false"
+            android:scrollbars="none"
+            android:stretchMode="columnWidth"
+            android:layoutAnimation="@anim/grid_layout_animation" />
+
+        <!-- 空态：图标 + 友好文案 + 行动按钮 -->
+        <LinearLayout
+            android:id="@+id/LEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@drawable/galgame_placeholder"
+                android:contentDescription="@string/galgame_library_title" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="@string/galgame_empty_title"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/galgame_empty_hint"
+                android:textSize="13sp"
+                android:lineSpacingExtra="3dp"
+                android:textColor="?android:attr/textColorSecondary" />
+
+            <Button
+                android:id="@+id/BTImportEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp"
+                android:text="@string/galgame_import_title"
+                android:textColor="#FFFFFFFF"
+                android:backgroundTint="?attr/colorAccent" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 导入 FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/FABImport"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_input_add"
+        app:tint="#FFFFFFFF"
+        app:backgroundTint="?attr/colorAccent"
+        app:rippleColor="#FFFFFFFF"
+        android:contentDescription="@string/galgame_import_title" />
+
+</FrameLayout>
