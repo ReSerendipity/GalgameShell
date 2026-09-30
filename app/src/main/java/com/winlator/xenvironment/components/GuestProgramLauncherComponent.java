@@ -100,6 +100,12 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         envVars.put("BOX64_LD_LIBRARY_PATH", rootDir+"/lib/x86_64-linux-gnu");
         envVars.put("ANDROID_SYSVSHM_SERVER", rootDir+UnixSocketConfig.SYSVSHM_SERVER_PATH);
 
+        // GalgameShell: heal shim. Some kernels (e.g. ColorOS on 39-bit VA devices) refuse to add
+        // PROT_EXEC to wine's PE file mappings with EACCES; libmpshim rebuilds those mappings so
+        // Windows programs can start. Injected only when the library is actually installed.
+        File shim = new File(environment.getContext().getApplicationInfo().nativeLibraryDir, "libmpshim.so");
+        if (shim.isFile()) envVars.put("LD_PRELOAD", shim.getAbsolutePath());
+
         if (this.envVars != null) envVars.putAll(this.envVars);
 
         File shmDir = new File(rootDir, "/tmp/shm");
