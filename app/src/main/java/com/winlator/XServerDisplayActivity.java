@@ -525,7 +525,18 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             if (container.getHUDMode() == FrameRating.Mode.FULL.ordinal()) envVars.put("X11_WND_GPU_INFO", "1");
 
             String desktopName = shortcut != null || getIntent().hasExtra("exec_path") ? "nogui" : "shell";
-            String guestExecutable = "wine explorer /desktop="+desktopName+","+xServer.screenInfo+" "+getWineStartCommand();
+            // GalgameShell: run the game exe directly in nogui mode. The previous chain
+            // (explorer -> winhandler.exe -> CreateProcess) hung on guest-initiated WOW64
+            // creation of 32-bit games under box32; the direct `wine <exe>` path is proven
+            // to work. Keep the game's own folder as cwd so data/DLL lookups succeed.
+            String guestExecutable;
+            if (shortcut == null && getIntent().hasExtra("exec_path")) {
+                guestExecutable = "wine "+getIntent().getStringExtra("exec_path");
+                File exeFile = new File(getIntent().getStringExtra("exec_path"));
+                guestProgramLauncherComponent.setWorkingDirOverride(exeFile.getParentFile());
+            } else {
+                guestExecutable = "wine explorer /desktop="+desktopName+","+xServer.screenInfo+" "+getWineStartCommand();
+            }
             guestProgramLauncherComponent.setGuestExecutable(guestExecutable);
 
             envVars.putAll(container.getEnvVars());

@@ -29,7 +29,11 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
     private EnvVars envVars;
     private String box64Preset = Box64Preset.CONSERVATIVE;
     private Callback<Integer> terminationCallback;
+    private File workingDirOverride;
     private static final Object lock = new Object();
+
+    /** GalgameShell: run the guest with its own folder as cwd (game data/DLL lookups). */
+    public void setWorkingDirOverride(File dir) { this.workingDirOverride = dir; }
 
     @Override
     public void start() {
@@ -113,7 +117,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
 
         String command = rootDir+"/usr/local/bin/box64 "+guestExecutable;
 
-        return ProcessHelper.exec(command, envVars, rootDir, (status) -> {
+        return ProcessHelper.exec(command, envVars, workingDirOverride != null ? workingDirOverride : rootDir, (status) -> {
             synchronized (lock) {
                 pid = -1;
             }
