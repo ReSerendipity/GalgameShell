@@ -25,6 +25,11 @@ public final class EngineDetector {
         RENPY(Route.B, "JoiPlay"),          // cyou.joiplay (+ renpy 插件)
         TYRANO(Route.B, "Tyranor"),         // com.akira.tyranoemu
         ONSCRIPTER(Route.B, "ONScripter"),  // jp.ogapee.onscripter.release
+        RPGMAKER2K(Route.B, "EasyRPG"),     // org.easyrpg.player（RPG Maker 2000/2003）
+        RPGMAKERRGSS(Route.B, "JoiPlay"),   // XP/VX/VX Ace：.rgssad/.rgss2a/.rgss3a
+        RPGMAKERMV(Route.B, "JoiPlay"),     // MV/MZ：www/ + data/（JoiPlay 插件）
+        WOLFRPG(Route.B, "JoiPlay"),        // Data/*.wolf
+        PSP(Route.B, "PPSSPP"),             // PSP_GAME/ 或 .cso（大量 galgame 的 PSP 移植）
         SIGLUS(Route.A, null),
         YURIS(Route.A, null),
         ARTEMIS(Route.A, null),
@@ -101,6 +106,26 @@ public final class EngineDetector {
                     || "00.txt".equalsIgnoreCase(name) || "nscr_sec.dat".equalsIgnoreCase(name)
                     || name.endsWith(".nsa")) {
                 return Engine.ONSCRIPTER;
+            }
+            // RPG Maker 2000/2003 → EasyRPG Player
+            if ("rpg_rt.exe".equalsIgnoreCase(name) || "rpg_rt.ldb".equalsIgnoreCase(name)) {
+                return Engine.RPGMAKER2K;
+            }
+            // RPG Maker XP/VX/VX Ace/MV/MZ（JoiPlay 插件）
+            if (name.toLowerCase().endsWith(".rgssad") || name.toLowerCase().endsWith(".rgss2a")
+                    || name.toLowerCase().endsWith(".rgss3a") || name.toLowerCase().endsWith(".rvdata2")) {
+                return Engine.RPGMAKERRGSS;
+            }
+            if (f.isDirectory() && "www".equalsIgnoreCase(name) && f.listFiles() != null
+                    && hasSubDir(f.listFiles(), "data")) {
+                return Engine.RPGMAKERMV;
+            }
+            // Wolf RPG Editor（JoiPlay 插件）
+            if (name.toLowerCase().endsWith(".wolf")) return Engine.WOLFRPG;
+            // PSP 镜像解包目录 / 压缩镜像 → PPSSPP
+            if (f.isDirectory() && "psp_game".equalsIgnoreCase(name)) return Engine.PSP;
+            if (name.toLowerCase().endsWith(".cso") || name.toLowerCase().endsWith(".pbp")) {
+                return Engine.PSP;
             }
         }
         // 3) A 路由可执行名（RK-11：启发式，待样本校准）
