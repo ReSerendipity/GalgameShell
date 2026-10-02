@@ -34,24 +34,37 @@ public final class NativeRouteLauncher {
     /** 一个原生播放器目标。 */
     public static final class Target {
         public final String id;
-        public final String packageName;
+        public final String[] packageNames; // 多变体包名（官方/社区重打包包名不同），依次尝试
         public final String displayName;
         public final int tier;
         public final String scanDir;   // 约定扫描目录（相对 /sdcard，可为 null）
         public final String note;
 
         Target(String id, String packageName, String displayName, int tier, String scanDir, String note) {
+            this(id, new String[]{packageName}, displayName, tier, scanDir, note);
+        }
+
+        Target(String id, String[] packageNames, String displayName, int tier, String scanDir, String note) {
             this.id = id;
-            this.packageName = packageName;
+            this.packageNames = packageNames;
             this.displayName = displayName;
             this.tier = tier;
             this.scanDir = scanDir;
             this.note = note;
         }
+
+        /** 首个包名（用于展示/日志）。 */
+        public String getPackageName() { return packageNames[0]; }
     }
 
     public static final Target KIRIKIROID2 = new Target(
-            "kirikiroid2", "org.tvp.kirikiri2", "Kirikiroid2", TIER_OPEN_SOURCE, null,
+            "kirikiroid2",
+            new String[]{
+                    "org.tvp.kirikiri2",                          // 官方原版
+                    "org.github.krkr2",                           // 中文社区版 1.4.4
+                    "org.tvp.kirikiri2_yuri_debloated_10309"      // debloat v1.2-pre（yuri 1.4.1，安卓 14）
+            },
+            "Kirikiroid2", TIER_OPEN_SOURCE, null,
             "在 App 内点选 data.xp3 启动；支持解密");
     public static final Target ONSCRIPTER = new Target(
             "onscripter", "jp.ogapee.onscripter.release", "ONScripter", TIER_OPEN_SOURCE, "ons",
@@ -123,7 +136,7 @@ public final class NativeRouteLauncher {
             message = "Tier-2 闭源播放器（" + t.displayName + "）需在设置中显式开启并同意免责声明";
         }
         else if (!installed) {
-            message = "未检测到 " + t.displayName + "，请先安装（" + t.packageName + "）";
+            message = "未检测到 " + t.displayName + "，请先安装（" + t.getPackageName() + "）";
         }
         else if (scanDir != null) {
             message = "将把游戏复制到 " + scanDir.getAbsolutePath() + " 后唤起 " + t.displayName;
@@ -139,22 +152,39 @@ public final class NativeRouteLauncher {
     public static boolean isInstalled(Context context, Target target) {
         if (context == null || target == null) return false;
         try {
-            return context.getPackageManager().getLaunchIntentForPackage(target.packageName) != null;
+            for (String pkg : target.packageNames) {
+                if (context.getPackageManager().getLaunchIntentForPackage(pkg) != null) return true;
+            }
+            return false;
         }
         catch (Exception e) {
             return false;
         }
     }
 
+    /** 目标播放器实际安装的包名（未安装返回 null）。 */
+    public static String installedPackage(Context context, Target target) {
+        if (context == null || target == null) return null;
+        try {
+            for (String pkg : target.packageNames) {
+                if (context.getPackageManager().getLaunchIntentForPackage(pkg) != null) return pkg;
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     /** 仅唤起目标 App（无公开一键 Intent，具体加载由用户在 App 内完成）。 */
     public static boolean launch(Context context, Target target) {
         if (context == null || target == null) return false;
         try {
-            Intent intent = context.getPackageManager().getLaunchIntentForPackage(target.packageName);
-            if (intent == null) return false;
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-            return true;
+            for (String pkg : target.packageNames) {
+                Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkg);
+                if (intent == null) continue;
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                return true;
+            }
+            return false;
         }
         catch (Exception e) {
             return false;
