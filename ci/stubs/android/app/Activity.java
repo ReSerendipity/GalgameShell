@@ -1,6 +1,7 @@
 package android.app;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ public class Activity extends Context {
     public AssetManager getAssets() { return null; }
     public PackageManager getPackageManager() { return null; }
     public String getPackageName() { return ""; }
+    public ApplicationInfo getApplicationInfo() { return null; }
     public Context getApplicationContext() { return null; }
     public void overridePendingTransition(int enterAnim, int exitAnim) {}
 }

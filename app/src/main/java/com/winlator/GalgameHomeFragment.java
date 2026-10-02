@@ -45,6 +45,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.winlator.galgame.engine.BuiltinEngine;
+import com.winlator.galgame.engine.BuiltinEngineRegistry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -483,6 +486,16 @@ public class GalgameHomeFragment extends Fragment {
     // ---- B 路由对话框（Tier 分层 + 免责）----
 
     private void showNativeRouteDialog(final ImportFlow.ImportResult result, final File source) {
+        // GalgameShell：内置原生引擎优先——检测到对应引擎且运行时已随包打包时，
+        // 直接用集成在我们自己 APK 里的引擎跑，不再唤起/安装第三方播放器。
+        BuiltinEngine builtin = BuiltinEngineRegistry.resolve(result.engine);
+        if (builtin != null && builtin.isAvailable(requireContext())) {
+            if (builtin.launch(requireContext(), source)) return;
+            Snackbar.make(requireView(), "内置引擎启动失败：" + builtin.displayName,
+                    Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
         final NativeRouteLauncher.Plan plan =
                 NativeRouteLauncher.plan(requireContext(), result.engine, GalgameSettings.isTier2Enabled(requireContext()));
 

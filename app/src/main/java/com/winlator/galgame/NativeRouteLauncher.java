@@ -62,7 +62,9 @@ public final class NativeRouteLauncher {
             new String[]{
                     "org.tvp.kirikiri2",                          // 官方原版
                     "org.github.krkr2",                           // 中文社区版 1.4.4
-                    "org.tvp.kirikiri2_yuri_debloated_10309"      // debloat v1.2-pre（yuri 1.4.1，安卓 14）
+                    "org.tvp.kirikiri2_yuri_debloated_10309",     // debloat v1.2-pre（yuri 1.4.1，安卓 14）
+                    "com.gamein.org.tvp.kirikiri2_free_10309",    // gamein 渠道免费版（真机实测存在）
+                    "com.tvp.kirikiri2_sytm_10001"                // sytm 渠道版（真机实测存在）
             },
             "Kirikiroid2", TIER_OPEN_SOURCE, null,
             "在 App 内点选 data.xp3 启动；支持解密");

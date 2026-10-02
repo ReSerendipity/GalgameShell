@@ -1,4 +1,5 @@
 package android.content;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 public abstract class Context {
@@ -6,6 +7,7 @@ public abstract class Context {
     public abstract AssetManager getAssets();
     public abstract PackageManager getPackageManager();
     public abstract String getPackageName();
+    public abstract ApplicationInfo getApplicationInfo();
     public abstract void startActivity(Intent intent);
     public String getString(int resId) { return ""; }
     public String getString(int resId, Object... formatArgs) { return ""; }
