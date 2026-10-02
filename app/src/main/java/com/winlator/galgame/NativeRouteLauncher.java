@@ -69,6 +69,12 @@ public final class NativeRouteLauncher {
     public static final Target ONSCRIPTER = new Target(
             "onscripter", "jp.ogapee.onscripter.release", "ONScripter", TIER_OPEN_SOURCE, "ons",
             "需把游戏放 /sdcard/ons/<game>/ 且含 default.ttf");
+    public static final Target EASYRPG = new Target(
+            "easyrpg", "org.easyrpg.player", "EasyRPG Player", TIER_OPEN_SOURCE, "easyrpg/games",
+            "游戏复制到 /sdcard/easyrpg/games/<name>/（RTP 可选放 /sdcard/easyrpg/rtp/）");
+    public static final Target PPSSPP = new Target(
+            "ppsspp", "org.ppsspp.ppsspp", "PPSSPP", TIER_OPEN_SOURCE, null,
+            "ACTION_VIEW 直启游戏镜像（iso/cso/pbp）");
     public static final Target JOIPLAY = new Target(
             "joiplay", "cyou.joiplay", "JoiPlay（需 Ren'Py 插件）", TIER_CLOSED, null,
             "闭源聚合器：App 内 Add Game 选择游戏目录");
@@ -83,8 +89,13 @@ public final class NativeRouteLauncher {
             case ONSCRIPTER:  return ONSCRIPTER;
             case RENPY:       return JOIPLAY;
             case TYRANO:      return TYRANOR;
-            case ARTEMIS:     return TYRANOR;   // 可走 Tyranor（B），亦可 A
-            default:          return null;      // Siglus/YU-RIS/CatSystem2/Unknown → A
+            case ARTEMIS:      return TYRANOR;   // 可走 Tyranor（B），亦可 A
+            case RPGMAKER2K:   return EASYRPG;
+            case RPGMAKERRGSS: return JOIPLAY;   // XP/VX/VX Ace 插件
+            case RPGMAKERMV:   return JOIPLAY;   // MV/MZ 插件
+            case WOLFRPG:      return JOIPLAY;   // Wolf 插件
+            case PSP:          return PPSSPP;    // ACTION_VIEW 直启镜像
+            default:           return null;      // Siglus/YU-RIS/CatSystem2/Unknown → A
         }
     }
 
@@ -189,6 +200,32 @@ public final class NativeRouteLauncher {
         catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * 用 ACTION_VIEW + 文件 URI 直接打开单个游戏文件（PPSSPP 等「传路径即启动」型）。
+     * Android 13+ 需要 category DEFAULT 与 MIME（ppsspp#17416 实测）。
+     */
+    public static boolean launchFile(Context context, Target target, File gameFile) {
+        if (context == null || target == null || gameFile == null || !gameFile.isFile()) return false;
+        String[] pkgs = target.packageNames;
+        for (int i = 0; i < pkgs.length; i++) {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setClassName(pkgs[i], pkgs[i] + ".PpssppActivity");
+                intent.addCategory(Intent.CATEGORY_DEFAULT);
+                intent.setDataAndType(android.net.Uri.fromFile(gameFile), "application/octet-stream");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                context.startActivity(intent);
+                return true;
+            } catch (Exception e) {
+                // 该变体无此 Activity → 尝试下一个
+            }
+        }
+        return launch(context, target);
     }
 
     /**
