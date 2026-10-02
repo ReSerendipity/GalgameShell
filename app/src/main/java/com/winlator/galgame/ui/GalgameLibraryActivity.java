@@ -29,6 +29,8 @@ import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
 import com.winlator.galgame.ImportFlow;
 import com.winlator.galgame.NativeRouteLauncher;
+import com.winlator.galgame.engine.BuiltinEngine;
+import com.winlator.galgame.engine.BuiltinEngineRegistry;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -467,6 +469,16 @@ public class GalgameLibraryActivity extends AppCompatActivity {
     // ---- B 路由对话框（Tier 分层 + 免责）----
 
     private void showNativeRouteDialog(final ImportFlow.ImportResult result, final File source) {
+        // GalgameShell：内置原生引擎优先——运行时已随包打包时直接用集成的引擎跑，
+        // 不再唤起/安装第三方播放器 APK。
+        BuiltinEngine builtin = BuiltinEngineRegistry.resolve(result.engine);
+        if (builtin != null && builtin.isAvailable(this)) {
+            if (!builtin.launch(this, source)) {
+                snackLong("内置引擎启动失败：" + builtin.displayName);
+            }
+            return;
+        }
+
         final NativeRouteLauncher.Plan plan =
                 NativeRouteLauncher.plan(this, result.engine, GalgameSettings.isTier2Enabled(this));
 
