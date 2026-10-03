@@ -76,6 +76,24 @@
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" />
 
+        <!-- GalgameShell：Kirikiroid2 内置引擎宿主（引擎运行时随本 APK 打包，不唤起任何第三方 App） -->
+        <!-- 引擎自身 Activity：libgame.so 的 JNI 按硬编码类名 org/tvp/kirikiri2/KR2Activity 绑定，包不得改名 -->
+        <activity android:name="org.tvp.kirikiri2.KR2Activity"
+            android:theme="@style/GalgameKrkrTheme"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="keyboardHidden|screenSize|density"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <!--
+          cocos2dx 的 Cocos2dxActivity 在 onCreate 里读 meta-data android.app.lib_name 并
+          System.loadLibrary(name)。libgame.so 只显式 load ffmpeg/SDL2，主库 game 必须靠这里加载；
+          缺失会在运行期直接 UnsatisfiedLinkError（上游 Kirikiroid2 1.4.1 同样靠这条注入）。
+        -->
+        <meta-data
+            android:name="android.app.lib_name"
+            android:value="game" />
+
         <!-- Needed for keep the container alive when in background or the device is locked. -->
         <service
             android:name="com.winlator.services.ForegroundService"

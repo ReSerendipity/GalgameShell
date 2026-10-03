@@ -162,6 +162,17 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
+
+    <!--
+      内置 Kirikiroid2 运行时的 Activity 主题。
+      刻意不复用 AppThemeFullscreenDark：那条主题带 windowTranslucentStatus/Navigation，
+      状态栏是"悬浮半透明"的，引擎的 GLSurfaceView 虽满屏但 UI 会被状态栏压住（上游不这么做）。
+      这里对齐上游 Kirikiroid2 的 @android:style/Theme.NoTitleBar.Fullscreen：
+      无标题栏 + 全屏 + 不透明黑底，与 cocos2dx GLSurfaceView 的预期一致。
+    -->
+    <style name="GalgameKrkrTheme" parent="@android:style/Theme.NoTitleBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
     <style name="ComboBox">
         <item name="android:layout_width">192dp</item>
         <item name="android:layout_height">42dp</item>

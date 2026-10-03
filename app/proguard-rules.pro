@@ -17,3 +17,12 @@
 #}
 
 -dontobfuscate
+
+# GalgameShell：内置原生引擎（Kirikiroid2 / cocos2dx）。
+# libgame.so 的 JNI 按硬编码类名 org/tvp/kirikiri2/KR2Activity 反射回调，
+# 原生方法按名字绑定（RegisterNatives 短名），压缩器不得裁掉它们。
+-keep class org.tvp.kirikiri2.KR2Activity { *; }
+-keep class org.tvp.kirikiri2.DummyEdit { *; }
+-keep class org.cocos2dx.lib.** { *; }
+-keepclassmembers class org.cocos2dx.lib.** { native *; }
+-keep class com.winlator.galgame.engine.** { *; }
