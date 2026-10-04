@@ -460,6 +460,58 @@ Activity（同 `KrkrEngine` 风格），故留在门禁内。
 - 确定按钮 `android:id/button1` 在软键盘弹出后位于约 (1022,1114)，弹前在 (1022,1644)——**以 uiautomator dump 实时坐标为准**；
 - `RenPyActivity`/`GalgameLibraryActivity` 均 `exported=false`（ColorOS retail 拒绝 shell 直启），须走主壳 UI。
 
+#### 回归防护：EngineDetector 纯 JVM 验证（`tools/run_detect_test.sh`）
+
+`detect()` 是不含 Android 依赖的纯 `java.io.File` 逻辑，可直接用 JDK 编译运行，**无需设备/模拟器/SDK**。
+为防本次修复静默回归，建立 14 个用例（2026-10-05，全部通过，commit `b0b612b`）：
+
+| 类别 | 用例 | 期望 |
+| --- | --- | --- |
+| 本次修复点 | 项目根 `game/` 下 `.rpy` / `.rpyc` / `.rpa` / `.rpym` / `.rpyb` | RENPY |
+| 本次修复点 | 目录名大写 `GAME/`（忽略大小写） | RENPY |
+| 不退化 | 根目录直接放 `.rpa`（RPA-3.0 / ARC-3.0 加密变体） | RENPY |
+| **优先级守门** | 根目录 `data.xp3`(magic) 与 `game/*.rpy` **同时存在** | **KIRIKIRI**（不得被 1b 段抢占） |
+| 负例 | 仅启动器 `.exe`、无 `game/` | UNKNOWN |
+| 负例 | 有 `game/` 但无 Ren'Py 内容 | UNKNOWN |
+| 负例 | `game` 是**文件**而非目录 | UNKNOWN |
+| 负例 | `SiglusEngine.exe` | SIGLUS |
+
+脚本每次从真实源码复制并重新编译（测的是当前代码而非快照），失败返回非零退出码。
+
+#### 测试游戏成套脚本（`tools/renpy-testgame/`）
+
+真机复验可直接使用，已修掉两个此前踩过的坑：
+
+- `screens.rpy`：`say` 屏的 text **必须带 `id "who"` / `id "what"`**（否则 `display_say` 报
+  `The say screen must return a Text object`）；`padding` **不能用简写**（样式展开时按下标取 tuple
+  → `TypeError: 'int' object is not subscriptable`），须写显式 `left_padding` 等四边属性。
+- `script.rpy`：用**显式 `image` 定义**而非自动命名——Ren'Py 自动 image 命名**不把下划线转成空格**
+  （`bg_dusk.png` → 名 `bg_dusk` 而非 `bg dusk`），写 `scene bg dusk` 会落到 `rgb(170,170,170)` 灰色占位图。
+- `make_art.py`：本机无 Pillow，手写 PNG 编码器生成黄昏背景与带 alpha 的立绘，
+  用于验证引擎的图片解码/缩放/透明合成链路（2026-10-05 实测逐色吻合，见下表）。
+
+#### 图片子系统已验证（排除集成缺陷）
+
+给纯文本测试游戏补上图片素材后复测，立绘区域采样像素与生成素材**逐项精确吻合**：
+
+| 画面位置 | 真实像素 | 素材对应项 |
+| --- | --- | --- |
+| 头部 | `(255,226,205)` | 脸部肤色 |
+| 颈部 | `(252,216,196)` | 脖子肤色 |
+| 胸前 | `(238,242,250)` | 衬衫白 |
+| 身体 | `(44,56,106)` | 校服蓝 |
+
+→ PNG 解码、缩放、**alpha 透明合成**全部正常，集成层无缺陷。纯黑占比 93.33% → 39.63%，颜色数 33 → 93。
+
+#### 剩余待办（真机 dc57ebe3 需重新连线）
+
+验证到一半真机掉线（adb devices 中消失），以下未完成：
+
+1. 用显式 image 定义的 `script.rpy` 重跑，取「渐变背景 + 立绘 + 对话框」完整画面截图
+   （届时第二步 TOP ACTIVITY 应为 `RenPyActivity`，且 `FATAL EXCEPTION` = 0）。
+2. 背景此前显示为 `(170,170,170)` 占位灰，系上述 image 命名问题所致，修正后的脚本待推送。
+3. 注：`app-debug.apk` 当前已是 **arm64-v8a** 默认产物（曾为模拟器出过 x86_64 UI 包，已重建覆盖回来）。
+
 ### 4.5.1 真机复测手册（设备 dc57ebe3 连上后）
 
 1. 安装：`adb -s dc57ebe3 install -r app/build/outputs/apk/debug/app-debug.apk`
