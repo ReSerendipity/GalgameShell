@@ -29,6 +29,7 @@
 | ONScripter | GPLv2 | ❌ | 与 LGPL-2.1 组合存在冲突/升级压力 |
 | PPSSPP | GPLv2+ | ❌ | 同上 |
 | JoiPlay / Tyranor | 闭源 | ❌ | 无源码；只能外部唤起（且需免责） |
+| Ren'Py | MIT + 部分 LGPL | 🟡 可内嵌（**未做**） | 2026-10-04 核实：多数代码 MIT，另有部分 LGPL 组件。LGPL 与本仓 LGPL-2.1 **兼容**，可并入（须提供 LGPL 源码链接）。但需集成 Python 运行时（renpy-build/python-for-android），工作量远大于 Kirikiroid2。覆盖 8000+ VN，是下一个最有价值的内嵌候选。 |
 
 > Kirikiroid2 的 LICENSE 文件本身是「主许可证 + 第三方声明」的合集，
 > 主许可证为 BSD 3-Clause（W.Dee & contributors），其余为 libjpeg-turbo / libpng / zlib /
@@ -247,6 +248,50 @@ adb -s $SER pull /sdcard/krkr_diag ./krkr_diag_out
 - 引擎浏览器左面板（▶ 播放按钮 + 最近路径列表）**渲染不可见但点击有效**——cocos UI 皮肤
   渲染问题，靠坐标点击绕过；不影响游戏本体画面。
 - recentpath.xml 指向 `data.bin` 时引擎浏览器显示 bosei2 目录条目，点 ▶ 直接启动——正常路径。
+
+## 4.4 Ren'Py 内嵌方案（2026-10-04 spike 完成，待铺开）
+
+用户 2026-10-04 拍板：下一个内嵌引擎选 **Ren'Py**（覆盖 8000+ VN，许可证兼容）。本节为
+可行性 spike 结论 + 实施方案。
+
+### Spike 结论：可嵌入 ✅
+
+Ren'Py Android 运行时的构成（据 renpy-build 源码 + Ren'Py Android 运行时逆向文档）：
+
+| 层 | 组件 | 说明 |
+| --- | --- | --- |
+| 原生 | `libpython*.so` | 完整 CPython 解释器 |
+| 原生 | `librenpy.so` | Ren'Py 原生加速模块 |
+| 原生 | `libSDL2*.so`（+image/ttf/mixer） | Pygame/SDL2 渲染/音频/输入 |
+| 资源 | `assets/renpy/**` | Ren'Py 引擎 Python 字节码（.pyc） |
+| 资源 | `assets/game/*.rpa`, `*.rpyc` | 游戏数据（.rpyc = pickled AST，**非** CPython 字节码） |
+| Java 壳 | `org.renpy.android.PythonSDLActivity` | 继承 SDL `SDLActivity`；`mActivity` 静态引用供 pyjnius 回访 |
+
+- **入口类名**：`org.renpy.android.PythonSDLActivity`（**注意不是** `org.kivy.android.PythonActivity`——
+  论坛常见踩坑）。Python 侧经 pyjnius `autoclass('org.renpy.android.PythonSDLActivity').mActivity` 拿上下文。
+- **游戏加载**：Ren'Py 支持从**外部存储**加载项目（`renpy.check_permission` / All-Files-Access），
+  正契合本项目「导入游戏 → 内置引擎跑」模型，无需把游戏塞进 APK。
+- **不需从源码编译 Python**：官方 RAPT（`renpy-8.5.3-rapt.zip`，65MB）+ SDK（155MB）能**构建一棵
+  参考 APK，从里面摘出运行时**（native 库 + 引擎字节码 + `org.renpy.android` 类）vendor 进我们的 APK。
+
+### 实施路径（分阶段）
+
+1. **取参考运行时**：装 SDK + RAPT，构建一棵最小 Ren'Py Android APK（arm64），`unzip` 摘出
+   `libpython*.so` / `librenpy.so` / `libSDL2*.so` / `assets/renpy/**` 与 Java 壳源码。
+2. **移植 Java 壳**：把 `PythonSDLActivity` 移植成我们的 `com.winlator.galgame.engine.renpy.RenPyActivity`
+   （继承同一 SDL `SDLActivity`），并把 `mActivity` 指向本壳。
+3. **运行时打包策略**（体积 vs 复杂度）：把引擎字节码+资源放 APK `assets/renpy/`（或首启解压到内部目录），
+   运行时 native 库进 `jniLibs/arm64-v8a/`。
+4. **接进现有架构**：实现 `RenPyEngine extends BuiltinEngine`（探测/启动/游戏定位），在
+   `BuiltinEngineRegistry.resolve()` 注册 `case RENPY`。
+5. **许可证合规**：NOTICE + 随附 LGPL 副本 + 指向 renpy/renpy、renpy/renpy-build 源码链接（LGPL 组件：
+   Pygame_sdl2 / chardet / FFmpeg(LGPL build) / Fribidi / libusb 等）。
+
+### 体积与合规小结
+
+- **体积**：运行时估 **40–70MB**（Python+SDL2+librenpy+引擎字节码）。叠加到现有 184MB APK → 约 **230–250MB**。
+  可选「运行时随包 + 首启解压」或「assets 压缩」缓解。
+- **合规**：MIT + 部分 LGPL，与本仓 LGPL-2.1 **兼容**。义务=附许可证副本 + 提供 LGPL 组件源码可得性。
 
 ## 5. 参考资料
 
