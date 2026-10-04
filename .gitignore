@@ -34,3 +34,10 @@ app/src/main/jniLibs/**/*.so
 
 # OS
 Thumbs.db
+
+# GalgameShell: tools/ 验证资产的构建中间产物与生成的图片素材。
+# DetectTest 每次运行会重新编译 EngineDetector 到 src/+classes/；
+# renpy-testgame 的图片由 make_art.py 生成，均可重建，不入库。
+tools/detect-test/src/
+tools/detect-test/classes/
+tools/renpy-testgame/game/images/
