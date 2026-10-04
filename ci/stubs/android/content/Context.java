@@ -1,4 +1,5 @@
 package android.content;
+import java.io.File;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -13,4 +14,6 @@ public abstract class Context {
     public String getString(int resId, Object... formatArgs) { return ""; }
     public SharedPreferences getSharedPreferences(String name, int mode) { return null; }
     public Context getApplicationContext() { return this; }
+    public File getFilesDir() { return null; }
+    public File getExternalFilesDir(String type) { return null; }
 }
