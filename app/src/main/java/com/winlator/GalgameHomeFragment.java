@@ -416,6 +416,10 @@ public class GalgameHomeFragment extends Fragment {
     private TextView progressTextView;
     private TextView progressPercentView;
     private ProgressBar progressBar;
+    // GalgameShell：进度条补间动画需持有引用——导入过快时 dismissProgressDialog 会把
+    // progressBar 置 null，若不 cancel 仍存活的 animator，下一帧回调即 NPE 崩掉主进程
+    // （真机实证：log13 FATAL EXCEPTION at GalgameHomeFragment.setProgressSmooth）。
+    private ValueAnimator progressAnimator;
 
     private void showProgressDialog(String text) {
         View view = LayoutInflater.from(requireContext()).inflate(R.layout.galgame_progress_dialog, null);
@@ -451,18 +455,28 @@ public class GalgameHomeFragment extends Fragment {
     /** 进度条平滑动画：从当前值补间到目标值，同步刷新百分比文本。 */
     private void setProgressSmooth(int target) {
         if (progressBar == null) return;
+        cancelProgressAnimator();
         int from = progressBar.getProgress();
-        ValueAnimator animator = ValueAnimator.ofInt(from, target);
-        animator.setDuration(450);
-        animator.addUpdateListener(a -> {
+        progressAnimator = ValueAnimator.ofInt(from, target);
+        progressAnimator.setDuration(450);
+        progressAnimator.addUpdateListener(a -> {
+            if (progressBar == null) return; // 对话框已被 dismiss：跳过余下帧，防 NPE
             int v = (Integer) a.getAnimatedValue();
             progressBar.setProgress(v);
             if (progressPercentView != null) progressPercentView.setText(v + "%");
         });
-        animator.start();
+        progressAnimator.start();
+    }
+
+    private void cancelProgressAnimator() {
+        if (progressAnimator != null) {
+            progressAnimator.cancel();
+            progressAnimator = null;
+        }
     }
 
     private void dismissProgressDialog() {
+        cancelProgressAnimator();
         if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
         progressDialog = null;
         progressTextView = null;
