@@ -71,8 +71,31 @@ public final class EngineDetector {
     }
 
     private static boolean hasSubDir(File[] files, String dirName) {
+        return findSubDir(files, dirName) != null;
+    }
+
+    /** 在直接子项中找同名目录（忽略大小写），找不到返回 null。 */
+    private static File findSubDir(File[] files, String dirName) {
         for (File f : files) {
-            if (f.isDirectory() && f.getName().equalsIgnoreCase(dirName)) return true;
+            if (f.isDirectory() && f.getName().equalsIgnoreCase(dirName)) return f;
+        }
+        return null;
+    }
+
+    /**
+     * 目录内是否含 Ren'Py 脚本/归档（判据与 {@code RenPyEngine.looksLikeRenPyGame} 一致：
+     * .rpy / .rpym / .rpyc / .rpa / .rpyb）。
+     */
+    private static boolean hasRenPyContent(File dir) {
+        File[] fs = (dir == null) ? null : dir.listFiles();
+        if (fs == null) return false;
+        for (File f : fs) {
+            if (!f.isFile()) continue;
+            String n = f.getName().toLowerCase();
+            if (n.endsWith(".rpy") || n.endsWith(".rpym") || n.endsWith(".rpyc")
+                    || n.endsWith(".rpa") || n.endsWith(".rpyb")) {
+                return true;
+            }
         }
         return false;
     }
@@ -94,6 +117,12 @@ public final class EngineDetector {
                 return Engine.RENPY;
             }
         }
+        // 1b) Ren'Py 标准布局：项目根下 game/ 子目录内含脚本/归档。
+        //     真实 Ren'Py 游戏把 .rpa/.rpyc 都放在 game/ 里，根目录只有启动器 .exe，
+        //     仅扫根目录会漏判成 UNKNOWN，导致内置 Ren'Py 引擎永远选不上。
+        //     判据与 RenPyEngine.looksLikeRenPyGame 保持一致。
+        File gameSubDir = findSubDir(files, "game");
+        if (gameSubDir != null && hasRenPyContent(gameSubDir)) return Engine.RENPY;
         // 2) 文件名/特征文件：TyranoScript / ONScripter
         for (File f : files) {
             String name = f.getName();
