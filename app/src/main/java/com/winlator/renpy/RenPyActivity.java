@@ -39,7 +39,7 @@ public class RenPyActivity extends PythonSDLActivity {
     private static final String ENGINE_ASSET_DIR = "renpy-engine";
 
     /** 解包版本号：引擎资产变更时 +1，触发重新解包（getFilesDir 跨升级保留）。 */
-    private static final String ENGINE_VERSION = "1";
+    private static final String ENGINE_VERSION = "7";
 
     private static final String VERSION_FILE = "renpy_engine.version";
 
@@ -79,7 +79,7 @@ public class RenPyActivity extends PythonSDLActivity {
         // 清掉旧引擎，避免残留。
         deleteRecursive(new File(filesDir, "renpy"));
         deleteRecursive(new File(filesDir, "lib"));
-        new File(filesDir, "main.py").delete();
+        deleteRecursive(new File(filesDir, "main.py"));
 
         try {
             copyAssetTree(ENGINE_ASSET_DIR, filesDir);
@@ -93,22 +93,34 @@ public class RenPyActivity extends PythonSDLActivity {
 
     /**
      * 递归把 assets 下的目录树复制到 {@code dest}。
-     * {@code AssetManager.list()} 对文件返回 null、对目录返回子项数组，据此区分。
+     *
+     * <p>判别陷阱（真机实证）：{@code AssetManager.list()} 对<b>文件</b>返回的是
+     * <b>空数组而非 null</b>——若以 null 判别文件，顶层文件会被误当空目录 mkdir，
+     * 整棵树只会得到一串空目录（main.py 缺失 → start_python 静默退出）。
+     * 故以「子项数 &gt; 0」判目录；空数组时先尝试按文件复制，失败再按空目录建。
      */
     private void copyAssetTree(String assetPath, File dest) throws IOException {
         String[] children = getAssets().list(assetPath);
 
-        if (children == null) {
-            // 叶子文件。
-            copyAssetFile(assetPath, dest);
+        if (children != null && children.length > 0) {
+            // 目录：递归复制。
+            if (!dest.isDirectory() && !dest.mkdirs()) {
+                throw new IOException("mkdir failed: " + dest);
+            }
+            for (String child : children) {
+                copyAssetTree(assetPath + "/" + child, new File(dest, child));
+            }
             return;
         }
 
-        if (!dest.isDirectory() && !dest.mkdirs()) {
-            throw new IOException("mkdir failed: " + dest);
-        }
-        for (String child : children) {
-            copyAssetTree(assetPath + "/" + child, new File(dest, child));
+        // 空数组：文件或空目录。能 open 即文件。
+        try {
+            copyAssetFile(assetPath, dest);
+        } catch (IOException e) {
+            // 空目录。
+            if (!dest.isDirectory() && !dest.mkdirs()) {
+                throw new IOException("mkdir failed: " + dest);
+            }
         }
     }
 
