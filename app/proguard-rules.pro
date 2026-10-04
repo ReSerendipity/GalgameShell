@@ -26,3 +26,16 @@
 -keep class org.cocos2dx.lib.** { *; }
 -keepclassmembers class org.cocos2dx.lib.** { native *; }
 -keep class com.winlator.galgame.engine.** { *; }
+
+# GalgameShell：内置 Ren'Py 运行时 Java 壳（SDL2 / renpy / jnius / jtar）。
+# librenpython.so 内静态链入的 SDL2 在 JNI_OnLoad 对 org/libsdl/app/SDLActivity
+# 做整表 RegisterNatives——R8 shrinking 会裁掉“只被 C 调用”的方法，任一缺失整表即失败
+# （真机实证：E SDL: Failed to register methods of org/libsdl/app/SDLActivity → native crash）。
+# C 侧另会 GetMethodID 回调 PythonSDLActivity.preparePython（RenPyActivity 覆写：解包引擎+写 game_dir.txt）。
+-keep class org.libsdl.app.** { *; }
+-keep class org.renpy.android.** { *; }
+-keep class org.jnius.** { *; }
+-keep class org.kamranzafar.jtar.** { *; }
+-keep class com.winlator.renpy.** { *; }
+-keepclassmembers class org.libsdl.app.** { native *; }
+-keepclassmembers class org.renpy.android.** { native *; }
