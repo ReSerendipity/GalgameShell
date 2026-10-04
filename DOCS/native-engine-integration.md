@@ -4,7 +4,8 @@
 > 而不是再安装一个第三方播放器 APK（用户明确否决：独立 APK 的方式不要）。
 >
 > 状态：**Ren'Py 引擎已端到端跑通**——APK 内嵌 `librenpython.so`（Python 3.12.8 + Ren'Py 8.5.3），
-> 真机（dc57ebe3/RMX5010）直启渲染出真实游戏对话画面并截图取证（§4.6）。Kirikiroid2 此前已跑通 bosei2。
+> 真机（dc57ebe3/RMX5010）直启渲染出真实游戏对话画面并截图取证（§4.6），游戏库生产路线
+> （导入→识别→内置引擎一键启动）E2E 亦已通过（§4.7）。Kirikiroid2 此前已跑通 bosei2。
 > 本文只记录已核实事实，猜测一律标注。
 
 ## 1. 结论先行
@@ -424,7 +425,40 @@ Activity（同 `KrkrEngine` 风格），故留在门禁内。
 #### 收尾状态
 
 - manifest `RenPyActivity` 已收回 `exported="false"`，最终 APK 重建重装，主壳（GalgameMainActivity）冒烟正常。
-- 已知待办：走游戏库路线（`RenPyEngine` 识别 `.rpa` → 自动 launch）的 E2E 未测（需带合法 `.rpa` 的游戏）。
+- ~~已知待办：走游戏库路线（`RenPyEngine` 识别 `.rpa` → 自动 launch）的 E2E 未测~~ → **已通过，见 §4.7**。
+
+### 4.7 游戏库路线 E2E 已通过（2026-10-05）✅ 生产路径闭环 + 两个集成 bug 实证修复
+
+用户游戏库（`D:\need load` 80 个 rar，用 UnRAR 列表全量扫描）中 **无任何 Ren'Py 游戏**
+（零 `.rpa`/`.rpyc`/`.rpy`），但发现 ≥8 个 Kirikiri 游戏（`data.xp3` 等，可供 Kirikiroid2 路线后续用样）。
+故 E2E 用设备上已有的 `game/*.rpy` 标准布局测试游戏验证——识别、启动、渲染链路与 `.rpa` 完全同一套
+（`detect → BuiltinEngineRegistry.resolve → RenPyEngine.launch → bootstrap`），差异仅在引擎内部资源加载（Ren'Py 本体行为，与集成层无关）。
+
+#### 期间发现并修复的两个集成 bug（真机实证）
+
+| # | 现象 | 根因 | 修复 | commit |
+| --- | --- | --- | --- | --- |
+| 1 | 标准布局 Ren'Py 游戏导入后 `import engine=UNKNOWN`，内置引擎永不选中 | `EngineDetector.detect()` 只扫游戏根目录**直接子项**且只认带 magic 的 `.rpa`；真实 Ren'Py 游戏 `.rpa/.rpyc` 都在 `game/` 子目录，根目录只有启动器 `.exe` → 一律判 UNKNOWN → `resolve(UNKNOWN)=null` → 走 JoiPlay/A 路由 | detect() 增 1b 段：根下 `game/` 含 `.rpy/.rpym/.rpyc/.rpa/.rpyb` → RENPY（判据与 `RenPyEngine.looksLikeRenPyGame` 对齐，置于 KiriKiri 字节级检查后不破坏优先级） | 57f2bca |
+| 2 | 导入 Ren'Py 游戏**必崩主进程**：`FATAL EXCEPTION ... ProgressBar.setProgress on a null object reference` @ `GalgameHomeFragment.setProgressSmooth` | `ValueAnimator` 为局部变量无取消机制；小游戏导入快，`dismissProgressDialog()` 把 `progressBar` 置 null 后 450ms 补间窗口内余下帧回调直接 NPE。`GalgameLibraryActivity` 为同款复制代码 | animator 提升字段 + dismiss 前 cancel + 回调判空双保险，两文件同步修 | b650acd |
+
+（bug 2 中游戏本体因独立 task 存活并正常渲染，崩的是主壳进程——返回时才会暴露。）
+
+#### E2E 证据链（修复后回归，dc57ebe3）
+
+1. 主壳游戏库点 FAB 导入 → 输入 `/sdcard/Android/data/com.winlator/files/Games/testrenpy` → 确定
+2. `logcat`: `GalgameShell: import engine=RENPY route=B gameId=testrenpy`（修复前 UNKNOWN）
+3. 内置引擎自动拉起：`SDL onCreate → nativeSetupJNI → Running main function SDL_main from .../librenpython.so`
+4. `python: Interface start took 420 ms` → `Hid presplash.`
+5. `topResumedActivity=com.winlator/.renpy.RenPyActivity`（前台）
+6. 全程 `FATAL EXCEPTION` 计数 = **0**
+7. 截图 `.workbuddy/verify/renpy_library_e2e_regression.png`：真实对话画面（与 §4.6 直启取证一致，横屏）
+
+#### 附：导入路径的 UI 自动化脚本要点（复测用）
+
+- 主壳首页自带 `FABImport`（id `com.winlator:id/FABImport`），无需导航；
+- 导入对话框为 EditText 预填 `/sdcard/Download`：`input keyevent 67`×25 清空 → `input text <路径>`；
+- 确定按钮 `android:id/button1` 在软键盘弹出后位于约 (1022,1114)，弹前在 (1022,1644)——**以 uiautomator dump 实时坐标为准**；
+- `RenPyActivity`/`GalgameLibraryActivity` 均 `exported=false`（ColorOS retail 拒绝 shell 直启），须走主壳 UI。
 
 ### 4.5.1 真机复测手册（设备 dc57ebe3 连上后）
 
