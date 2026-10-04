@@ -553,9 +553,21 @@ public class KR2Activity extends Cocos2dxActivity {
         return result;
     }
 
-    static final boolean isWritableNormalOrSaf(final String path) {
+    /**
+     * GalgameShell: 补齐 libgame.so JNI 契约缺失的 isWritableNormal(String)Z。
+     * 原生层按硬编码方法名 "isWritableNormal" 反射调用本方法以探测某存储路径是否可写；
+     * 此前该法缺失 → GetStaticMethodID 失败 → 可写性探测恒失败 → 在游戏目录（含应用专属
+     * 外部目录、已开启 All-Files-Access 的 /sdcard）下一律弹“只读的外部存储器”并退回浏览器。
+     * 实现：在目标目录内创建临时探测文件并删除，等价于上游 normal 分支；若传入为文件路径
+     * （非目录）则回退到其父目录探测。
+     */
+    static final boolean isWritableNormal(final String path) {
         File folder = new File(path);
-        if (!folder.exists() || !folder.isDirectory()) return false;
+        if (!folder.exists() || !folder.isDirectory()) {
+            File parent = folder.getParentFile();
+            if (parent == null || !parent.isDirectory()) return false;
+            folder = parent;
+        }
         int i = 0;
         File file;
         do {
@@ -563,6 +575,11 @@ public class KR2Activity extends Cocos2dxActivity {
             file = new File(folder, fileName);
         } while (file.exists());
         return isWritable(file);
+    }
+
+    static final boolean isWritableNormalOrSaf(final String path) {
+        // 本项目 SAF 已禁用（getDocumentFile 恒返回 null），OrSaf 分支无实际意义，直接复用 normal 探测。
+        return isWritableNormal(path);
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)

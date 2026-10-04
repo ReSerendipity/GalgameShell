@@ -127,12 +127,12 @@ JNI 找不到方法只会静默失败（`getStaticMethodInfo` 返回 false），
   KR2Activity 稳定 `ResumedActivity`，SurfaceView 持续出帧（`BLASTBufferQueue ... 1264x2640` 每 10s 更新）。
 - ✅ `libgame.so` 加载、`Cocos2dxHelper` 初始化、`applicationDidFinishLaunching` 全部通过。
 - ✅ recentpath 注入生效：引擎识别出游戏并显示 **bosei2 加载页**（白底 + 绿色标题栏 `bosei2`）。
-- ⏸ **未拿到游戏画面**：加载页 CPU 持续 20–27% 在忙（**不是死锁**），但 10+ 分钟画面一帧不变，
-  也未生成任何缓存目录。换 `patch.xp3`（535 KB，无过滤器）复现同样现象 → **与包体积/解密量无关**，
-  卡在初始化之后的阶段。原版 APK 对照未能完成（它停在“最近路径”列表，cocos 自定义按钮的坐标换算导致
-  `input tap` 命中不了播放键）。
+- ✅ **游戏画面已拿到（2026-10-04，见 4.3）**：此前「加载页 10+ 分钟不动」的根因是
+  `isWritableNormal` JNI 方法缺失（可写性检查恒败）+ `resolveEntry` 误选 patch2.xp3 当主包，
+  两者修复后 splash → 年龄确认页 → 主标题菜单全部正常渲染。
 - 备注：`/sdcard/Games/bosei2` 里 `data.bin`（97 MB）头 4 字节就是 `XP3\r\n`，是改名的 XP3；
-  该游戏自带 `xp3filter.tjs`（逐字节 XOR 过滤器）。**曾在真机复制出 `data.xp3`（97 MB 副本），需清理**。
+  该游戏自带 `xp3filter.tjs`（逐字节 XOR 过滤器）。~~曾在真机复制出 `data.xp3`（97 MB 副本），需清理~~
+  （已清理，2026-10-04）。
 
 ### 真机复测手册（设备连上后）
 
@@ -197,6 +197,56 @@ adb -s $SER pull /sdcard/krkr_diag ./krkr_diag_out
 
 > 重要：KR2Activity 是 `exported=false`，**不能**用 `am start` 直启，必须由「GalgameShell 游戏库点开游戏」
 > 触发（KrkrEngine.launch 写 recentpath.xml + startActivity）。脚本的 run-as 写入是兜底。
+
+## 4.3 端到端打通实录（2026-10-04，真机 dc57ebe3）✅
+
+**结论：内置 Kirikiroid2 引擎已在真机完整跑通 bosei2——主标题菜单截图确认，全部在本 APK 进程内。**
+
+### 根因链条（三层，逐层剥开）
+
+1. **`resolveEntry` 误选补丁当主包**（已修，0ae9204 后补）：目录里有 111MB 的 `patch2.xp3`，
+   按「最大的 .xp3」裁决会误选它 → 挂载后无 `startup.tjs`。修复后裁决顺序：
+   `data.xp3` → `data.bin`（过 XP3 魔数校验）→ 排除 patch/update/补丁 命名的最大 .xp3 → 目录。
+2. **「只读的外部存储器」对话框恒现**：libgame.so 原生层按硬编码 JNI 名
+   `isWritableNormal (Ljava/lang/String;)Z` 反射调用 Java 层，而 `KR2Activity` 只有
+   `isWritableNormalOrSaf`（上游裁剪 SAF 时把 normal 变体一并裁掉了）→ `GetStaticMethodID`
+   失败 → 可写性探测恒失败，无论实际权限（All-Files-Access 已授、游戏在应用专属目录）都报只读。
+   **修复：补回 `isWritableNormal(String)`**（临时探测文件法，等价上游 normal 分支；
+   `isWritableNormalOrSaf` 改为委托调用——本项目 `getDocumentFile` 恒返回 null，SAF 无实际分支）。
+3. **Android 11+ 整库读写 /sdcard**：manifest 补 `MANAGE_EXTERNAL_STORAGE`，
+   设置页手动授权「所有文件访问」（ColorOS 禁止 adb `appops set`，必须 UI 手授）。
+
+### 真机验证证据链
+
+- 引擎日志（`cocos2d-x debug info`）：
+  - `Program started on Android` → `Trying to read XP3 ... bosei2/data.bin` → `Done. (contains 639 file(s))`
+  - `Loading startup script : ...data.bin>startup.tjs`（此前卡死时永远到不了这行）
+  - `arc/voice.xp3`、`evimage.xp3`、`bgimage.xp3` 等全部挂载成功
+- 截图（`.workbuddy/verify/krkr_verify2/`）：
+  - `tap_s1.png` — AkabeiSoft2 LOGO splash（灰→白背景动画中）
+  - `after_center_tap.png` — 18 禁年龄确认页（日文全文渲染清晰）
+  - `next_1.png` — **《母性カジョ2》主标题菜单**（LOGO/八按钮/立绘/版本号全部正确）
+- 全程零 crash、零 `UnsatisfiedLinkError`、零 `NoSuchMethodError`。
+
+### 验证手法备忘（临时 exported + 直启）
+
+最终版 KR2Activity 必须 `exported=false`；为隔离验证引擎修复，临时改 `exported=true`
+重建 → `am start` 直启（recentpath.xml 已指向 data.bin）→ 截图取证 → **收回 `exported=false`
+重建安装**，并用 `am start` 被拒（SecurityException: not exported）实证安全设置已恢复。
+生产启动路径不变：游戏库 → KrkrEngine.launch（写 recentpath.xml + 同 APK 内 startActivity）。
+
+### 工具链坑（新增）
+
+- **`adb pull` 目标路径必须用 Windows 形式**（`C:/Users/...`）：Git Bash 下传 `/c/...`
+  给原生 adb.exe 会报 `cannot create file/directory`（MSYS_NO_PATHCONV=1 时 MSYS 不转换，
+  adb.exe 自己也不认 `/c/` 形式）。
+- `adb input tap` 坐标随当前屏幕旋转（横屏下 screencap 2780x1264 与 tap 同一坐标系）。
+
+### 遗留小问题（不阻塞）
+
+- 引擎浏览器左面板（▶ 播放按钮 + 最近路径列表）**渲染不可见但点击有效**——cocos UI 皮肤
+  渲染问题，靠坐标点击绕过；不影响游戏本体画面。
+- recentpath.xml 指向 `data.bin` 时引擎浏览器显示 bosei2 目录条目，点 ▶ 直接启动——正常路径。
 
 ## 5. 参考资料
 

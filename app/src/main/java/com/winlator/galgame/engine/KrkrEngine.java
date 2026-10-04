@@ -7,7 +7,9 @@ import android.content.pm.ApplicationInfo;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,22 +111,62 @@ public final class KrkrEngine extends BuiltinEngine {
      * {@code data.bin}（内容仍是 {@code "XP3\r\n"} 魔数，靠 {@code xp3filter.tjs} 之类的
      * 逐字节过滤器解密）。这类包没有可推断的入口文件，回落到把<em>目录</em>写进
      * recentpath，让引擎自己扫描整个目录。
+     *
+     * <p>主包裁决顺序（真机 bosei2 教训：patch*.xp3 往往比主包大，
+     * 按「最大的 .xp3」选会误把补丁当主包，引擎挂载后找不到 startup.tjs → 落到空浏览器）：
+     * <ol>
+     *   <li>{@code data.xp3}（惯例主包）</li>
+     *   <li>{@code data.bin}（须过 XP3 魔数校验）</li>
+     *   <li>最大的 <b>非补丁</b> .xp3（按 isPatchLike 排除 patch、update、修正 等命名）</li>
+     *   <li>整个目录（引擎自扫）</li>
+     * </ol>
      */
     private static File resolveEntry(File dir) {
         File data = new File(dir, "data.xp3");
         if (data.isFile()) return data;
 
+        File dataBin = new File(dir, "data.bin");
+        if (isXp3(dataBin)) {
+            Log.i("KrkrEngine", "发现 data.bin 且带 XP3 魔数，选用为主包");
+            return dataBin;
+        }
+
         File[] xp3s = dir.listFiles((f) -> f.isFile() && f.getName().toLowerCase().endsWith(".xp3"));
         if (xp3s != null && xp3s.length > 0) {
-            // 取最大的一个当主包（补丁包通常远小于主包）
-            File best = xp3s[0];
-            for (File f : xp3s) if (f.length() > best.length()) best = f;
+            File best = null;
+            for (File f : xp3s) {
+                if (isPatchLike(f.getName())) continue; // 补丁包不当主包
+                if (best == null || f.length() > best.length()) best = f;
+            }
+            if (best == null) best = xp3s[0]; // 全是补丁命名时退回旧逻辑
             Log.i("KrkrEngine", "目录内发现 " + xp3s.length + " 个 xp3，选用主包 " + best.getName());
             return best;
         }
 
         Log.i("KrkrEngine", "目录内没有 data.xp3 / *.xp3，回落到整个目录让引擎扫描：" + dir);
         return dir;
+    }
+
+    /** XP3 魔数：{@code "XP3\r\n \n\x1a\x8bg\x01"}（与 EngineDetector.XP3_MAGIC 一致）。 */
+    private static boolean isXp3(File f) {
+        if (f == null || !f.isFile()) return false;
+        byte[] magic = {0x58, 0x50, 0x33, 0x0D, 0x0A, 0x20, 0x0A, 0x1A, (byte) 0x8B, 0x67, 0x01};
+        try (FileInputStream in = new FileInputStream(f)) {
+            byte[] buf = new byte[magic.length];
+            int n = in.read(buf);
+            if (n < magic.length) return false;
+            for (int i = 0; i < magic.length; i++) if (buf[i] != magic[i]) return false;
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    /** 补丁/更新包命名特征（大小写不敏感，含中文「补丁」「修正」）。 */
+    private static boolean isPatchLike(String name) {
+        String n = name.toLowerCase();
+        return n.startsWith("patch") || n.startsWith("update") || n.startsWith("upgrade")
+                || n.contains("补丁") || n.contains("修正");
     }
 
     /**
