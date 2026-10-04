@@ -3,7 +3,7 @@
 > 目标：把「识别到某引擎 → 用该引擎的原生运行时直接跑」这条链路做进 **GalgameShell 自身 APK**，
 > 而不是再安装一个第三方播放器 APK（用户明确否决：独立 APK 的方式不要）。
 >
-> 状态：**调研完成 / 集成进行中**。本文只记录已核实事实，猜测一律标注。
+> 状态：**Phase 1 二进制级内嵌已完成并通过真机启动验证；游戏画面卡死（加载页后无推进）待设备重连后现场取证**。本文只记录已核实事实，猜测一律标注。
 
 ## 1. 结论先行
 
@@ -148,6 +148,55 @@ adb -s dc57ebe3 logcat -v time -d | grep -E "Fatal signal|ClassNotFound|Force fi
 adb -s dc57ebe3 shell top -n 1 -b | grep com.winlator
 adb -s dc57ebe3 exec-out screencap -p > C:/tmp/krkr.png
 ```
+
+## 4.2 加载卡死根因分析（静态，2026-10-04）
+
+**现象**：引擎识别出 bosei2 并显示其加载页（白底 + 绿标题栏），之后 CPU 持续 20–27% 在忙，
+但 10+ 分钟画面一帧不变、不生成缓存目录；换 `patch.xp3`（535 KB，无过滤器）同样复现。
+用户硬要求：**必须拿到真实游戏画面截图**，进程起来 / 渲染帧都不算完成。
+
+### 已排除的集成侧嫌疑（逐项静态取证）
+
+| 嫌疑 | 结论 | 证据 |
+| --- | --- | --- |
+| 原生库加载顺序错（ffmpeg/SDL2 须在 game 之前） | ❌ 排除 | `KR2Activity` static 块先 load ffmpeg→SDL2→game；`Cocos2dxActivity.onCreate` 经 `android.app.lib_name` 再 load game 是冗余 no-op，顺序已正确 |
+| `Cocos2dxDownloader` 回调 NPE（`Cocos2dxHelper.getActivity()` 为 null） | ❌ 排除 | `Cocos2dxHelper.init(this)` 在 `onCreate` 内、`sActivity` 于引擎运行前已赋值 |
+| Android 15 分区存储挡住读游戏目录 | ❌ 排除 | `targetSdkVersion = 28`，按旧存储模型运行，外部存储读自动放行 |
+| 引擎资源缺失（`assets/locale/*.xml`、`ui/*.csb`、`DroidSansFallback.ttf`） | ❌ 排除 | 均已并入 `app/src/main/assets/` 根目录且 git 跟踪（与 Winlator 自有 assets 合并） |
+| Downloader JNI 签名不匹配 | ❌ 排除 | 三签名 `(IILjava/lang/String;I)L…`、`(L…;ILjava/lang/String;Ljava/lang/String;)V`、`(L…;)V` 与 `libgame.so` 逐字一致 |
+| `android.app.lib_name` 导致 game 被双重/提前加载 | ❌ 排除 | 同上，static 块已先行加载，meta-data 仅为冗余保险 |
+
+### 关键 reinterpretation：23% 的 CPU 不一定是「自旋」
+
+cocos2d-x 的 GL 线程以 ~60fps 持续 `nativeRender`，**即便画面是静态加载页也会稳定占用一部分 CPU**。
+所以「CPU 20–27% 在忙」更可能是**正常渲染/事件循环**，而非某线程死循环。
+→ 卡死的本质更可能是：**游戏启动脚本在等一个永远不会到来的事件**（而非算力卡死）。
+
+### 两个 leading hypothesis（待现场取证区分）
+
+1. **在等用户点一下**：不少 galge 的「loading」实为「读取完成，请按开始」界面；之前 `input tap`
+   坐标换算打不中 cocos 自绘按钮。→ 若中心点击能推进，则不是 bug，只是缺交互。
+2. **在等一个从未 fire 的异步回调**：游戏启动经由 `Cocos2dxDownloader`（引擎内嵌
+   `https://zeas2.github.io/Kirikiroid2_patch/patch` 自检 URL）或 cocos 网络栈发起加载，
+   回调若因路径/线程问题没回到原生侧，游戏会一直等。→ 已在 `Cocos2dxDownloader.createTask/onFinish`
+   加诊断日志；现场 `logcat` 看是否有 `createTask` 而无配对的 `onFinish`。
+3. **TJS 启动脚本自身在某步空转/未推进**：需 `logcat` 末行 + `kill -3` 线程栈定位。
+
+### 现场取证脚本（已就绪）
+
+`.workbuddy/verify/krkr_diag.sh` —— 在**设备端**跑完整个观察循环（规避后台 logcat 被会话回收）：
+清空并放大 logcat 缓冲 → 落 recentpath.xml（run-as）→ 周期截图 + `top -H` 线程快照 →
+**启动 60s 后做一次屏幕中心 `input tap`**（旋转不变，专治「等点击」假设）→ 结束 dump logcat + SIGQUIT 栈。
+
+```bash
+SER=dc57ebe3
+adb -s $SER push .workbuddy/verify/krkr_diag.sh /data/local/tmp/
+adb -s $SER shell sh /data/local/tmp/krkr_diag.sh /sdcard/Games/bosei2 480
+adb -s $SER pull /sdcard/krkr_diag ./krkr_diag_out
+```
+
+> 重要：KR2Activity 是 `exported=false`，**不能**用 `am start` 直启，必须由「GalgameShell 游戏库点开游戏」
+> 触发（KrkrEngine.launch 写 recentpath.xml + startActivity）。脚本的 run-as 写入是兜底。
 
 ## 5. 参考资料
 

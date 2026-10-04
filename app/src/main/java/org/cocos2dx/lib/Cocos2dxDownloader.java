@@ -80,6 +80,10 @@ public class Cocos2dxDownloader {
     public void onFinish(final int id, final int errCode, final String errStr, final byte[] data) {
         DownloadTask task = _taskMap.remove(id);
         if (null == task) return;
+        // GalgameShell 诊断埋点：确认 finish 回调是否真的回到原生侧（未 fire = 游戏会一直等）。
+        String es = errStr == null ? "null" : errStr;
+        if (es.length() > 120) es = es.substring(0, 120) + "...";
+        logD("onFinish id=" + id + " errCode=" + errCode + " errStr=" + es);
         final byte[] payload = data;
         Cocos2dxHelper.runOnGLThread(new Runnable() {
             @Override
@@ -106,6 +110,9 @@ public class Cocos2dxDownloader {
         final int id = id_;
         final String url = url_;
         final String path = path_;
+
+        // GalgameShell 诊断埋点：记录引擎是否经此桥发起下载（含内置 patch 自检 URL）。
+        logD("createTask id=" + id + " url=" + url + " path=" + path);
 
         Runnable taskRunnable = new Runnable() {
             @Override
