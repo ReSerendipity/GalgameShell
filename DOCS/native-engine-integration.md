@@ -3,7 +3,9 @@
 > 目标：把「识别到某引擎 → 用该引擎的原生运行时直接跑」这条链路做进 **GalgameShell 自身 APK**，
 > 而不是再安装一个第三方播放器 APK（用户明确否决：独立 APK 的方式不要）。
 >
-> 状态：**Phase 1 二进制级内嵌已完成并通过真机启动验证；游戏画面卡死（加载页后无推进）待设备重连后现场取证**。本文只记录已核实事实，猜测一律标注。
+> 状态：**Ren'Py 引擎已端到端跑通**——APK 内嵌 `librenpython.so`（Python 3.12.8 + Ren'Py 8.5.3），
+> 真机（dc57ebe3/RMX5010）直启渲染出真实游戏对话画面并截图取证（§4.6）。Kirikiroid2 此前已跑通 bosei2。
+> 本文只记录已核实事实，猜测一律标注。
 
 ## 1. 结论先行
 
@@ -384,8 +386,45 @@ Activity（同 `KrkrEngine` 风格），故留在门禁内。
 | 离线布局契约（用真实 APK 资源模拟解包，`.workbuddy/verify/verify_renpy_layout.py`） | ✅ `path_to_common`→`filesdir/renpy/common`；`path_to_gamedir`→`game_root/game`；`lib/android`+`lib/jnius`+`main.py`+`renpy/__main__.py` 齐备；launcher `_read_game_dir()` 正确解析 |
 | 许可证合规（根 `NOTICE` §8 + 随 APK 分发 `assets/licenses/LICENSE_LGPL-2.1.txt` 与 `REN_PY_THIRD_PARTY.txt`） | ✅ Ren'Py MIT + LGPL 组件清单与源码链接（`renpy/renpy`、`renpy/renpy-build`、`renpy/pygame_sdl2`）已写入；LGPL-2.1 全文随 APK 附带 |
 
-**未完成（阻塞）**：真机运行期（SDL 渲染 + jnius/android JNI 桥 + 实际游戏画面截图）——`librenpython.so`
-**仅 arm64-v8a**，x86_64 模拟器跑不了，需真机 `dc57ebe3`。设备上线后按 §4.5.1 手册取证。
+**真机运行期**：✅ 已完成（2026-10-04），取证过程与四个 root cause 见 **§4.6**。
+
+### 4.6 真机运行期取证已通过（2026-10-04）✅ 真实游戏画面截图达成
+
+按 §4.5.1 路线 A（临时 `exported=true` 直启 → 取证 → 收回 `exported=false`）执行。
+测试游戏：`.workbuddy/verify/renpy_game/`（无 `.rpa` 极简项目，仅适用直启路线）。
+
+#### 逐个 root cause（全部实证修复，按暴露顺序）
+
+| # | 现象 | 根因 | 修复 | 实证 |
+| --- | --- | --- | --- | --- |
+| 1 | `SDL: Failed to register methods of org/libsdl/app/SDLActivity` + native crash | R8 `minifyEnabled true`（debug 亦生效）的 **shrinking** 删掉「未被 Java 引用」的方法，`JNI_OnLoad` 整表 `RegisterNatives` 失败（`-dontobfuscate` 只关改名不关裁剪） | `proguard-rules.pro` 补 keep：`org.libsdl.app`/`org.renpy.android`/`org.jnius`/`org.kamranzafar.jtar`/`com.winlator.renpy` 五包 + native 成员 | 重建后 `nativeSetupJNI()` 成功、C 侧 `preparePython` 回调通 |
+| 2 | `files/main.py` 不存在/是空目录，整树只剩空目录 | **`AssetManager.list()` 对文件返回空数组而非 null**；以 `null` 判文件把顶层文件误当空目录 `mkdir` | `copyAssetTree` 改为「子项数>0 判目录；空数组先试按文件复制，失败再按空目录建」+ `ENGINE_VERSION` bump 强制重解包 | 设备 `files/main.py` 2679B 真实文件 |
+| 3 | `SDL_main` ~4ms 静默退出、logcat **零 Python 输出** | **CPython 标准库缺失**：`PYTHONHOME`=`filesDir` 时解释器要 `filesDir/lib/python3.12/`；解包树里只有 `renpy/`、`lib/{android,jnius}`、`main.py` → `import os` 即 ImportError（stderr 未接 logcat 故无输出） | 从 `renpy-sdk.zip` 抽 `lib/python3.12/**`（833 个 `.pyc`）进 `assets/renpy-engine/lib/python3.12/`；黑名单只排 `android`/`jnius`（已在 `lib/` 顶层）与 Windows 版 `lib-dynload`；每个 `.pyc` 的 flags 由 1（hash-checked，需源文件）翻成 **2（hash-unchecked，免源校验）**——与真实 Ren'Py Android 产物一致 | Python 回溯开始出现在 logcat |
+| 4 | `AttributeError: module '__main__' has no attribute 'path_to_gamedir'`（bootstrap.py:334） | **启动器契约缺失**：`renpy.bootstrap`/`renpy.main` 经 `renpy.__main__` 回调 6 个 `path_to_*` 函数；SDK 官方启动器 `renpy.py` 在 `main()` 里显式 `renpy.__main__ = sys.modules[__name__]`，我们的 main.py 既没定义函数也没绑定 | 重写 `assets/renpy-engine/main.py` 为官方启动器同构：定义 `path_to_gamedir`/`path_to_common`/`path_to_saves`/`path_to_logdir`/`predefined_searchpath`/`path_to_renpy_base` + bootstrap 前 `renpy.__main__ = sys.modules[__name__]` | bootstrap 推进到 `renpy.import_all()` |
+| 5 | `ModuleNotFoundError: No module named 'zipfile._path'`（APK 里 457 缺 2） | **aapt2 默认 ignore 模式含 `<dir>_*`**，assets 里下划线开头的**目录**被剔除（下划线开头的**文件**不受影响）——`zipfile/_path/` 整目录进不了 APK | `app/build.gradle` 覆盖 `androidResources.ignoreAssetsPattern`（照抄默认项、仅去掉 `<dir>_*`，`// GalgameShell:` 标记） | APK stdlib 条目 455→457，import 通过 |
+| 6 | `No module named 'ecdsa'`（savetoken.py:26）、`No module named 'renpy.test'`（`__init__.py:572`） | 抽取黑名单误伤 Ren'Py 自带依赖（ecdsa/requests 等在 SDK 的 `lib/python3.12/` 内）；引擎提取时漏 `renpy/test/` 全包（20 文件） | 黑名单收窄为 `android`/`jnius`/`lib-dynload` 三项；按 SDK↔本地全量对账补齐 `renpy/test/` | 依赖全部解析，进入 `renpy.main.main()` |
+
+#### 最终证据链（round 9+）
+
+- logcat（`python:I`，**零异常**）：`Opening APK ...`（p4a android 模块初始化）→
+  `Interface start took 153 ms` → `Total time until interface ready: 1.10s` → `Hid presplash.`
+- `topResumedActivity = com.winlator/.renpy.RenPyActivity`（前台）
+- 截图 `.workbuddy/verify/renpy_final.png`：真实 Ren'Py 8.5.3 游戏画面——测试游戏
+  `script.rpy` 首句对话 **"GalgameShell built-in Ren'Py engine is running."** 渲染于自绘
+  `screen say` 对话框（另有 `renpy_shot5.png` 为引擎自带异常界面，同样证明 SDL 渲染链路通）。
+- 版本角标 `1.0 / 8.5.3.26051504 / Android`（Ren'Py 渲染，证明字体/样式/文本布局链路全通）。
+
+#### 测试游戏自身的两个坑（游戏侧，非引擎）
+
+- `screen say` **必须含 `id "what"`（who 可选 `id "who"`）的 Text 控件**，否则
+  `display_say` 报 `The say screen (or show_function) must return a Text object.`
+- `padding 20` 简写在样式展开时按下标取 tuple → `TypeError: 'int' object is not subscriptable`；
+  用显式 `left_padding`/`right_padding`/`top_padding`/`bottom_padding`。
+
+#### 收尾状态
+
+- manifest `RenPyActivity` 已收回 `exported="false"`，最终 APK 重建重装，主壳（GalgameMainActivity）冒烟正常。
+- 已知待办：走游戏库路线（`RenPyEngine` 识别 `.rpa` → 自动 launch）的 E2E 未测（需带合法 `.rpa` 的游戏）。
 
 ### 4.5.1 真机复测手册（设备 dc57ebe3 连上后）
 
