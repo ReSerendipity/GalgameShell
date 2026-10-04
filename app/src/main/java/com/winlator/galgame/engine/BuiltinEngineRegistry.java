@@ -13,7 +13,7 @@ import com.winlator.galgame.EngineDetector;
  */
 public final class BuiltinEngineRegistry {
 
-    private static final BuiltinEngine[] ENGINES = { KrkrEngine.INSTANCE };
+    private static final BuiltinEngine[] ENGINES = { KrkrEngine.INSTANCE, RenPyEngine.INSTANCE };
 
     private BuiltinEngineRegistry() {}
 
@@ -25,6 +25,7 @@ public final class BuiltinEngineRegistry {
         if (engine == null) return null;
         switch (engine) {
             case KIRIKIRI: return KrkrEngine.INSTANCE;
+            case RENPY:    return RenPyEngine.INSTANCE;
             default:       return null;   // 其余均有许可证/源码障碍，见类注释
         }
     }

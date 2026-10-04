@@ -324,13 +324,88 @@ Ren'Py Android 运行时的构成（据 renpy-build 源码 + Ren'Py Android 运�
 
 **体积实测**：35 + 16 = **51MB**（落在 40–70MB 预估区间内），叠加现有 184MB → 约 **235MB**，符合预期。
 
-**下一步（尚未做）**：
-1. 实现 `com.winlator.galgame.engine.renpy.RenPyActivity`（继承 `org.renpy.android.PythonSDLActivity`，`mActivity` 指向本壳），
-   改写 `preparePython`/游戏定位逻辑，从**外部存储**加载 Ren'Py 项目（`assets/renpy-engine/renpy` 首启解压到内部目录并加进 sys.path）。
-2. 实现 `RenPyEngine extends BuiltinEngine`（探测/启动/游戏定位），在 `BuiltinEngineRegistry.resolve()` 注册 `case RENPY`。
-3. manifest 加 `RenPyActivity` + `RenPyFileProvider`（`authorities=com.winlator.fileprovider`，注意与 Winlator 既有 FileProvider 权威名冲突风险，需核对）。
-4. 真机验证：导入 Ren'Py 游戏 → 内置引擎跑 → 截图确认画面（用户硬要求）。
-5. 许可证合规：NOTICE + 随附 LGPL 副本 + 指向 renpy/renpy、renpy/renpy-build 源码链接。
+**下一步**：集成层（启动器 / Activity / 引擎注册 / manifest）已全部完成，见 **§4.5**；
+余下仅真机运行期取证（§4.5.1）与许可证合规（NOTICE + LGPL 副本 + 源码链接）。
+
+### 4.5 集成层已落地（2026-10-04 续）✅ 构建 + 离线布局验证通过
+
+在 §4.4.1 运行时之上补齐「集成层」：启动器、Activity 宿主、引擎注册、manifest 注册。
+
+#### 启动契约（逐条对源码核实，非猜测）
+
+- `librenpython.so` 的 `SDL_main` → `start_python()` 固定执行 `getenv("ANDROID_PRIVATE")/main.py`，
+  并 `chdir` 到该目录；`sys.path[0]` 与 `PYTHONHOME` 都指向它。
+- `PythonSDLActivity.preparePython()` 已把 `ANDROID_PRIVATE` 设为 `getFilesDir()`，且 `renpy/__init__.py`
+  以 `"ANDROID_PRIVATE" in os.environ` 判定 `renpy.android=True`（自动成立，无需额外代码）。
+- 引擎须解包到 `getFilesDir()/renpy/`；`renpy.main.main()` 用 `renpy.config.renpy_base` 调
+  `renpy.__main__.path_to_common()` → `renpy_base/renpy/common`。
+- **SDL 版本无冲突**：`.so` 内实测为 **SDL2**（`Java_org_libsdl_app_SDLActivity`×29、`SDL_SetMainReady`、
+  `SDL2_` 前缀），与仓内 vendored SDL2 `SDLActivity`（`getLibraries()` 返回 `{"renpython"}`）一致；
+  SDL2 静态链入 `librenpython.so`，无需独立 `libSDL2.so`。
+- **jnius 无需独立 so**：`librenpython.so` 内含 jnius（369 处引用），C 扩展为内建模块；磁盘上只需
+  `jnius/`、`android/` 的 `.pyc`。`renpy/loader.py` 会 `import android.apk`，故 `apk.pyc` 必需。
+
+#### 补齐的引擎缺失件（§4.4.1 提取遗漏）
+
+| 缺失件 | 来源 | 原因 |
+| --- | --- | --- |
+| `renpy/__main__.py` | SDK 根 `renpy.py` | SDK 把 `renpy.__main__` 放在包外的根 `renpy.py`，原提取只取 `renpy/*` 子树而漏掉；缺它 `renpy.main.main()` 会 AttributeError |
+| `lib/android/{__init__,apk}.pyc` | SDK `lib/python3.12/android/` | `renpy.android` 分支需 `import android` / `import android.apk` |
+| `lib/jnius/{__init__,env,reflect,signatures}.pyc` | SDK `lib/python3.12/jnius/` | `from jnius import autoclass` |
+
+`.pyc` 魔数 3531（CPython 3.12），与 `.so` 内嵌解释器 3.12.8 一致。
+
+#### 新增 / 改动文件
+
+| 文件 | 作用 |
+| --- | --- |
+| `assets/renpy-engine/main.py` | 启动器：读 `game_dir.txt` → 设 `sys.argv=[py, game_root, "run"]`（`renpy.arguments` 的 basedir 是**位置参数** nargs="?"）→ `renpy.bootstrap.bootstrap(renpy_base)` |
+| `java/com/winlator/renpy/RenPyActivity.java` | 引擎宿主：版本化解包 `assets/renpy-engine/**`→`getFilesDir()`，写 `game_dir.txt`，复用父类 env 设置 |
+| `java/com/winlator/galgame/engine/RenPyEngine.java` | `extends BuiltinEngine`：`isAvailable` 探 `librenpython.so`；`launch` 解析游戏根目录 + 启 Activity |
+| `BuiltinEngineRegistry` | 注册 `case RENPY`（`ENGINES` 数组加 `RenPyEngine.INSTANCE`） |
+| `AndroidManifest.xml` | 加 `com.winlator.renpy.RenPyActivity`(exported=false) + `RenPyFileProvider`(authority `com.winlator.fileprovider`) |
+
+**放置决策**：`RenPyActivity` 放 `com.winlator.renpy`（**不在** `com.winlator.galgame`）——CI 的
+`galgame-compile` 门禁只对 `com/winlator/galgame` 用桩编译，而本类依赖真实 Android/SDL 类，放进去会编不过。
+`RenPyEngine` 只用桩安全 API（Context/Intent/ComponentName/File/Log/ApplicationInfo）且以字符串引用
+Activity（同 `KrkrEngine` 风格），故留在门禁内。
+
+**游戏根目录解析**（`RenPyEngine.resolveGameRoot`）：用户可能选项目根目录，也可能选 `game/` 内的 `.rpa/.rpy`。
+后者向上取「名为 `game` 的目录」的父级作 basedir——使 `basedir/game` 天然存在，bootstrap 不会多建空 `game/`。
+
+#### 验证结果
+
+| 项 | 结果 |
+| --- | --- |
+| CI 桩门禁（`com/winlator/galgame` 对 `ci/stubs`，`-Xlint:all`） | ✅ rc=0 零警告 |
+| `compileDebugJavaWithJavac --offline` | ✅ BUILD SUCCESSFUL |
+| `assembleDebug --offline`（arm64） | ✅ BUILD SUCCESSFUL，APK **199MB** |
+| APK 内容 | `lib/arm64-v8a/librenpython.so` + 305 个 `renpy-engine` 资源齐备 |
+| 离线布局契约（用真实 APK 资源模拟解包，`.workbuddy/verify/verify_renpy_layout.py`） | ✅ `path_to_common`→`filesdir/renpy/common`；`path_to_gamedir`→`game_root/game`；`lib/android`+`lib/jnius`+`main.py`+`renpy/__main__.py` 齐备；launcher `_read_game_dir()` 正确解析 |
+
+**未完成（阻塞）**：真机运行期（SDL 渲染 + jnius/android JNI 桥 + 实际游戏画面截图）——`librenpython.so`
+**仅 arm64-v8a**，x86_64 模拟器跑不了，需真机 `dc57ebe3`。设备上线后按 §4.5.1 手册取证。
+
+### 4.5.1 真机复测手册（设备 dc57ebe3 连上后）
+
+1. 安装：`adb -s dc57ebe3 install -r app/build/outputs/apk/debug/app-debug.apk`
+2. 导入测试游戏：把含 `game/` 的项目推到 `/sdcard/Android/data/com.winlator/files/Games/testrenpy/`。
+3. 直启（`RenPyActivity` exported=false，需临时改 true 或走游戏库）：
+   `adb -s dc57ebe3 shell am start -n com.winlator/com.winlator.renpy.RenPyActivity --es com.winlator.galgame.extra.RENPY_GAME_DIR /sdcard/Android/data/com.winlator/files/Games/testrenpy`
+4. 观察：`adb -s dc57ebe3 logcat -s python:* RenPyActivity:* SDL:* `；首启会有一次引擎解包日志。
+5. 截图：`adb -s dc57ebe3 exec-out screencap -p > shot.png`（Windows 目标用 `C:/...`）。
+
+**关于 `exported`**：第 3 步的 `am start` 直启在本机（ColorOS retail）会被拒——shell 无权拉起
+他包 non-exported Activity（Kirikiroid2 阶段已实证）。两条路：
+- **A 直启取证（确定性高，推荐首测）**：临时把 manifest 里 `RenPyActivity` 的
+  `android:exported="false"` 改成 `true`，`assembleDebug --offline` 重装，测完改回并重建。
+- **B 走游戏库（免重建，但要过 UI 与引擎识别）**：把游戏导入游戏库并被 `EngineDetector`
+  识别为 RENPY（靠 `.rpa` 魔数），再点开关；由 `GalgameLibraryActivity.showNativeRouteDialog`
+  自动 `resolve→isAvailable→launch`，无需改 manifest。测试目录 `.workbuddy/verify/renpy_game/`
+  是无 `.rpa` 的极简项目，**仅适用 A**；走 B 需另备带合法 `.rpa` 的游戏。
+
+**测试游戏**（已就绪，gitignored）：`.workbuddy/verify/renpy_game/game/{options,screens,script}.rpy`
+——自带 `say`/`main_menu` 屏（引擎不提供默认屏），`main_menu` 1.2s 后自动 `Start()`，便于直截对话画面。
 
 ## 5. 参考资料
 
