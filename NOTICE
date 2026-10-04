@@ -14,7 +14,7 @@ GalgameShell — NOTICE
 
   对应源码获取方式（LGPL-2.1 §6 / AC-18）：
   - 应用内：「游戏库 → 关于」中列出源码地址；
-  - 仓库：上述 GitHub 地址（分支 galgame）；
+  - 仓库：上述 GitHub 地址（分支 main）；
   - 分发二进制时，须同时提供或书面承诺提供上述源码。
 
 2. 本外壳新增部分（新增价值层）
@@ -53,14 +53,17 @@ GalgameShell — NOTICE
 - **严禁**捆绑商业字体（如 MS Gothic / Hiragino / 方正等）。
 - 用户放入的字体由其自行负责许可合规；本外壳仅做本地注入，不进行再分发。
 
-5. 原生播放器（B 路由，A4）
----------------------------
-本外壳不内嵌任何第三方原生播放器，仅在用户显式操作时"唤起"已安装的应用：
-- Kirikiroid2 (org.tvp.kirikiri2)        — 开源，Tier-1
+5. 原生播放器与内嵌引擎（B 路由演进）
+------------------------------------
+本外壳现已**内嵌**以下原生引擎，在其自身 APK 进程内直接运行（许可证详见 §8）：
+- Kirikiroid2 (org.tvp.kirikiri2) — BSD-3-Clause
+- Ren'Py                          — MIT + 部分 GNU LGPL-2.1
+
+仍支持在用户显式操作时"唤起"已安装的外部应用（Kirikiroid2 已内嵌，外部唤起仅作兜底）：
 - ONScripter (jp.ogapee.onscripter.release) — 开源，Tier-1
 - JoiPlay (cyou.joiplay)                 — 闭源聚合器，Tier-2（需显式开启 + 免责）
 - Tyranor (com.akira.tyranoemu)          — 闭源聚合器，Tier-2（需显式开启 + 免责）
-上述应用与其运行的游戏内容的版权/许可，由各自权利人负责。
+上述被唤起的应用与其运行的游戏内容的版权/许可，由各自权利人负责。
 
 6. 游戏内容与加密（A5）
 -----------------------
@@ -71,3 +74,27 @@ GalgameShell — NOTICE
 7. 无担保
 ---------
 本软件按"原样"提供，不附带任何明示或默示担保。使用风险自负。
+
+8. 内嵌引擎的第三方组件与许可证（LGPL-2.1 合规）
+-----------------------------------------------
+本外壳内嵌的原生引擎包含第三方组件，其许可证义务如下：
+
+8.1 Kirikiroid2（BSD-3-Clause，宽松）
+- 主许可证：BSD 3-Clause（W.Dee & contributors），无 copyleft，无需开源本仓库代码；
+  仅须保留版权声明，且不得以作者名义背书。
+- 源码：https://github.com/zeas2/Kirikiroid2
+
+8.2 Ren'Py（MIT + 部分 GNU LGPL-2.1）
+- Ren'Py 主体：MIT License（https://github.com/renpy/renpy）。
+- 静态链入 librenpython.so 的 LGPL-2.1 组件：
+  chardet、FFmpeg、Fribidi、libusb、Pygame_SDL2（MIT + LGPL-2.1）。
+- 其他宽松组件：Python（PSF License）、SDL2（zlib/BSD 风格）、zlib/brotli/ANGLE 等。
+- 对应源码（LGPL-2.1 §6 / AC-18 义务）：
+  - Ren'Py 本体及依赖：https://github.com/renpy/renpy
+  - 构建系统（含上述 LGPL 组件源码、产生 librenpython.so 的构建脚本）：
+    https://github.com/renpy/renpy-build
+  - pygame_sdl2 独立仓：https://github.com/renpy/pygame_sdl2
+- LGPL-2.1 全文见同目录 LICENSE（亦随 APK 分发于
+  assets/licenses/LICENSE_LGPL-2.1.txt，及 assets/licenses/REN_PY_THIRD_PARTY.txt 组件清单）。
+- 本外壳对 Ren'Py 运行时的修改仅限 Java 壳剥离 Google Play Asset Delivery / IAP
+  （不影响 LGPL 组件本身），完整对应源码公开于 https://github.com/ReSerendipity/GalgameShell。

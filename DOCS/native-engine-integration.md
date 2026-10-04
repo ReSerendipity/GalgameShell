@@ -324,8 +324,8 @@ Ren'Py Android 运行时的构成（据 renpy-build 源码 + Ren'Py Android 运�
 
 **体积实测**：35 + 16 = **51MB**（落在 40–70MB 预估区间内），叠加现有 184MB → 约 **235MB**，符合预期。
 
-**下一步**：集成层（启动器 / Activity / 引擎注册 / manifest）已全部完成，见 **§4.5**；
-余下仅真机运行期取证（§4.5.1）与许可证合规（NOTICE + LGPL 副本 + 源码链接）。
+**下一步**：集成层（启动器 / Activity / 引擎注册 / manifest）与许可证合规已全部完成，见 **§4.5**；
+余下仅真机运行期取证（§4.5.1）。
 
 ### 4.5 集成层已落地（2026-10-04 续）✅ 构建 + 离线布局验证通过
 
@@ -382,6 +382,7 @@ Activity（同 `KrkrEngine` 风格），故留在门禁内。
 | `assembleDebug --offline`（arm64） | ✅ BUILD SUCCESSFUL，APK **199MB** |
 | APK 内容 | `lib/arm64-v8a/librenpython.so` + 305 个 `renpy-engine` 资源齐备 |
 | 离线布局契约（用真实 APK 资源模拟解包，`.workbuddy/verify/verify_renpy_layout.py`） | ✅ `path_to_common`→`filesdir/renpy/common`；`path_to_gamedir`→`game_root/game`；`lib/android`+`lib/jnius`+`main.py`+`renpy/__main__.py` 齐备；launcher `_read_game_dir()` 正确解析 |
+| 许可证合规（根 `NOTICE` §8 + 随 APK 分发 `assets/licenses/LICENSE_LGPL-2.1.txt` 与 `REN_PY_THIRD_PARTY.txt`） | ✅ Ren'Py MIT + LGPL 组件清单与源码链接（`renpy/renpy`、`renpy/renpy-build`、`renpy/pygame_sdl2`）已写入；LGPL-2.1 全文随 APK 附带 |
 
 **未完成（阻塞）**：真机运行期（SDL 渲染 + jnius/android JNI 桥 + 实际游戏画面截图）——`librenpython.so`
 **仅 arm64-v8a**，x86_64 模拟器跑不了，需真机 `dc57ebe3`。设备上线后按 §4.5.1 手册取证。
