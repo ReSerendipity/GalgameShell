@@ -96,6 +96,15 @@
             android:name="android.app.lib_name"
             android:value="game" />
 
+        <!-- GalgameShell：内置 Ren'Py 引擎宿主（继承 org.renpy.android.PythonSDLActivity）。
+             引擎从 assets/renpy-engine 解包到 getFilesDir()，游戏根目录经 EXTRA_GAME_DIR 传入。
+             放在 com.winlator.renpy（非 galgame 包）以避开 CI 桩编译门禁。 -->
+        <activity android:name="com.winlator.renpy.RenPyActivity"
+            android:theme="@style/AppThemeFullscreenDark"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="keyboardHidden|screenSize|density|orientation"
+            android:exported="false" />
+
         <!-- Needed for keep the container alive when in background or the device is locked. -->
         <service
             android:name="com.winlator.services.ForegroundService"
@@ -108,6 +117,20 @@
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.winlator.FileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+        </provider>
+
+        <!-- GalgameShell：Ren'Py 引擎的 FileProvider（PythonSDLActivity.openEditor 用）。
+             权威名 = getPackageName()+".fileprovider" = com.winlator.fileprovider（与上面的大写
+             com.winlator.FileProvider 不同字符串，可共存）。 -->
+        <provider
+            android:name="org.renpy.android.RenPyFileProvider"
+            android:authorities="com.winlator.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
 
