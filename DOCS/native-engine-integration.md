@@ -260,12 +260,15 @@ Ren'Py Android 运行时的构成（据 renpy-build 源码 + Ren'Py Android 运�
 
 | 层 | 组件 | 说明 |
 | --- | --- | --- |
-| 原生 | `libpython*.so` | 完整 CPython 解释器 |
-| 原生 | `librenpy.so` | Ren'Py 原生加速模块 |
-| 原生 | `libSDL2*.so`（+image/ttf/mixer） | Pygame/SDL2 渲染/音频/输入 |
-| 资源 | `assets/renpy/**` | Ren'Py 引擎 Python 字节码（.pyc） |
+| 原生 | `librenpython.so`（arm64-v8a, 35MB） | **单一合并库**：内嵌 CPython 解释器 + Ren'Py 原生加速模块 + pygame_sdl2 + SDL2（全部静态链入）。**没有**独立的 librenpy.so / libSDL2.so |
+| 资源 | `assets/renpy/**` | Ren'Py 引擎 Python 字节码（`__pycache__/*.cpython-312.pyc`，CPython 3.12 与 librenpython.so 同版本，可移植）+ `common/` 主题字体 + 15 个子包 |
 | 资源 | `assets/game/*.rpa`, `*.rpyc` | 游戏数据（.rpyc = pickled AST，**非** CPython 字节码） |
 | Java 壳 | `org.renpy.android.PythonSDLActivity` | 继承 SDL `SDLActivity`；`mActivity` 静态引用供 pyjnius 回访 |
+
+> **关键修正（2026-10-04 续）**：此前按 renpy-build 文档假设 native 层是 `libpython*.so` + `librenpy.so` + `libSDL2*.so` 三件套。
+> 实测 RAPT 产物是**单一 `librenpython.so`**（`DT_NEEDED` 仅 = Android 系统库：`libGLESv2` / `libOpenSLES` /
+> `libandroid` / `liblog` / `libc` / `libm` / `libdl`）。CPython + Ren'Py C 扩展 + pygame_sdl2 + SDL2 全部静态链入该库。
+> 因此本仓只需 vendor 一个 35MB 的 `librenpython.so`，**无额外 .so 依赖**。
 
 - **入口类名**：`org.renpy.android.PythonSDLActivity`（**注意不是** `org.kivy.android.PythonActivity`——
   论坛常见踩坑）。Python 侧经 pyjnius `autoclass('org.renpy.android.PythonSDLActivity').mActivity` 拿上下文。
@@ -292,6 +295,42 @@ Ren'Py Android 运行时的构成（据 renpy-build 源码 + Ren'Py Android 运�
 - **体积**：运行时估 **40–70MB**（Python+SDL2+librenpy+引擎字节码）。叠加到现有 184MB APK → 约 **230–250MB**。
   可选「运行时随包 + 首启解压」或「assets 压缩」缓解。
 - **合规**：MIT + 部分 LGPL，与本仓 LGPL-2.1 **兼容**。义务=附许可证副本 + 提供 LGPL 组件源码可得性。
+
+### 4.4.1 运行时已落地（2026-10-04 续）✅
+
+**重大发现**：RAPT 包（`renpy-8.5.3-rapt.zip`）的 `prototype/renpyandroid/src/main/jniLibs/arm64-v8a/librenpython.so`
+是**预构建、可直接 vendored** 的 Android arm64 运行时——**不需要** renpy-build 本地编译 Python，也**不需要**
+额外的 support-package 下载（renpy.org/dl 上的 `renpy-android-support.*.zip` 经核实为 404；运行时就在 RAPT 原型里）。
+所以「构建参考 APK」这一步被大幅简化：运行时本体已就在手，真正需要的只是把它 + 引擎字节码 + Java 壳搬进本仓。
+
+**已 vendored 到本仓（commit 见 git log，未 push）**：
+
+| 类型 | 落点 | 体积 / 数量 |
+| --- | --- | --- |
+| 原生库 | `app/src/main/jniLibs/arm64-v8a/librenpython.so` | 35MB（自包含，仅依赖系统库） |
+| 引擎字节码 | `app/src/main/assets/renpy-engine/renpy/**` | 16MB / 679 文件（`__pycache__` + `common/` + 15 子包：gl2/text/display/ui/sl2/…） |
+| Java 壳 | `app/src/main/java/org/renpy/android/` `org/libsdl/app/` `org/jnius/` `org/kamranzafar/jtar/` | 53 个 `.java` |
+
+**Java 壳处理**：
+- **剥离 Google Play Asset Delivery + IAP**：`PythonSDLActivity` 原 `implements AssetPackStateUpdateListener`，
+  依赖 `com.google.android.play.core.assetpacks.*` / `com.google.android.gms.tasks.*` 与 `Constants` / `StoreInterface`。
+  这些仅在 `Constants.assetPacks` 非空时才激活；本仓直接把引擎/资源打进 APK、首启解压，无 Play 资源包、无 IAP，故整段移除。
+  顺带删除 `Constants.java` / `StoreInterface.java`（删前已 grep 确认无其它引用）。**未引入任何新 gradle 依赖**。
+- `RenPyFileProvider` 补 `import com.winlator.R;`（原壳 namespace = `org.renpy.android`，与本仓 `com.winlator` 不符，裸 `R` 解析不到）。
+- `getLibraries()` 仍返回 `{"renpython"}` → 加载 `librenpython.so`；`nativeSetEnv` / `AssetExtract` / SDL 契约**原样保留**（JNI 契约不可改，与 Kirikiroid2 同理）。
+
+**编译验证**：`compileDebugJavaWithJavac --offline` **BUILD SUCCESSFUL**（仅项目既有 deprecation 警告），
+确认 53 个上游 Java 在本仓 `compileSdk 35` 下全部编过。
+
+**体积实测**：35 + 16 = **51MB**（落在 40–70MB 预估区间内），叠加现有 184MB → 约 **235MB**，符合预期。
+
+**下一步（尚未做）**：
+1. 实现 `com.winlator.galgame.engine.renpy.RenPyActivity`（继承 `org.renpy.android.PythonSDLActivity`，`mActivity` 指向本壳），
+   改写 `preparePython`/游戏定位逻辑，从**外部存储**加载 Ren'Py 项目（`assets/renpy-engine/renpy` 首启解压到内部目录并加进 sys.path）。
+2. 实现 `RenPyEngine extends BuiltinEngine`（探测/启动/游戏定位），在 `BuiltinEngineRegistry.resolve()` 注册 `case RENPY`。
+3. manifest 加 `RenPyActivity` + `RenPyFileProvider`（`authorities=com.winlator.fileprovider`，注意与 Winlator 既有 FileProvider 权威名冲突风险，需核对）。
+4. 真机验证：导入 Ren'Py 游戏 → 内置引擎跑 → 截图确认画面（用户硬要求）。
+5. 许可证合规：NOTICE + 随附 LGPL 副本 + 指向 renpy/renpy、renpy/renpy-build 源码链接。
 
 ## 5. 参考资料
 
