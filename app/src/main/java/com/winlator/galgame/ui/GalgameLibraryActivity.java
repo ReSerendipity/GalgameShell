@@ -18,15 +18,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import com.winlator.R;
-import com.winlator.XServerDisplayActivity;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
 import com.winlator.galgame.EngineDetector;
 import com.winlator.galgame.GalgameDiagnostics;
-import com.winlator.galgame.GalgameLaunchHelper;
+import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
+import com.winlator.galgame.GameLauncher;
 import com.winlator.galgame.ImportFlow;
 import com.winlator.galgame.NativeRouteLauncher;
 import com.winlator.galgame.engine.BuiltinEngine;
@@ -69,10 +69,10 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         // GridView 级别的 onItemClick/onItemLongClick，故不能挂在 GridView 上。
         adapter.setOnGameActionListener(new GalgameLibraryAdapter.OnGameActionListener() {
             @Override
-            public void onGameClick(Container container) { launchGame(container); }
+            public void onGameClick(GalgameLibraryAdapter.Item item) { launchGame(item); }
 
             @Override
-            public void onGameLongClick(Container container) { showGameActions(container); }
+            public void onGameLongClick(GalgameLibraryAdapter.Item item) { showGameActions(item); }
         });
         GridView grid = findViewById(R.id.GVGalgames);
         grid.setAdapter(adapter);
@@ -103,22 +103,42 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     // ---- 列表 ----
 
+    /**
+     * 列表 = 容器条目 + 自有索引里的原生条目（与 {@code GalgameHomeFragment} 同口径）。
+     *
+     * <p>原生游戏走 Route.B，导入时不建容器（历史行为），以前因此永远进不了库；
+     * 现在由 {@link GalgameLibraryIndex} 记档，这里合并进来一并展示。
+     */
     private void refresh() {
         items.clear();
+
+        java.util.Map<String, GalgameLibraryIndex.Entry> index = new java.util.HashMap<>();
+        for (GalgameLibraryIndex.Entry e : GalgameLibraryIndex.load(this)) {
+            index.put(e.gameId, e);
+        }
 
         List<Container> containers = containerManager.getContainers();
         if (containers != null) {
             for (Container c : containers) {
                 String name = c.getName();
-                if (name != null && name.startsWith(CONTAINER_PREFIX)) {
-                    String gameId = name.substring(CONTAINER_PREFIX.length());
-                    File gameDir = new File(c.getRootDir(), ".wine/drive_c/galgame/" + gameId);
-                    File exe = overlayExe(c);
-                    String engine = c.getExtra("galgame_engine", "?");
-                    items.add(new GalgameLibraryAdapter.Item(c, gameId, engine, gameDir, exe));
-                }
+                if (name == null || !name.startsWith(CONTAINER_PREFIX)) continue;
+                String gameId = name.substring(CONTAINER_PREFIX.length());
+                GalgameLibraryIndex.Entry e = index.get(gameId);
+                items.add(GalgameLibraryAdapter.fromContainer(c, e != null ? e.preferredEngine : null));
             }
         }
+
+        // 只补「没有容器、也没被上面覆盖」的原生条目
+        for (GalgameLibraryIndex.Entry e : index.values()) {
+            if (e.containerized) continue;
+            boolean alreadyListed = false;
+            for (GalgameLibraryAdapter.Item it : items) {
+                if (it.gameId.equals(e.gameId)) { alreadyListed = true; break; }
+            }
+            if (alreadyListed) continue;
+            items.add(GalgameLibraryAdapter.fromIndexEntry(e));
+        }
+
         adapter.notifyDataSetChanged();
 
         TextView subtitle = findViewById(R.id.TVSubtitle);
@@ -141,26 +161,40 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         }
     }
 
-    private void showGameActions(Container container) {
-        if (container == null) return;
+    /**
+     * 长按菜单。容器专属操作（诊断 / 存档 / 日志）只对有容器的条目开放——
+     * 原生游戏没有 wine 容器，这些按钮点了也只会报错。
+     */
+    private void showGameActions(final GalgameLibraryAdapter.Item item) {
+        if (item == null) return;
 
-        String[] items = {
-                getString(R.string.galgame_action_launch),
-                getString(R.string.galgame_action_diagnose),
-                getString(R.string.galgame_action_export_save),
-                getString(R.string.galgame_action_import_save),
-                getString(R.string.galgame_action_logs),
-        };
+        java.util.List<String> actions = new ArrayList<>();
+        java.util.List<Integer> codes = new ArrayList<>();   // 0=启动 1=诊断 2=导出存档 3=导入存档 4=日志 5=切换运行方式
+
+        actions.add(getString(R.string.galgame_action_launch));         codes.add(0);
+        actions.add(getString(R.string.galgame_action_switch_engine));  codes.add(5);
+        if (item.hasContainer()) {
+            actions.add(getString(R.string.galgame_action_diagnose));       codes.add(1);
+            actions.add(getString(R.string.galgame_action_export_save));    codes.add(2);
+            actions.add(getString(R.string.galgame_action_import_save));    codes.add(3);
+            actions.add(getString(R.string.galgame_action_logs));           codes.add(4);
+        }
+
+        String[] actionItems = actions.toArray(new String[0]);
+        final java.util.List<Integer> finalCodes = codes;
 
         new AlertDialog.Builder(this)
-                .setTitle(container.getName())
-                .setItems(items, (dialog, which) -> {
-                    switch (which) {
-                        case 0: launchGame(container); break;
+                .setTitle(item.label)
+                .setItems(actionItems, (dialog, which) -> {
+                    if (which < 0 || which >= finalCodes.size()) return;
+                    Container container = item.container;
+                    switch (finalCodes.get(which)) {
+                        case 0: launchGame(item); break;
                         case 1: showDiagnostics(container); break;
                         case 2: exportSave(container); break;
                         case 3: importSave(container); break;
                         case 4: showLogs(container); break;
+                        case 5: showEnginePicker(item); break;
                         default: break;
                     }
                 })
@@ -168,22 +202,62 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 .show();
     }
 
-    /** 启动游戏：复用官方 XServerDisplayActivity（A 路由容器）。 */
-    private void launchGame(Container container) {
-        // B 修复（2026-09-28）：启动前校验启动 exe 是否落盘；缺失则提示并取消启动。
-        if (GalgameLaunchHelper.isExecMissing(container)) {
-            snack(getString(R.string.galgame_exe_missing));
+    /** 「切换运行方式」：把玩家的偏好记进自有索引，下次启动按它裁决。 */
+    private void showEnginePicker(final GalgameLibraryAdapter.Item item) {
+        final java.util.List<GameLauncher.Option> options =
+                GameLauncher.options(item.hasContainer(), getString(R.string.galgame_switch_engine_auto));
+
+        String[] labels = new String[options.size()];
+        int current = 0;
+        for (int i = 0; i < options.size(); i++) {
+            labels[i] = options.get(i).label;
+            String id = options.get(i).id;
+            if (id != null && id.equals(item.preferredEngine)) current = i;
+            if (id == null && item.preferredEngine == null) current = i;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.galgame_switch_engine_title, item.label))
+                .setSingleChoiceItems(labels, current, (dialog, which) -> {
+                    GameLauncher.Option picked = options.get(which);
+                    GalgameLibraryIndex.setPreferredEngine(this, item.gameId, picked.id);
+                    snack(picked.id == null
+                            ? getString(R.string.galgame_switch_engine_reset)
+                            : getString(R.string.galgame_switch_engine_done, picked.label));
+                    dialog.dismiss();
+                    refresh();
+                })
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
+    }
+
+    /**
+     * 启动游戏：走统一裁决入口 {@link GameLauncher}。
+     *
+     * <p>此前这里无条件 {@code startActivity(XServerDisplayActivity)}，已容器化的 Kirikiri /
+     * Ren'Py 从库里启动会被一刀切送进 wine。现在由 {@link GameLauncher} 按
+     * 「用户 override → 启动前重检测 → 登记值 → 容器兜底」裁决。
+     */
+    private void launchGame(final GalgameLibraryAdapter.Item item) {
+        if (item == null) return;
+
+        // 原生游戏本体仍在原地：目录没了就得重新导入，不能让引擎自己去猜
+        if (!item.hasContainer() && (item.gameDir == null || !item.gameDir.isDirectory())) {
+            snackLong(getString(R.string.galgame_source_missing));
             return;
         }
 
-        // 友好提示：告知正在启动哪个游戏（现代 Snackbar 代替 Toast）
-        snack(getString(R.string.galgame_launching, gameIdOf(container)));
+        snack(getString(R.string.galgame_launching, item.label));
 
-        android.content.Intent intent = new android.content.Intent(this, XServerDisplayActivity.class);
-        intent.putExtra("container_id", container.id);
-        // A 路由：注入 overlay 的 exe，boot 直接运行游戏（与容器页启动共用同一接线）
-        GalgameLaunchHelper.injectExecPath(container, intent);
-        startActivity(intent);
+        GameLauncher.Result result = GameLauncher.launch(
+                this, item.gameDir, item.container, item.engineName, item.preferredEngine);
+
+        if (!result.launched) {
+            snackLong(result.message != null ? result.message : getString(R.string.galgame_import_failed));
+            return;
+        }
+
+        GalgameLibraryIndex.touchPlayedAsync(getApplicationContext(), item.gameId);
         // 界面切换过渡（淡入淡出，配合主题 windowAnimationStyle）
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
@@ -368,6 +442,8 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
                         GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
                         saveManager.redirectShellFolders(container);
+                        // 落进了容器的游戏不必再按「无容器」展示
+                        GalgameLibraryIndex.markContainerized(appCtx, gameId);
                         File stagedGameDir = new File(container.getRootDir(),
                                 ".wine/drive_c/galgame/" + gameId);
                         saveManager.symlinkPortableSaves(stagedGameDir);
@@ -486,9 +562,14 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         // 不再唤起/安装第三方播放器 APK。
         BuiltinEngine builtin = BuiltinEngineRegistry.resolve(result.engine);
         if (builtin != null && builtin.isAvailable(this)) {
-            if (!builtin.launch(this, source)) {
-                snackLong("内置引擎启动失败：" + builtin.displayName);
+            if (builtin.launch(this, source)) {
+                // 原生路线不建容器，这里补一条索引记录，游戏才有「库入口」：
+                // 退出引擎后还能从封面墙一点即玩，而不是重新手打路径。
+                GalgameLibraryIndex.putNative(this, result.gameId, source.getName(),
+                        result.engine, source);
+                return;
             }
+            snackLong("内置引擎启动失败：" + builtin.displayName);
             return;
         }
 
@@ -550,24 +631,6 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         String name = container.getName();
         if (name == null) return "";
         return name.startsWith(CONTAINER_PREFIX) ? name.substring(CONTAINER_PREFIX.length()) : name;
-    }
-
-    /** 读容器 galgame_overlay.json 的 exe 路径（供封面适配器提取 exe 图标）。 */
-    private static File overlayExe(Container container) {
-        File f = new File(container.getRootDir(), "galgame_overlay.json");
-        if (!f.isFile()) return null;
-        try (java.io.InputStream in = new java.io.FileInputStream(f)) {
-            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
-            byte[] buf = new byte[1 << 13];
-            int n;
-            while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
-            org.json.JSONObject o = new org.json.JSONObject(
-                    new String(bos.toByteArray(), java.nio.charset.StandardCharsets.UTF_8));
-            String exe = o.optString("exe", null);
-            return (exe != null && !exe.isEmpty()) ? new File(exe) : null;
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private static String sanitize(String name) {
