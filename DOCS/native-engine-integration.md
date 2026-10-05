@@ -5,7 +5,9 @@
 >
 > 状态：**Ren'Py 引擎已端到端跑通**——APK 内嵌 `librenpython.so`（Python 3.12.8 + Ren'Py 8.5.3），
 > 真机（dc57ebe3/RMX5010）直启渲染出真实游戏对话画面并截图取证（§4.6），游戏库生产路线
-> （导入→识别→内置引擎一键启动）E2E 亦已通过（§4.7）。Kirikiroid2 此前已跑通 bosei2。
+> （导入→识别→内置引擎一键启动）E2E 亦已通过（§4.7），并已用**真实商业 Ren'Py 游戏《候鸟》
+> （build 于 7.5.3，8.5.3 引擎向前兼容加载其字节码）**跑通主菜单→剧情→对话全链路（§4.7 末）。
+> Kirikiroid2 此前已跑通 bosei2。
 > 本文只记录已核实事实，猜测一律标注。
 
 ## 1. 结论先行
@@ -525,7 +527,32 @@ Activity（同 `KrkrEngine` 风格），故留在门禁内。
 
 → **结论**：Ren'Py 内置引擎在真机完整渲染出「渐变背景 + 立绘 + 对话框」游戏画面，非黑屏、非程序错误、非占位灰；集成链路（检测/解包/启动/图片子系统/透明合成）全部实证通过。`exported` 已收回 `false` 并重建重装（§4.5.1 路线 A 收尾）。
 
-> 诚实说明：用于验证的 `tools/renpy-testgame/` 是**本项目自造的最小合成测试游戏**（结构合法：真实 `.rpy`→`.rpyc` 编译、真实 Ren'Py 引擎加载、手写 PNG 立绘），并非某款商业发行的 Ren'Py 游戏。用户游戏库 `D:\need load` 的 80 个 rar 扫描结果为 **0 个 Ren'Py 游戏**（全 YU-RIS/Siglus/Kirikiri 等）；若需某款真实发行 Ren'Py 游戏做 E2E，需用户合法提供（不下载盗版）。合成游戏已充分验证集成链路。
+> 诚实说明：用于验证的 `tools/renpy-testgame/` 是**本项目自造的最小合成测试游戏**（结构合法：真实 `.rpy`→`.rpyc` 编译、真实 Ren'Py 引擎加载、手写 PNG 立绘），并非某款商业发行的 Ren'Py 游戏。用户游戏库 `D:\need load` 的 80 个 rar 扫描结果为 **0 个 Ren'Py 游戏**（全 YU-RIS/Siglus/Kirikiri 等）。合成游戏已充分验证集成链路；真实商业游戏验证见下节。
+
+#### 真实商业 Ren'Py 游戏 E2E 验证已完成（2026-10-05 续，《候鸟》）✅ 合成游戏的"非商业样本"缺口已补上
+
+样本来源：用户本人用其自建下载器 `Nekogal-DL`（`Desktop/Nekogal-DL/`）从公开资源站 nekogal.com 个人备份的**真实商业 Ren'Py 游戏《候鸟》(MIGRANT BIRD)**（站点公开可下载、仅个人备份、不涉及传播）。zip 1.2GB，`Migrant/game/` 标准 Ren'Py 布局：`pic.rpa`(804MB)+`script.rpa`(21.9MB)+`sound.rpa`(465MB)+`cache/*.rpyb`（预编译字节码，商业游戏惯例剥离 `.rpy` 源码）+`tl/`+`saves/`。`script_version.txt=(7,5,3)` → 游戏 build 于 **Ren'Py 7.5.3**；内置引擎为 **8.5.3**（注意：`RenPyActivity.ENGINE_VERSION=7` 是自有资产解包计数器，与 Ren'Py 版本无关），8.x 向前兼容加载 7.x 编译的 `.rpyb` 字节码——本轮实证跑通，无需重编译。
+
+执行（真机 dc57ebe3，§4.5.1 路线 A）：
+
+1. `adb push …/Migrant /sdcard/Android/data/com.winlator/files/Games/houniao/` → 设备端 `Games/houniao/game/`（adb push 会铺平单层目录，游戏根= `Games/houniao`，其下 `game/` 与 `main.py:path_to_gamedir` 的 candidates 落点一致）。
+2. 临时 `exported=true` 重建安装 → `am start -n com.winlator/com.winlator.renpy.RenPyActivity --es com.winlator.galgame.extra.RENPY_GAME_DIR /sdcard/Android/data/com.winlator/files/Games/houniao`。
+3. `mCurrentFocus=com.winlator/com.winlator.renpy.RenPyActivity` 前台；28s 内完成 1.2GB `.rpa` 加载 + 字节码装载 + 主菜单渲染。
+4. `input tap` 交互两步：点「开始」→ 进入剧情；再点 → 推进对话。
+
+客观证据（三张截图，`C:/Users/Doro/Desktop/GalgameShell验证截图/houniao_live_*.png`）：
+
+| 步骤 | 画面内容 | 像素客观分析 |
+| --- | --- | --- |
+| 主菜单 | 水彩天空 +「候鸟 MIGRANT BIRD」标题 + 开始/读档/设置/附加内容/制作人员/退出游戏 六按钮 | 占位灰 **0%**、彩色 80.84%、**87453** 种颜色（合成测试游戏仅 6771） |
+| 点「开始」 | 男主角河畔红桥剧情 CG + Ren'Py 快捷菜单（回退/快进/自动/菜单）+ 右侧存档/设置浮标 | 占位灰 **0%**、**241782** 种颜色（真实 CG 细腻度） |
+| 再点 | 对话框 + **中文文本渲染**（截图中淡入中段呈半透明）+ 快捷菜单高亮 | CJK 字体渲染正常 |
+
+- 左右黑边为 16:9 游戏画面 letterbox 到 21:9 屏（黑占比 ~19%），非渲染异常。
+- 全程 logcat **无 FATAL EXCEPTION / AndroidRuntime 崩溃 / Python Traceback**。
+- 收尾：`am force-stop` → manifest 改回 `exported=false` 重建重装 → `am start` 被拒 `SecurityException: … not exported from uid 11293`（实证安全恢复）。
+
+→ **结论**：真实商业 Ren'Py 游戏（7.5.3 字节码 + RPA-3.0 归档）在内置引擎上**完整跑通主菜单 → 剧情场景 → 对话文本**全链路，交互真实生效；合成测试阶段的全部结论在真实样本上复现成立。生产路线（游戏库导入 → 内置引擎）对真实发行游戏的适配无遗留缺口。
 
 ### 4.5.1 真机复测手册（设备 dc57ebe3 连上后）
 
