@@ -14,8 +14,13 @@ import java.io.File;
  * 静态并入的运行时**必须是宽松许可证**——目前只有 Kirikiroid2（BSD 3-Clause）达标；
  * EasyRPG(GPLv3) / ONScripter(GPLv2) / PPSSPP(GPLv2+) 会把整个项目拖成 GPL，故不提供内置实现，
  * JoiPlay / Tyranor 闭源，连源码都没有。
+ *
+ * <p><b>等价化改造（2026-10-05）</b>：本类同时实现 {@link GameEngine}，使内置原生引擎与
+ * {@link WinlatorContainerEngine} 在同一个抽象下被选路。这里只多了几个把 final 字段暴露成
+ * 接口方法的桥接方法，外加一个把 {@link GameLaunchRequest} 拆回 {@code (Context, File)}
+ * 的委派，<b>既有的 {@code launch(Context, File)} 语义零改动</b>。
  */
-public abstract class BuiltinEngine {
+public abstract class BuiltinEngine implements GameEngine {
 
     public final String id;
     public final String displayName;
@@ -45,6 +50,19 @@ public abstract class BuiltinEngine {
      * @return true 表示已成功拉起
      */
     public abstract boolean launch(Context context, File gamePath);
+
+    // ---- GameEngine 桥接（字段 ↔ 接口方法同名不冲突，Java 二者命名空间独立）----
+
+    @Override public String id() { return id; }
+    @Override public String displayName() { return displayName; }
+    @Override public String upstreamUrl() { return upstreamUrl; }
+    @Override public String license() { return license; }
+
+    /** 内置引擎不依赖容器，只取请求里的游戏路径。 */
+    @Override
+    public boolean launch(Context context, GameLaunchRequest request) {
+        return request != null && launch(context, request.gamePath);
+    }
 
     @Override
     public String toString() { return id; }
