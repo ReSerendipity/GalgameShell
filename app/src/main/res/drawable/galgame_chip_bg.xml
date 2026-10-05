@@ -2,6 +2,6 @@
 <!-- 引擎/元信息小标签（chip） -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#FFEAF0FF" />
+    <solid android:color="?attr/galgameChipBackground" />
     <corners android:radius="8dp" />
 </shape>

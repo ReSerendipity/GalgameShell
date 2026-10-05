@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF7F8FC">
+    android:background="?android:attr/colorBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,7 +32,7 @@
                 android:layout_height="42dp"
                 android:layout_marginEnd="12dp"
                 android:src="@drawable/galgame_placeholder"
-                android:tint="#FFFFFFFF"
+                android:tint="?attr/colorOnAccent"
                 android:contentDescription="@string/galgame_app_name" />
 
             <LinearLayout
@@ -47,7 +47,7 @@
                     android:text="@string/galgame_library_title"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="#FFFFFFFF" />
+                    android:textColor="?attr/colorOnAccent" />
 
                 <TextView
                     android:id="@+id/TVSubtitle"
@@ -55,7 +55,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textSize="12sp"
-                    android:textColor="#D9FFFFFF" />
+                    android:textColor="?attr/colorOnAccentSubtle" />
             </LinearLayout>
 
             <ImageButton
@@ -64,7 +64,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_info_details"
-                android:tint="#FFFFFFFF"
+                android:tint="?attr/colorOnAccent"
                 android:contentDescription="@string/galgame_about" />
         </LinearLayout>
 
@@ -132,8 +132,8 @@
                 android:paddingStart="22dp"
                 android:paddingEnd="22dp"
                 android:text="@string/galgame_import_title"
-                android:textColor="#FFFFFFFF"
-                android:backgroundTint="#FF6A5AE0" />
+                android:textColor="?attr/colorOnAccent"
+                android:backgroundTint="?attr/colorAccent" />
         </LinearLayout>
 
     </LinearLayout>
@@ -146,9 +146,9 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        app:tint="#FFFFFFFF"
-        app:backgroundTint="#FF6A5AE0"
-        app:rippleColor="#FFFFFFFF"
+        app:tint="?attr/colorOnAccent"
+        app:backgroundTint="?attr/colorAccent"
+        app:rippleColor="?attr/colorOnAccent"
         android:contentDescription="@string/galgame_import_title" />
 
 </FrameLayout>

@@ -4,8 +4,8 @@
     android:shape="rectangle">
     <gradient
         android:angle="270"
-        android:startColor="#FF6A5AE0"
-        android:endColor="#FF9B5DE8" />
+        android:startColor="?attr/galgameBrandStart"
+        android:endColor="?attr/galgameBrandEnd" />
     <corners
         android:bottomLeftRadius="18dp"
         android:bottomRightRadius="18dp" />

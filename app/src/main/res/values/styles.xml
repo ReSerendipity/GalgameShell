@@ -62,14 +62,27 @@
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
     <!-- 游戏库亮色主题别名：v29 起关闭 Force Dark（系统深色模式会强转暗色） -->
-    <style name="GalgameLibraryTheme" parent="@style/AppThemeLight">
+    <!-- GalgameShell 品牌 token 基座（亮档）：游戏库专属主题与外壳亮主题共用同一套品牌值。
+         抽出来是必须的——布局已全面改用 ?attr，主题若缺 token 会在 inflate 时直接抛
+         Resources.NotFoundException（游戏库 Activity 走 GalgameLibraryTheme，不是 GalgameMainTheme）。 -->
+    <style name="GalgameBrandTokensLight" parent="@style/AppThemeLight">
+        <item name="colorAccent">#FF6A5AE0</item>
+        <item name="colorPrimary">#FF6A5AE0</item>
+        <item name="colorPrimaryDark">#FF4B3DBF</item>
+        <item name="colorSurface">#FFFFFFFF</item>
+        <item name="colorOnSurface">#FF1F2430</item>
+        <item name="galgameBrandStart">#FF6A5AE0</item>
+        <item name="galgameBrandEnd">#FF9B5DE8</item>
+        <item name="galgameChipBackground">#FFEAF0FF</item>
+        <item name="galgameChipText">#FF5A6ACF</item>
+        <item name="colorOnAccent">#FFFFFFFF</item>
+        <item name="colorOnAccentSubtle">#D9FFFFFF</item>
+        <item name="galgameCoverPlaceholder">#FFEDEFF2</item>
+    </style>
+    <style name="GalgameLibraryTheme" parent="@style/GalgameBrandTokensLight">
         <!-- 现代过渡：界面切换淡入淡出，并启用内容转场 -->
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
         <item name="android:windowActivityTransitions">true</item>
-        <!-- GalgameShell：补 Material Components 属性，消除该主题下 Material 控件 inflate 时
-             "Failed to resolve attribute colorOnSurface" 的反复告警 -->
-        <item name="colorSurface">#FFFFFFFF</item>
-        <item name="colorOnSurface">#FF1F2430</item>
     </style>
 
     <style name="GalgameWindowAnim" parent="@android:style/Animation.Activity">
@@ -104,8 +117,8 @@
         <item name="preloaderBackground">@drawable/preloader_background_light</item>
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_light</item>
         <!-- 上游 AppThemeBase 的 android:windowBackground=?attr/colorPrimarySurface 实测解析失败（窗口退化为纯黑），
-             这里用字面量颜色覆盖，确保淡紫背景真正生效 -->
-        <item name="android:windowBackground">#FFF7F8FC</item>
+             这里用具体 drawable 覆盖：冷启动即显示品牌字形（窗口 + 酒杯），不再是一块空白/黑屏 -->
+        <item name="android:windowBackground">@drawable/galgame_splash</item>
         <item name="android:colorBackground">#FFF7F8FC</item>
         <item name="android:statusBarColor">#FF4B3DBF</item>
         <!-- GalgameShell R1 语义 token（亮档） -->
@@ -113,6 +126,14 @@
         <item name="colorHairline">#FFEAEAF2</item>
         <item name="colorTextDisabled">#FFB6BCC8</item>
         <item name="colorOnAccent">#FFFFFFFF</item>
+        <!-- GalgameShell 品牌 token（亮档）：顶栏渐变起点/终点、chip 底与字、封面占位底色、
+             以及主色上的次要文字（原 #D9FFFFFF 半透白） -->
+        <item name="galgameBrandStart">#FF6A5AE0</item>
+        <item name="galgameBrandEnd">#FF9B5DE8</item>
+        <item name="galgameChipBackground">#FFEAF0FF</item>
+        <item name="galgameChipText">#FF5A6ACF</item>
+        <item name="colorOnAccentSubtle">#D9FFFFFF</item>
+        <item name="galgameCoverPlaceholder">#FFEDEFF2</item>
         <!-- GalgameShell：补 Material Components 属性（库已声明 attr，主题此前未给值），消除底部导航/FAB/Snackbar
              等控件 inflate 时反复刷屏的 "Failed to resolve attribute colorOnSurface" 告警 -->
         <item name="colorSurface">#FFFFFFFF</item>
@@ -138,7 +159,7 @@
         <item name="panelBackground">@drawable/panel_background_dark</item>
         <item name="preloaderBackground">@drawable/preloader_background_dark</item>
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
-        <item name="android:windowBackground">#FF17161F</item>
+        <item name="android:windowBackground">@drawable/galgame_splash_dark</item>
         <item name="android:colorBackground">#FF17161F</item>
         <item name="android:statusBarColor">#FF23203F</item>
         <!-- GalgameShell R1 语义 token（深档） -->
@@ -146,6 +167,13 @@
         <item name="colorHairline">#FF33324A</item>
         <item name="colorTextDisabled">#FF6B7280</item>
         <item name="colorOnAccent">#FFFFFFFF</item>
+        <!-- GalgameShell 品牌 token（深档）：同上，取紫黑梯度对应的深色值 -->
+        <item name="galgameBrandStart">#FF32305A</item>
+        <item name="galgameBrandEnd">#FF4A3F7A</item>
+        <item name="galgameChipBackground">#FF2B2A44</item>
+        <item name="galgameChipText">#FFA9B4FF</item>
+        <item name="colorOnAccentSubtle">#B3F2F3F7</item>
+        <item name="galgameCoverPlaceholder">#FF2A2938</item>
         <!-- GalgameShell：补 Material Components 属性，消除 "Failed to resolve attribute colorOnSurface" 反复告警 -->
         <item name="colorSurface">#FF232230</item>
         <item name="colorOnSurface">#FFF2F3F7</item>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GalgameShell 闪屏底色（两档各一）。放在自有资源文件里，不碰 default strings/colors 之外的官方向量。 -->
+<resources>
+    <color name="galgame_splash_background">#FF6A5AE0</color>
+    <color name="galgame_splash_background_dark">#FF32305A</color>
+</resources>

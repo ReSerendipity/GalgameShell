@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GalgameShell 冷启动闪屏（亮档）：品牌紫底 + 居中品牌字形（窗口 + 酒杯）。
+     注意：这里刻意用字面量颜色而非 ?attr——上游 AppThemeBase 的 windowBackground
+     引用主题属性时实测解析失败（窗口退化为纯黑），故亮/暗两档各出一份 drawable，
+     由 GalgameMainTheme / GalgameMainThemeDark 分别引用。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/galgame_splash_background" />
+    <item
+        android:width="132dp"
+        android:height="132dp"
+        android:gravity="center"
+        android:drawable="@drawable/galgame_launcher_foreground" />
+</layer-list>

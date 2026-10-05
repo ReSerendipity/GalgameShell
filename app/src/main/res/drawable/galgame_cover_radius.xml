@@ -2,6 +2,6 @@
 <!-- GalgameShell: 游戏库封面圆角底；配合 ImageView clipToOutline 把封面裁成圆角缩略图 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#FFEDEFF2" />
+    <solid android:color="?attr/galgameCoverPlaceholder" />
     <corners android:radius="12dp" />
 </shape>
