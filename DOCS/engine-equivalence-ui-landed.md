@@ -127,6 +127,7 @@
 | 资源链接 | `gradle ... processDebugResources --offline` | 通过，无新增告警 |
 | 完整打包 | `gradle ... assembleDebug --offline` | BUILD SUCCESSFUL（`app/build/outputs/apk/debug/app-debug.apk` ≈209MB） |
 | 图标视觉 | 模型直接读生成的 PNG 核对 | 「窗口 + 酒杯」母题成立，白字形/紫底盘正确 |
+| 通知图标可读性 | `.workbuddy/verify/analyze_png.py` 统计字形覆盖率 | 实心酒杯剪影 39.3%（此前镂空版 10.5%，24dp 下只剩轮廓+洞），24px 预览可辨认 |
 
 **未完成：真机回归**。`adb devices` 当前为空（`dc57ebe3` 未连接），阶段 D 的三条路径回归待设备接入。
 
