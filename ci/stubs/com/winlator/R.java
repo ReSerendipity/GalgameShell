@@ -35,14 +35,14 @@ public final class R {
         public static final int galgame_action_import_save = 5;
         public static final int galgame_action_launch = 6;
         public static final int galgame_action_logs = 7;
-        public static final int galgame_broute_disclaimer = 8;
-        public static final int galgame_broute_enable = 9;
-        public static final int galgame_cancel = 10;
-        public static final int galgame_diag_reinject = 11;
-        public static final int galgame_diag_reinject_done = 12;
-        public static final int galgame_diag_reinject_fail = 13;
-        public static final int galgame_diag_title = 14;
-        public static final int galgame_exe_missing = 15;
+        public static final int galgame_action_switch_engine = 8;
+        public static final int galgame_broute_disclaimer = 9;
+        public static final int galgame_broute_enable = 10;
+        public static final int galgame_cancel = 11;
+        public static final int galgame_diag_reinject = 12;
+        public static final int galgame_diag_reinject_done = 13;
+        public static final int galgame_diag_reinject_fail = 14;
+        public static final int galgame_diag_title = 15;
         public static final int galgame_import_done = 16;
         public static final int galgame_import_failed = 17;
         public static final int galgame_import_hint = 18;
@@ -62,5 +62,10 @@ public final class R {
         public static final int galgame_save_export_fail = 32;
         public static final int galgame_save_no_backup = 33;
         public static final int galgame_save_restored = 34;
+        public static final int galgame_source_missing = 35;
+        public static final int galgame_switch_engine_auto = 36;
+        public static final int galgame_switch_engine_done = 37;
+        public static final int galgame_switch_engine_reset = 38;
+        public static final int galgame_switch_engine_title = 39;
     }
 }

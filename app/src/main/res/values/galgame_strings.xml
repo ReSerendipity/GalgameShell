@@ -42,6 +42,13 @@
     <string name="galgame_touch_na">非游戏容器不支持触控模式切换</string>
     <string name="galgame_action_import_save">导入存档</string>
     <string name="galgame_action_logs">查看日志</string>
+    <string name="galgame_action_switch_engine">切换运行方式</string>
+    <string name="galgame_switch_engine_title">「%1$s」的运行方式</string>
+    <string name="galgame_switch_engine_auto">自动（推荐）</string>
+    <string name="galgame_switch_engine_done">已记住运行方式：%1$s</string>
+    <string name="galgame_switch_engine_reset">已恢复自动裁决</string>
+    <string name="galgame_source_missing">游戏目录已不存在（可能被移动或清理），请重新导入</string>
+    <string name="galgame_index_native_hint">原生引擎（无容器）</string>
 
     <!-- 导入即玩 (P1) -->
     <string name="galgame_import_title">导入游戏</string>

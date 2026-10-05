@@ -49,6 +49,10 @@ public final class GalgameLibraryIndex {
 
     private static final Object LOCK = new Object();
 
+    /** 供异步写法复用的单线程 IO 池（索引体量极小，一个线程足够，无需构造开销）。 */
+    private static final java.util.concurrent.ExecutorService IO =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
+
     private GalgameLibraryIndex() {}
 
     /** 一条游戏记录（不可变）。 */
@@ -222,6 +226,19 @@ public final class GalgameLibraryIndex {
                             System.currentTimeMillis(), 0L);
                 }
                 return existing.withPreferredEngine(engineId);
+            }
+        });
+    }
+
+    /**
+     * 异步版 {@link #touchPlayed}：给 UI 线程调用，避免在主线程做文件 IO。
+     * 索引只用于「最近游玩」展示，晚几百毫秒落盘无副作用。
+     */
+    public static void touchPlayedAsync(final Context context, final String gameId) {
+        IO.execute(new Runnable() {
+            @Override
+            public void run() {
+                touchPlayed(context.getApplicationContext(), gameId);
             }
         });
     }

@@ -14,6 +14,9 @@ public class AlertDialog implements DialogInterface {
         public Builder setMessage(int messageId) { return this; }
         public Builder setView(android.view.View view) { return this; }
         public Builder setItems(CharSequence[] items, DialogInterface.OnClickListener l) { return this; }
+        // GalgameShell：切换运行方式用单选列表，补真实 AlertDialog.Builder 的签名。
+        public Builder setSingleChoiceItems(CharSequence[] items, int checkedItem,
+                                           DialogInterface.OnClickListener l) { return this; }
         public Builder setPositiveButton(CharSequence text, DialogInterface.OnClickListener l) { return this; }
         public Builder setPositiveButton(int textId, DialogInterface.OnClickListener l) { return this; }
         public Builder setNegativeButton(CharSequence text, DialogInterface.OnClickListener l) { return this; }
