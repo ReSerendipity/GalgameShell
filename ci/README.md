@@ -17,6 +17,25 @@ javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check app/src/main/java/com/winlator/galgame/*.java
 ```
 
+## 本地门禁：`ci/pre-push`（推送前类型门禁）
+
+把上面那两条命令做成 git pre-push 钩子，**推送前几秒内**跑一遍与 CI 同口径的类型门禁，
+避免「推上去才发现桩缺 API」——历史上 `Log.w` 三参重载、`Context.getFilesDir`、
+`ValueAnimator.cancel` 三次 CI 失败都属于这一类，本地无门禁时只能等 CI 才发现。
+
+启用（一次性，在仓库根目录执行）：
+
+```bash
+cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+```
+
+`ci/pre-push` 是版本库内的唯一来源，改它之后需重新 `cp` 一次。行为：
+
+- 用 `javac`（PATH 或 `JAVA_HOME/bin`）编译 `ci/stubs`，再对 `com.winlator.galgame` 全树跑 `-Xlint:all`；
+- 任一环节失败即 **exit 1 阻断推送**，并提示按本文件补桩；
+- 找不到 `javac` 时**优雅跳过并警告**（不阻断），避免把钩子变成环境依赖门禁；
+- 临时产物写在 `.git/pre-push-out.<pid>`，退出时自动清理，不入库。
+
 ## 为什么不做完整 APK 构建
 本 fork 是「框架-only」：`app/src/main/assets/**/*.tzst`（wine/box64 运行时）与
 `app/src/main/jniLibs/**/*.so` 未随仓分发（体积/代理限制，且计划 §VIII 的口径是
