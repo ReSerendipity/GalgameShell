@@ -87,18 +87,32 @@ FOOT = rrect(47.5, 69, 60.5, 72.8, 1.9)
 CUP_REGION = union(BOWL, STEM, FOOT)
 
 GLYPH = subtract(subtract(WINDOW, TITLE_BAR), CUP_REGION)
-# 通知栏图标要小到 24dp 也认得出，去掉细横条（1px 级别会被降采样成噪点）
-GLYPH_SIMPLE = subtract(WINDOW, CUP_REGION)
+# 通知栏图标要小到 24dp 也认得出：镂空造型（窗口挖酒杯）在该尺寸只剩一圈轮廓+一个洞，
+# 故这里反过来用**实心酒杯**剪影——形状单纯、覆盖率高，缩到 24dp 仍是清晰的酒杯。
+GLYPH_NOTIFICATION = CUP_REGION
 
 
 # ---- 光栅化 ----
 
 
-def render(size, glyph, fg, bg_shape, bg_color, span, ss=4):
-    """把 108 空间的 glyph 映射到 size×size 画布中心（占 span 比例）。"""
+def render(size, glyph, fg, bg_shape, bg_color, span, ss=4, src=None):
+    """把 108 空间的 glyph 映射到 size×size 画布中心（占 span 比例）。
+
+    src 可指定源矩形 (x0, y0, x1, y1)：用于把子形状（如酒杯）单独放大填满画布，
+    否则它会按母题里的原始占比（酒杯只占 108 画布的 ~5%）渲染得过小。
+    """
     box = size * span
     off = (size - box) / 2.0
     scale = box / 108.0
+    if src is not None:
+        sx0, sy0, sx1, sy1 = src
+        sw = max(sx1 - sx0, 1e-6)
+        sh = max(sy1 - sy0, 1e-6)
+        scale = min(box / sw, box / sh)
+        off_x = (size - sw * scale) / 2.0
+        off_y = (size - sh * scale) / 2.0
+    else:
+        off_x = off_y = off
     step = 1.0 / ss
     rows = []
     for py in range(size):
@@ -108,10 +122,10 @@ def render(size, glyph, fg, bg_shape, bg_color, span, ss=4):
             bg_hits = 0
             for sy in range(ss):
                 y = py + (sy + 0.5) * step
-                gy = (y - off) / scale
+                gy = (y - off_y) / scale + (sy0 if src is not None else 0.0)
                 for sx in range(ss):
                     x = px + (sx + 0.5) * step
-                    gx = (x - off) / scale
+                    gx = (x - off_x) / scale + (sx0 if src is not None else 0.0)
                     if glyph(gx, gy):
                         fg_hits += 1
                     if bg_shape(x / size * 108.0, y / size * 108.0):
@@ -151,9 +165,14 @@ def write_png(path, size, rows):
         f.write(blob)
 
 
+# 酒杯在母题 108 画布里的包围盒（用于通知图标放大填满自身画布）
+CUP_BOX = (42.0, 46.5, 66.0, 73.8)
+
+
 def write_notification(path, size=48):
-    """通知小图标：纯白字形 + 透明底（系统只取 alpha 做遮罩并自行着色）。"""
-    rows = render(size, GLYPH_SIMPLE, WHITE, lambda x, y: False, WHITE, 0.94)
+    """通知小图标：纯白酒杯剪影 + 透明底（系统只取 alpha 做遮罩并自行着色）。"""
+    rows = render(size, GLYPH_NOTIFICATION, WHITE, lambda x, y: False, WHITE,
+                  0.92, src=CUP_BOX)
     write_png(path, size, rows)
 
 
