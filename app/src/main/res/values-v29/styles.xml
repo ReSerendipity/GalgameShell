@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- API 29+：关闭 Force Dark，保证游戏库亮色 UI 不被系统深色模式反转 -->
 <resources>
-    <style name="GalgameLibraryTheme" parent="@style/AppThemeLight">
+    <style name="GalgameLibraryTheme" parent="@style/GalgameBrandTokensLight">
         <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowAnimationStyle">@style/GalgameWindowAnim</item>
         <item name="android:windowActivityTransitions">true</item>
