@@ -12,6 +12,9 @@ public class JSONObject {
     public String optString(String k) { return null; }
     public String optString(String k, String fallback) { return fallback; }
     public boolean optBoolean(String k, boolean fallback) { return fallback; }
+    // GalgameShell：游戏条目索引 GalgameLibraryIndex 用到 long 字段（added_at / last_played_at）。
+    // 真实 org.json.JSONObject 有此重载，此前桩缺签导致 CI galgame-compile 红灯，按 ci/README.md 补桩。
+    public long optLong(String k, long fallback) { return fallback; }
     public boolean has(String k) { return false; }
     public String toString() { return ""; }
     public String toString(int i) { return ""; }
