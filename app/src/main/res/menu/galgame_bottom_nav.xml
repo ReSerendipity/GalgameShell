@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- GalgameShell R2/C4：底导顺序＝游戏库 → 工具 → 设置 → 容器管理。
+     上游 Winlator 的「容器」屏改为末位并从「容器」更名为「容器管理」（文案在 galgame_strings.xml，
+     不动 values/strings.xml），让游戏库成为绝对主入口；类与深链入口均保留，不删屏。
+     图标全部换成自有矢量（原先游戏库用系统 ic_menu_gallery、容器用系统 ic_menu_agenda）。 -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_galgame_library"
-        android:icon="@android:drawable/ic_menu_gallery"
+        android:icon="@drawable/ic_galgame_library"
         android:title="@string/galgame_library_title" />
-    <item
-        android:id="@+id/nav_galgame_containers"
-        android:icon="@android:drawable/ic_menu_agenda"
-        android:title="@string/containers" />
     <item
         android:id="@+id/nav_galgame_tools"
         android:icon="@drawable/ic_galgame_tools"
@@ -16,4 +16,8 @@
         android:id="@+id/nav_galgame_settings"
         android:icon="@drawable/ic_galgame_settings"
         android:title="@string/settings" />
+    <item
+        android:id="@+id/nav_galgame_containers"
+        android:icon="@drawable/ic_galgame_containers"
+        android:title="@string/galgame_containers_title" />
 </menu>

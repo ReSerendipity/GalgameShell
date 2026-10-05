@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 底部导航「容器管理」图标：带盖的盒子（容器语义），替代原先的系统
+  ic_menu_agenda（那是日程清单，与容器无关）。
+  由 galgame_nav_item.xml 着色（选中=colorAccent / 未选中=colorTextDisabled），故仅提供单色剪影。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M4,8h16v11a2,2 0 0 1 -2,2h-12a2,2 0 0 1 -2,-2zM3.5,3h17a1.5,1.5 0 0 1 1.5,1.5v2a1.5,1.5 0 0 1 -1.5,1.5h-17a1.5,1.5 0 0 1 -1.5,-1.5v-2a1.5,1.5 0 0 1 1.5,-1.5z" />
+</vector>
