@@ -1,0 +1,4 @@
+# 仓库内 shell 脚本一律以 LF 检出，避免 Windows 下 core.autocrlf=true 把
+# 钩子/脚本转成 CRLF 导致 shebang 与命令解析异常。
+*.sh   text eol=lf
+ci/pre-push text eol=lf

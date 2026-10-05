@@ -1,0 +1,45 @@
+#!/bin/sh
+# ci/pre-push — 推送前类型门禁（本地版 galgame-compile）
+#
+# 与 .github/workflows/ci.yml 的 galgame-compile job 同口径：用 ci/stubs 对
+# com.winlator.galgame 整棵树做 javac -Xlint:all。目的是把 CI 红灯提前到本地
+# 几秒内暴露——历史上两次 CI 失败都是「新代码用了桩里没有的 API」
+# （Log.w 三参重载 / Context.getFilesDir / ValueAnimator.cancel），
+# 本地无门禁时只能等 CI 才发现。
+#
+# 本文件是版本库内的唯一来源。启用（一次性，在仓库根目录执行）：
+#     cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+#
+# 无 javac 时优雅跳过并提示（不阻断），避免把钩子变成环境依赖门禁。
+set -e
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+JAVAC=""
+if command -v javac >/dev/null 2>&1; then
+    JAVAC="javac"
+elif [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/javac" ]; then
+    JAVAC="$JAVA_HOME/bin/javac"
+fi
+
+if [ -z "$JAVAC" ]; then
+    echo "[pre-push] 未找到 javac（PATH 与 JAVA_HOME 都没有），跳过类型门禁；CI 仍会检查" >&2
+    exit 0
+fi
+
+# 输出目录放在 .git/ 下的相对路径：既不会入库，也避免 Windows 盘符绝对路径
+# 在 MSYS 环境下触发删除限制。
+OUT=".git/pre-push-out.$$"
+mkdir -p "$OUT/stubs" "$OUT/check"
+trap 'rm -rf "$OUT"' EXIT INT TERM
+
+echo "[pre-push] 类型门禁：com.winlator.galgame（对 ci/stubs）"
+if ! "$JAVAC" -d "$OUT/stubs" $(find ci/stubs -name '*.java'); then
+    echo "[pre-push] ✗ ci/stubs 自身编译失败，已阻止推送" >&2
+    exit 1
+fi
+if ! "$JAVAC" -Xlint:all -cp "$OUT/stubs" -d "$OUT/check" $(find app/src/main/java/com/winlator/galgame -name '*.java'); then
+    echo "[pre-push] ✗ 类型门禁未通过，已阻止推送。" >&2
+    echo "           新代码用到了 ci/stubs 里没有的 API —— 按 ci/README.md 补桩后重试。" >&2
+    exit 1
+fi
+echo "[pre-push] ✓ 类型门禁通过（ci/stubs + com.winlator.galgame 全树，-Xlint:all）"
