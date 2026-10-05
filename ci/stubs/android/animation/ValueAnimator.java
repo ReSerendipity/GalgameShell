@@ -5,5 +5,6 @@ public class ValueAnimator {
     public void setDuration(long duration) {}
     public void addUpdateListener(AnimatorUpdateListener listener) {}
     public void start() {}
+    public void cancel() {}
     public Object getAnimatedValue() { return 0; }
 }
