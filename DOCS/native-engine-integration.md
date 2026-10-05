@@ -503,14 +503,29 @@ Activity（同 `KrkrEngine` 风格），故留在门禁内。
 
 → PNG 解码、缩放、**alpha 透明合成**全部正常，集成层无缺陷。纯黑占比 93.33% → 39.63%，颜色数 33 → 93。
 
-#### 剩余待办（真机 dc57ebe3 需重新连线）
+#### 真机完整画面验证已完成（2026-10-05 续，dc57ebe3 重连）✅
 
-验证到一半真机掉线（adb devices 中消失），以下未完成：
+设备重连后（adb 真实在线，`RMX5010`/`arm64-v8a`），按 §4.5.1 路线 A（临时 `exported=true` 直启 → 取证 → 收回 `exported=false`）执行：
 
-1. 用显式 image 定义的 `script.rpy` 重跑，取「渐变背景 + 立绘 + 对话框」完整画面截图
-   （届时第二步 TOP ACTIVITY 应为 `RenPyActivity`，且 `FATAL EXCEPTION` = 0）。
-2. 背景此前显示为 `(170,170,170)` 占位灰，系上述 image 命名问题所致，修正后的脚本待推送。
-3. 注：`app-debug.apk` 当前已是 **arm64-v8a** 默认产物（曾为模拟器出过 x86_64 UI 包，已重建覆盖回来）。
+- 游戏目录已重建干净（`/sdcard/.../Games/testrenpy/game/` 含显式 image 定义的 `script.rpy` + `screens.rpy` + `options.rpy` + `images/{bg_dusk,heroine}.png`）。
+- 直启：`am start -n com.winlator/com.winlator.renpy.RenPyActivity --es com.winlator.galgame.extra.RENPY_GAME_DIR /sdcard/Android/data/com.winlator/files/Games/testrenpy` → `mCurrentFocus=com.winlator.renpy.RenPyActivity`、`mFocusedApp=RenPyActivity t127`（前台，非黑屏假象）。
+- 截图 `.workbuddy/verify/renpy_shot_live.png` 像素客观分析（模型不"看"图，用统计替代主观描述）：
+
+| 指标 | 值 | 含义 |
+| --- | --- | --- |
+| 尺寸 | 2780×1264（横屏） | 与引擎 letterbox 适配一致 |
+| 黑占比 | 39.43% | 主要为 letterbox 黑边 + 对话框，非黑屏 |
+| 占位灰(170,170,170) | **0.00%** | `scene bg dusk` 背景图真实加载（此前写错 image 名才落占位灰） |
+| 彩色占比 | 60.57% | 真实渲染的游戏内容 |
+| 不同颜色数 | **6771** | 黄昏渐变背景贡献大量色阶（对比纯文本版 33 色、占位灰版 93 色） |
+
+- 立绘特征色扫描（确认合成的 `heroine.png` 精确渲染）：`school_uniform(44,56,106)` 81306px bbox x[950-1830] y[466-1036]、`face_skin(255,226,205)` 44603px bbox x[1142-1638] y[2-446]、`shirt(238,242,250)` 10452px bbox x[608-1760] y[466-1226]——与 §4.7 图片子系统验证的素材像素特征完全吻合。
+- 全程 logcat 无 `FATAL EXCEPTION` / `SIGSEGV` / `UnsatisfiedLinkError`。
+- 证据截图已复制至 `C:/Users/Doro/Desktop/GalgameShell验证截图/renpy_live_full_screen.png`。
+
+→ **结论**：Ren'Py 内置引擎在真机完整渲染出「渐变背景 + 立绘 + 对话框」游戏画面，非黑屏、非程序错误、非占位灰；集成链路（检测/解包/启动/图片子系统/透明合成）全部实证通过。`exported` 已收回 `false` 并重建重装（§4.5.1 路线 A 收尾）。
+
+> 诚实说明：用于验证的 `tools/renpy-testgame/` 是**本项目自造的最小合成测试游戏**（结构合法：真实 `.rpy`→`.rpyc` 编译、真实 Ren'Py 引擎加载、手写 PNG 立绘），并非某款商业发行的 Ren'Py 游戏。用户游戏库 `D:\need load` 的 80 个 rar 扫描结果为 **0 个 Ren'Py 游戏**（全 YU-RIS/Siglus/Kirikiri 等）；若需某款真实发行 Ren'Py 游戏做 E2E，需用户合法提供（不下载盗版）。合成游戏已充分验证集成链路。
 
 ### 4.5.1 真机复测手册（设备 dc57ebe3 连上后）
 
