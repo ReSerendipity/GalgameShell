@@ -101,7 +101,8 @@ public class GalgameMainActivity extends AppCompatActivity implements GalgameHos
             showTabFragment(new GalgameHomeFragment(), false, 0);
         }
         else if (itemId == R.id.nav_galgame_containers) {
-            showTabFragment(new ContainersFragment(), true, R.string.containers);
+            // C4：上游容器屏降级为末位 Tab，改名「容器管理」（文案在 galgame_strings.xml）
+            showTabFragment(new ContainersFragment(), true, R.string.galgame_containers_title);
         }
         else if (itemId == R.id.nav_galgame_tools) {
             showTabFragment(new GalgameToolsFragment(), true, R.string.galgame_tools_title);

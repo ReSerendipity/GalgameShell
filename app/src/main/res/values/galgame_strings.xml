@@ -10,6 +10,8 @@
 
     <!-- 底部导航 Tab -->
     <string name="galgame_tools_title">工具</string>
+    <!-- C4：上游「容器」屏改名为「容器管理」并降级到末位 Tab（不改 values/strings.xml 的 containers） -->
+    <string name="galgame_containers_title">容器管理</string>
 
     <!-- 通用 -->
     <string name="galgame_ok">确定</string>
