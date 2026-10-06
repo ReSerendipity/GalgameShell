@@ -26,6 +26,7 @@ import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
+import com.winlator.galgame.GalgameStoragePermission;
 import com.winlator.galgame.GameLauncher;
 import com.winlator.galgame.ImportFlow;
 import com.winlator.galgame.NativeRouteLauncher;
@@ -93,6 +94,9 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         importEmpty.setOnClickListener(v -> showImportDialog());
 
         refresh();
+
+        // 评估报告 #3：MANAGE_EXTERNAL_STORAGE 运行时引导（首次进入未授权时弹一次）
+        GalgameStoragePermission.ensure(this);
     }
 
     @Override
@@ -623,6 +627,16 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.galgame_about)
                 .setMessage(R.string.galgame_about_message)
+                .setPositiveButton(R.string.galgame_ok, null)
+                .setNeutralButton(R.string.galgame_privacy_title, (dialog, which) -> showPrivacy())
+                .show();
+    }
+
+    /** 隐私说明（评估报告 #3）：本地运行、零采集的一句话声明。 */
+    private void showPrivacy() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_privacy_title)
+                .setMessage(R.string.galgame_privacy_message)
                 .setPositiveButton(R.string.galgame_ok, null)
                 .show();
     }
