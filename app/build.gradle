@@ -6,7 +6,10 @@ android {
 
     defaultConfig {
         applicationId 'com.winlator'
-        minSdkVersion 26
+        // 评估报告 #7：对齐 README「Android 11+/API 30」声明（原 26 与实际测试基线不符）。
+        // Android 11 是 MANAGE_EXTERNAL_STORAGE / Scoped Storage 的起点，
+        // 也是 README 系统要求里写明的最低版本。
+        minSdkVersion 30
         targetSdkVersion 28
         versionCode 33
         versionName "11.2"
@@ -14,8 +17,9 @@ android {
 
     buildTypes {
         debug {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // 评估报告 #12：debug 关闭 minify——proguard-rules.pro 已 -dontobfuscate，
+            // debug 开 minify 既拖慢构建又裁剪调试堆栈，无收益。
+            minifyEnabled false
 
             ndk {
                 // 默认 arm64-v8a（发布基线，勿改）。

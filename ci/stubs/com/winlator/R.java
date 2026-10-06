@@ -63,9 +63,14 @@ public final class R {
         public static final int galgame_save_no_backup = 33;
         public static final int galgame_save_restored = 34;
         public static final int galgame_source_missing = 35;
-        public static final int galgame_switch_engine_auto = 36;
-        public static final int galgame_switch_engine_done = 37;
-        public static final int galgame_switch_engine_reset = 38;
-        public static final int galgame_switch_engine_title = 39;
+        public static final int galgame_storage_perm_go = 36;
+        public static final int galgame_storage_perm_message = 37;
+        public static final int galgame_storage_perm_title = 38;
+        public static final int galgame_switch_engine_auto = 39;
+        public static final int galgame_switch_engine_done = 40;
+        public static final int galgame_switch_engine_reset = 41;
+        public static final int galgame_switch_engine_title = 42;
+        public static final int galgame_privacy_message = 43;
+        public static final int galgame_privacy_title = 44;
     }
 }

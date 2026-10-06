@@ -24,6 +24,7 @@ public class AlertDialog implements DialogInterface {
         public Builder setNeutralButton(int textId, DialogInterface.OnClickListener l) { return this; }
         public Builder setNegativeButton(int textId, DialogInterface.OnClickListener l) { return this; }
         public Builder setCancelable(boolean cancelable) { return this; }
+        public Builder setOnDismissListener(android.content.DialogInterface.OnDismissListener l) { return this; }
         public AlertDialog create() { return new AlertDialog(); }
         public AlertDialog show() { return new AlertDialog(); }
     }
