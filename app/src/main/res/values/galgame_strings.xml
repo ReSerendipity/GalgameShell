@@ -107,7 +107,7 @@
 
     <!-- 存储权限运行时引导（评估报告 #3） -->
     <string name="galgame_storage_perm_title">需要「所有文件访问权」</string>
-    <string name="galgame_storage_perm_message">内置 Kirikiroid2 / Ren'Py 引擎需要读取 /sdcard 下的游戏目录（Android 11+ 起须手动授予所有文件访问权）。\n\n点「去授权」后在系统设置页打开本应用的开关即可。本应用不上传任何游戏文件到网络。</string>
+    <string name="galgame_storage_perm_message">内置 Kirikiroid2 / Ren\'Py 引擎需要读取 /sdcard 下的游戏目录（Android 11+ 起须手动授予所有文件访问权）。\n\n点「去授权」后在系统设置页打开本应用的开关即可。本应用不上传任何游戏文件到网络。</string>
     <string name="galgame_storage_perm_go">去授权</string>
 
     <!-- 隐私政策（评估报告 #3） -->
