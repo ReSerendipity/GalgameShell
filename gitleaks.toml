@@ -1,0 +1,13 @@
+# GalgameShell gitleaks 配置
+# 基于官方默认规则扩展（useDefault = true 保留全部内置检测规则），
+# 仅追加经人工核验的误报 allowlist，保证本地/CI 扫描口径与家族其他仓库一致且不误伤。
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "经人工核验的统一误报清单（第三方 vendored 源码中的密钥样式字面量；SharedPreferences 布尔键名被通用 API key 规则误伤）"
+paths = [
+  '''virglrenderer''',
+  '''GalgameSettings\.java''',
+]
