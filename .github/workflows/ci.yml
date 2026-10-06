@@ -65,3 +65,11 @@ jobs:
           javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
           javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
           echo "OK: com.winlator.galgame (whole tree) compiles clean (-Xlint:all)"
+
+      - name: "EngineDetector 回归测试（tools/detect-test/DetectTest.java）"
+        run: |
+          set -e
+          mkdir -p /tmp/detect-out
+          javac -cp /tmp/stubs-out:/tmp/check -d /tmp/detect-out tools/detect-test/DetectTest.java
+          java -cp /tmp/stubs-out:/tmp/check:/tmp/detect-out DetectTest
+          echo "OK: EngineDetector regression tests passed"
