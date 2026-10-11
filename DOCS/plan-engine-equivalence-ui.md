@@ -23,7 +23,8 @@
   - ✅ 扩展一律走**新增类 / 新增资源**，不要改既有上游类。
 - **【双分支红线】**：分批提交、**默认不 push**（除非用户当次显式授权）；同一仓库同时只跑一个 fixer；严禁触碰未提交 WIP。
 - **自有屏优先**：R 系列新 UI 在 `com.winlator.galgame.ui.*`；新屏一律用 `?attr` 主题属性，**禁止硬编码颜色**。
-- **构建环境**（本机）：JDK 21（Adoptium）、Gradle 离线用 `C:/Users/Doro/.gradle/manual-dist/gradle-8.14.3`（wrapper 声明 8.14.5）、`ANDROID_HOME=C:/Users/Doro/AppData/Local/Android/Sdk`、NDK 24.0.8215888、AGP **8.4.2**（注意：**不是** DraftPeek 的 8.10.1）、compileSdk 35 / minSdk 26 / targetSdk 28。
+- **构建环境**（本机）：JDK 21（Adoptium）、Gradle 离线用 `C:/Users/Doro/.gradle/manual-dist/gradle-8.14.3`（wrapper 声明 8.14.5）、`ANDROID_HOME=C:/Users/Doro/AppData/Local/Android/Sdk`、NDK 24.0.8215888、AGP **8.4.2**（注意：**不是** DraftPeek 的 8.10.1）、compileSdk 35 / minSdk 30 / targetSdk 28。
+  - 勘误（2026-10-11，第二轮移动端评估 T9 文档同步）：原记 `minSdk 26` 与代码不符，实际 **minSdk 30**（Android 11+，与 README「API 30」声明及 MANAGE_EXTERNAL_STORAGE 语义一致）。
   - 默认 APK 仅 `arm64-v8a`；可 `./gradlew assembleDebug -PgalgameUiAbi=x86_64` 出无原生库 UI 调试 APK（模拟器用）。
   - **勿用 gradlew**（离线 PKIX 失败）；本地用 `gradle-8.14.3/bin/gradle assembleDebug --offline`。
 - **真机**：`dc57ebe3`（RMX5010，Android 15，1264×2780）。Git Bash 下 adb 须 `export MSYS_NO_PATHCONV=1`；`adb pull` 目标用 `C:/...` 形式。

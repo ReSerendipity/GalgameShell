@@ -136,6 +136,7 @@ P6（真机回归 R1–R17）为发布门禁，需 Adreno + Mali 各一台真机
 | 阶段 | 内容 | 状态 |
 |------|------|------|
 | P8 | 合并双 UI：`GalgameLibraryActivity` 与 `GalgameHomeFragment` 并为单一 Fragment（历史遗留，见 `engine-equivalence-ui-landed.md` §9 / tech-debt-register.md TD-01；2026-10-11 评估整改 P2-6 登记） | ⬜ 待排期（验收：两条启动路径行为一致、库 UI 仅单一实现） |
+| P9 | targetSdk 升级（28 → 30+，与 minSdk 对齐 Android 11+ 声明；第二轮移动端评估 T7，2026-10-11 登记）。前置已完成：B 路由 FileProvider 化（T2，file:// 隐患已除）、存储权限运行时申请链（GalgameStoragePermission）核对；风险面：MANAGE_EXTERNAL_STORAGE 在 targetSdk 30 的语义、前台服务/通知 API 适配（targetSdk 34 要求） | ⬜ 待排期（验收：targetSdk 30+ 构建 + 真机 R1-R17 回归通过） |
 
 ## 8. 商店说明要点（发布用）
 
@@ -144,6 +145,25 @@ P6（真机回归 R1–R17）为发布门禁，需 Adreno + Mali 各一台真机
 - 本应用不含游戏本体、不提供破解；用户需自备合法游戏副本。
 - 第三方原生播放器为可选唤起，使用风险自负。
 - 开源许可与源码获取方式见应用内「关于」及 `NOTICE`。
+
+### 8.1 版本演进规则（第二轮移动端评估 T6，2026-10-11 固化）
+
+- `versionName` 跟随上游 winlator 主版本（当前 `11.2`），本仓新增功能**不改变** versionName——
+  保持与上游对账简单（`versionCode` 单调递增，当前 `33`）。
+- 发布时打 tag `v<versionName>`（release.yml 校验 `^v[0-9]+(\.[0-9]+){1,2}$`）。
+- 上游发布新版本后：先完成 §5 rebase 同步（T5 待授权），再决定是否跟随版本号；版本号变更
+  必须登记本条修订。
+
+### 8.2 性能与资源治理口径（第二轮移动端评估 T8，2026-10-11 登记）
+
+- **已落地**：`GalgameGpuProfiler`（M2，零改铁律只读系统信息）——Adreno 选 Turnip、
+  Mali（天玑/Xclipse）选 Vortek，规避 stock 默认在 Adreno 上的错误驱动导致渲染失败；
+  `GalgameGpuProfiler` 结果仅向 ImportFlow 提供「推荐图形驱动」字符串。
+- **量化缺口（报告差距）**：模拟器重场景（Wine 容器 + 游戏渲染）的帧率/内存**无成文量化**；
+  诊断向导仅收集日志（logs.txt/stderr/DXVK，GalgameLogs）供人工分析。
+- **口径约定（后续）**：性能评估以「固定样本游戏 + 固定容器参数」实测帧率/温度/内存峰值并留档
+  （参考 `docs/EVAL.md` 思路，Android 侧落 DOCS）；启动期主线程初始化清单（主题/语言/RootFS 安装/
+  库列表装载）在 P9 targetSdk 升级时一并核对。均属后续建议，不在本轮改动范围。
 
 ## 9. 重大变更流程约定（2026-10-11 固化，评估整改 P3-9）
 

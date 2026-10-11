@@ -1,0 +1,20 @@
+# 依赖版本目录（第二轮移动端评估 T5 · 版本集中管理）
+# 单一事实源：依赖版本统一在此管理，app/build.gradle 经 libs.* 引用；
+# 升级依赖只改本文件，无需逐处改坐标。新增依赖必须在此登记版本与 library 别名。
+[versions]
+appcompat = "1.4.0"
+preference = "1.2.1"
+material = "1.4.0"
+zstdJni = "1.5.2-3"
+xz = "1.7"
+commonsCompress = "1.20"
+lifecycleProcess = "2.5.1"
+
+[libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni", artifactType = "aar" }
+xz = { module = "org.tukaani:xz", version.ref = "xz" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commonsCompress" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }

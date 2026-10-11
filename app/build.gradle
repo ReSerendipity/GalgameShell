@@ -68,11 +68,12 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.4.0'
-    implementation 'androidx.preference:preference:1.2.1'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'com.github.luben:zstd-jni:1.5.2-3@aar'
-    implementation 'org.tukaani:xz:1.7'
-    implementation 'org.apache.commons:commons-compress:1.20'
-    implementation 'androidx.lifecycle:lifecycle-process:2.5.1'
+    // 第二轮移动端评估 T5：依赖版本集中管理（gradle/libs.versions.toml 单一事实源）
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.preference
+    implementation libs.material
+    implementation libs.zstd.jni
+    implementation libs.xz
+    implementation libs.commons.compress
+    implementation libs.androidx.lifecycle.process
 }
