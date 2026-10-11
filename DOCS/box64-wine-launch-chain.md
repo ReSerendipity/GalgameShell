@@ -33,6 +33,10 @@ cmake -G Ninja \
 产物经 `llvm-strip --strip-all` 后打成 `app/src/main/assets/box64/box64-<ver>.tzst`
 （内部结构对齐官方：`./usr/local/bin/box64`，zstd -19）。
 
+> **可复现约定（2026-10-11，评估整改 P2-8）**：每次自建 box64 必须在此记录上游 commit hash，使重建可复现。
+> 0.4.5 构建时未记录（提交 `e80db63` 仅记「上游 main 自建」），现无法从仓内恢复精确 hash——如需精确重建，
+> 需人工提供当时 upstream commit；缺失期间以「配方 + 日期」近似复现（见 tech-debt-register.md TD-05）。
+
 ## 3. 垫片 libmpshim.so
 
 - 拦截 `mprotect`；对 EXEC 请求收到 EACCES 时，按 `/proc/self/maps` 找到 backing

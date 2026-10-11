@@ -127,11 +127,15 @@ git push --force-with-lease origin galgame
 - **A7 LocaleHelper 例外（2026-10-11 登记，评估整改 P1-1）**：`LocaleHelper.supportedLocales` 的 `"zh_CN"`
   为简体中文界面必要触碰（提交 `bb810ca`）；上游原生支持 zh_CN 后回退本文件改动。
 
-## 7. 阶段路线图（P0–P7）
+## 7. 阶段路线图（P0–P8）
 
 `P0 → P1 → (P2, P3 并行) → P4 → P5 → P6 → P7`
 
 P6（真机回归 R1–R17）为发布门禁，需 Adreno + Mali 各一台真机。
+
+| 阶段 | 内容 | 状态 |
+|------|------|------|
+| P8 | 合并双 UI：`GalgameLibraryActivity` 与 `GalgameHomeFragment` 并为单一 Fragment（历史遗留，见 `engine-equivalence-ui-landed.md` §9 / tech-debt-register.md TD-01；2026-10-11 评估整改 P2-6 登记） | ⬜ 待排期（验收：两条启动路径行为一致、库 UI 仅单一实现） |
 
 ## 8. 商店说明要点（发布用）
 
