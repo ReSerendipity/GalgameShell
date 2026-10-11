@@ -71,11 +71,52 @@ git push --force-with-lease origin galgame
 - `app/src/main/java/com/winlator/core/LocaleHelper.java`
 - `app/src/main/res/values/strings.xml` 现有条目
 
+> **登记例外（A7，2026-10-11）**：`LocaleHelper.supportedLocales` 增加 `"zh_CN"` 是本仓简体中文界面的
+> 必要触碰（提交 `bb810ca`），登记为既有例外；若上游未来原生支持 zh_CN，应回退本文件改动。详见 §6 A7。
+
 所有 galgame 价值放新包 `com.winlator.galgame` + 新文件 `galgame_strings.xml`。
 已接受的**加法型**冲突面：`AndroidManifest.xml`（注册新 Activity + `<queries>`）、
 `res/layout/activity_galgame_library.xml`（全新建）。
 
-## 6. 决策锁定（A1–A6）
+### 5.1 已触碰上游文件清单（截至 2026-10-11，评估整改 P1-3）
+
+> 口径：`git diff upstream/main HEAD -- app/src/main/java` 中 **fork 主动改动**（有 fork 提交归因）；
+> 落后上游所致、fork 未主动改的差异单列于表末。冲突风险：低=新增/UI 局部；中=与待同步上游提交重叠。
+
+| 文件 | 改动要点 | fork 提交（示例） | 冲突风险 |
+|---|---|---|---|
+| `BaseFileManagerFragment.java` | P0 设计系统：列表卡片化 + 空态组件化 | 18949f3 | 低 |
+| `ContainerDetailFragment.java` | 容器详情走 GalgameHost 底部导航壳 | 84e873f | 低 |
+| `ContainerFileManagerFragment.java` | 整行进入目录；卡片图标品牌圆底盘 | fc395b4 / 7fd0929 | 低 |
+| `ContainersFragment.java` | 退出落回 R 新壳；启动前 exe 缺失拦截 | eeafc3a / 84e873f | 低 |
+| `InputControlsFragment.java` | GalgameHost 宿主契约，解耦上游强转 | 70f0a12 | 低 |
+| `MainActivity.java` | 抽屉品牌化与开合遮罩；GalgameHost 契约 | 444d4d4 / 70f0a12 | 低 |
+| `SettingsFragment.java` | GalgameHost 宿主契约 | 70f0a12 | 低 |
+| `ShortcutsFragment.java` | 整行进入目录；卡片图标品牌圆底盘 | fc395b4 / 7fd0929 | 低 |
+| `XServerDisplayActivity.java` | 触控模式运行时切换；galgame 容器退出落回库；nogui 直跑 + wine 输出落盘 | b7243c8 / 6fceb55 | **中**（待同步上游 a544910 亦改此文件） |
+| `contentdialog/AboutDialog.java` | 关于页品牌化 | 662399f | 低 |
+| `contentdialog/ContentDialog.java` | P1–P3 对话框/表单品牌化 | d3726a3 | 低 |
+| `core/AppUtils.java` | 外壳品牌化：紫色亮/深双主题 | efe256c | 低 |
+| `core/DefaultVersion.java` | BOX64 0.4.4 → 0.4.5 | e80db63 | 低 |
+| `core/FileUtils.java` | 缺 `.update-timestamp` NPE 修复 | 1e97eef | 低 |
+| `core/GeneralComponents.java` | GalgameHost 宿主契约 | 70f0a12 | 低 |
+| `core/LocaleHelper.java` | `supportedLocales` 增 `zh_CN`（**A7 登记例外**） | bb810ca | 中（铁律文件，CI 门禁锁） |
+| `core/ProcessHelper.java` | wine 输出落盘 `wine_exec.log`（原 /dev/null） | b7243c8 | 低 |
+| `core/WineUtils.java` | 缺 `.update-timestamp` NPE 修复 | 1e97eef | 低 |
+| `widget/ImagePickerView.java` | GalgameHost 宿主契约 | 70f0a12 | 低 |
+| `xenvironment/RootFSInstaller.java` | GalgameHost 宿主契约 | 70f0a12 | 低 |
+| `xenvironment/components/GuestProgramLauncherComponent.java` | libmpshim 条件 LD_PRELOAD；移除临时 WINEDEBUG | b7243c8 / 45b76b6 | 低 |
+
+资源/构建层（非 java，另行登记）：
+
+| 文件 | 改动要点 | 备注 |
+|---|---|---|
+| `app/src/main/AndroidManifest.xml` | MANAGE_EXTERNAL_STORAGE / `<queries>` / 入口接管 | 文档已声明为加法型冲突面 |
+| `app/build.gradle` | 品牌化、minSdk 对齐 API 30、abiFilters 调试开关 | 待同步上游亦改此文件（**中**） |
+| `app/src/main/res/values/strings.xml` | `app_name` 品牌化为 GalgameShell（4729601，既有登记） | 待同步上游 34df94f 新增 `native_resolution`（**中**） |
+| `app/src/main/res/values/arrays.xml`、`widget/TouchpadView.java` | **待同步差异**：落后上游 4 commits（34df94f / a544910）所致，fork 无主动改动 | 随 T5 同步后消失 |
+
+## 6. 决策锁定（A1–A7）
 
 - **A1 字体**：仅开源 CJK（IPAex / Noto，OFL）；**禁捆绑商业字体**；框架不分发字体。
 - **A2 容器**：每游戏独立容器（隔离 + 导入即玩）。
@@ -83,6 +124,8 @@ git push --force-with-lease origin galgame
 - **A4 B 路由**：默认唤起不内嵌；Tier-1 开源默认 / Tier-2 闭源显式开启 + 免责。
 - **A5 加密**：仅检测 + 提示，不破解。
 - **A6 许可**：LGPL-2.1，fork 公开 + `LICENSE`/`NOTICE` + 应用内源码获取。
+- **A7 LocaleHelper 例外（2026-10-11 登记，评估整改 P1-1）**：`LocaleHelper.supportedLocales` 的 `"zh_CN"`
+  为简体中文界面必要触碰（提交 `bb810ca`）；上游原生支持 zh_CN 后回退本文件改动。
 
 ## 7. 阶段路线图（P0–P7）
 
