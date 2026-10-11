@@ -205,8 +205,12 @@ public final class NativeRouteLauncher {
     }
 
     /**
-     * 用 ACTION_VIEW + 文件 URI 直接打开单个游戏文件（PPSSPP 等「传路径即启动」型）。
+     * 用 ACTION_VIEW + FileProvider content URI 直接打开单个游戏文件（PPSSPP 等「传路径即启动」型）。
      * Android 13+ 需要 category DEFAULT 与 MIME（ppsspp#17416 实测）。
+     *
+     * 第二轮移动端评估 T2：file://（Uri.fromFile）在 Android 7+ 会触发 FileUriExposedException，
+     * targetSdk 29+ 直接崩溃；改用已注册的 {@code com.winlator.FileProvider}（res/xml/file_paths.xml
+     * 已含 external-path 覆盖外部存储）并授予临时读权限。
      */
     public static boolean launchFile(Context context, Target target, File gameFile) {
         if (context == null || target == null || gameFile == null || !gameFile.isFile()) return false;
@@ -216,11 +220,14 @@ public final class NativeRouteLauncher {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setClassName(pkgs[i], pkgs[i] + ".PpssppActivity");
                 intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.setDataAndType(android.net.Uri.fromFile(gameFile), "application/octet-stream");
+                intent.setDataAndType(
+                        androidx.core.content.FileProvider.getUriForFile(context, "com.winlator.FileProvider", gameFile),
+                        "application/octet-stream");
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                         | Intent.FLAG_ACTIVITY_CLEAR_TASK
                         | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        | Intent.FLAG_ACTIVITY_NO_HISTORY);
+                        | Intent.FLAG_ACTIVITY_NO_HISTORY
+                        | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 context.startActivity(intent);
                 return true;
             } catch (Exception e) {

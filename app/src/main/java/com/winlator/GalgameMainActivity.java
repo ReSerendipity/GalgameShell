@@ -47,6 +47,10 @@ public class GalgameMainActivity extends AppCompatActivity implements GalgameHos
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_galgame_main);
 
+        // 第二轮移动端评估 T3：轻量崩溃采集（进程级 UncaughtExceptionHandler，无新依赖；
+        // 崩溃落盘 getExternalFilesDir/crashes/，交还原 handler 不吞崩溃）
+        com.winlator.galgame.GalgameCrashHandler.install(this);
+
         Toolbar toolbar = findViewById(R.id.galgameToolbar);
         setSupportActionBar(toolbar);
 

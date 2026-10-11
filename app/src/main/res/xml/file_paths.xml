@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <files-path name="files" path="." />
+    <!-- 第二轮移动端评估 T2：B 路由 launchFile 经 FileProvider 分发（PPSSPP 等传路径型），
+         游戏文件位于外部存储根下（easyrpg/games、PSP_GAME 等 scanDir）→ 覆盖 external 根。 -->
+    <external-path name="external" path="." />
 </paths>

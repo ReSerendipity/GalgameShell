@@ -30,6 +30,16 @@ android {
                 abiFilters (project.findProperty('galgameUiAbi') ?: 'arm64-v8a')
             }
         }
+
+        // 第二轮移动端评估 T4：release 显式化（此前仅定义 debug，release 隐式存在且未声明）。
+        // - minifyEnabled false：与 debug 对齐（proguard-rules.pro 现存 -dontobfuscate）；
+        // - signingConfig signingConfigs.debug：本仓为侧载/源码分发、未捆绑正式 keystore
+        //   （报告未要求引入签名凭据，铁律 1），开发期 release 沿用 debug 签名保证可安装；
+        //   有正式 keystore 后在此替换为 release signingConfig（后续建议）。
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
     }
 
     lintOptions {

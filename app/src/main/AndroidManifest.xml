@@ -18,12 +18,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- GalgameShell: 让 Android 11+ 能看到原生播放器（B 路由唤起，P5） -->
+    <!-- GalgameShell: 让 Android 11+ 能看到原生播放器（B 路由唤起，P5）。
+         第二轮移动端评估 T1：补齐 NativeRouteLauncher 6 个 B 路由 target 的包可见性
+         （org.easyrpg.player / org.ppsspp.ppsspp），消除 EasyRPG/PPSSPP 启动不可达。 -->
     <queries>
         <package android:name="org.tvp.kirikiri2" />
         <package android:name="jp.ogapee.onscripter.release" />
         <package android:name="cyou.joiplay" />
         <package android:name="com.akira.tyranoemu" />
+        <package android:name="org.easyrpg.player" />
+        <package android:name="org.ppsspp.ppsspp" />
     </queries>
 
     <application
