@@ -39,13 +39,41 @@ app/src/main/java/com/winlator/galgame/
   NativeRouteLauncher.java   P5 B 路由唤起（Tier 分层 + 免责 + 扫描目录预置）
   GalgameDiagnostics.java    诊断向导（GPU/日文/视频/位宽/音频/加密 检查表）
   GalgameLogs.java           日志查看（logs.txt / stderr / dxvk + 要害行提取）
+  GalgameCoverProvider.java  M1 游戏库封面（扫描目录图 + exe 图标提取；游戏自带封面优先）
+  GalgameCrashHandler.java   轻量崩溃采集（未捕获异常落盘 crashes/，交还原 handler）
+  GalgameGpuProfiler.java    M2 GPU 自适应调优（Adreno→Turnip / Mali→Vortek 驱动推荐）
+  GalgameInputHelper.java    触控接线（为容器接入 GalgameDirectTouchView 直接触控）
+  GalgameLanguageDetector.java 中文游戏检测（强信号才判 zh，否则默认日语）
+  GalgameLaunchHelper.java   启动接线（galgame_overlay.json 的 exe 注入 exec_path）
+  GalgameLibraryIndex.java   游戏库索引（持久化与列表装载）
+  GalgameStoragePermission.java MANAGE_EXTERNAL_STORAGE 运行时引导（未授权弹说明对话框）
+  GameLauncher.java          游戏启动统一入口（引擎裁决从 UI 收出，任何入口同一条路）
+  package-info.java          包说明（零改铁律与模块清单）
+  engine/                    内嵌引擎子包
+    GameEngine.java            引擎抽象接口
+    GameEngineRegistry.java    引擎注册表
+    GameLaunchRequest.java     启动请求参数
+    BuiltinEngine.java         内嵌引擎抽象
+    BuiltinEngineRegistry.java 内嵌引擎解析注册（RENPY / KIRIKIRI 等）
+    RenPyEngine.java           Ren'Py 内嵌引擎（librenpython.so，Python 3.12.8 + Ren'Py 8.5.3）
+    KrkrEngine.java            Kirikiri2 内嵌引擎（Kirikiroid2 libgame.so）
+    WinlatorContainerEngine.java Winlator 容器引擎
   ui/
     GalgameLibraryActivity.java  库 UI（导入/启动/诊断/日志/存档/B 路由）
+    GalgameLibraryAdapter.java   库列表适配器（封面 + 标题 + 信息行）
     GalgameSettings.java         Tier-2 开关（SharedPreferences）
+  widget/
+    GalgameDirectTouchView.java  直接触控层（点按=点击 / 拖动=拖拽 / 双指=右键）
 ```
 
-新增资源：`assets/engine_presets.json`、`assets/galgame_fonts.json`、
+新增资源：`assets/engine_presets.json`（本仓新增）、`assets/galgame_fonts.json`（本仓新增）、
 `res/values/galgame_strings.xml`、`res/layout/activity_galgame_library.xml`。
+
+assets 其余 json 归属：`common_dlls.json`、`gamepad_models.json`、`gpu_cards.json`、
+`wine_debug_channels.json`、`wine_startmenu.json` 为**上游自带**；`engine_presets.json`、
+`galgame_fonts.json` 为**本仓新增**。内嵌引擎资源目录：`assets/renpy-engine/`（Ren'Py 引擎
+字节码与运行时，本仓新增）、`assets/ui|locale|img|Default|DroidSansFallback.ttf|default.cur`
+（Kirikiroid2 引擎资源，本仓并入）。
 
 ## 4. 资源口径与 CI 内部约定
 
