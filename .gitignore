@@ -71,3 +71,6 @@ logs/
 service-account.json
 .aws/
 .gcloud/
+
+# Qoder 本地评估产物（better-harness 证据与运行清单，不入库）
+.qoder/
