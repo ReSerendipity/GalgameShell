@@ -1,11 +1,12 @@
 # GalgameShell — GalGame Android Shell
 
-基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）的 galgame 专用外壳：以 Winlator 为模拟层基座，自动识别游戏引擎，在「原生播放器 (B) / 模拟 (A)」之间智能路由，让 galgame 在 Android 上导入即玩。
+基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）的 galgame 专用外壳：以 Winlator 为模拟层基座，自动识别游戏引擎，在「内嵌原生引擎 / 原生播放器 (B) / 模拟 (A)」之间智能路由，让 galgame 在 Android 上导入即玩。
 
 ## 功能亮点
 
 - **导入即玩**：选定游戏目录后，自动创建专属容器、复制游戏文件、注入运行环境，导入完成即可从库中启动，无需手工配置 Wine 容器。
-- **引擎识别与 A/B 双路由**：通过引擎指纹判断游戏引擎并自动选择运行方式——适合原生运行的游戏唤起原生播放器（开源原生引擎默认可用；闭源原生播放器默认关闭，需在设置中显式开启），其余游戏走 Winlator 模拟层；检测到加密仅作提示，不破解。
+- **内嵌原生引擎**：APK 内嵌 Ren'Py 引擎运行时（`librenpython.so`，Python 3.12.8 + Ren'Py 8.5.3，真机已跑通真实商业游戏《候鸟》全链路）与 Kirikiri2 引擎运行时（内嵌 Kirikiroid2，`libgame.so`，真机验证通过），识别到对应引擎的游戏由内嵌引擎进程内直启渲染；Winlator 容器引擎承载其余模拟游戏。
+- **引擎识别与 A/B 双路由**：通过引擎指纹判断游戏引擎并自动选择运行方式——适合原生运行的游戏优先走内嵌原生引擎（B 路由默认渲染路线）；内嵌引擎不可用时可唤起外部原生播放器作为可选回退（闭源原生播放器默认关闭，需在设置中显式开启），其余游戏走 Winlator 模拟层；检测到加密仅作提示，不破解。
 - **一键日文化**：自动注入日文区域环境（`LC_ALL` / `LANG` 环境变量与区域注册表）并配置日文字体，解决日文游戏乱码问题（字体文件不随应用捆绑）。
 - **游戏内视频正常播放**：自动启用 DirectShow / Windows Media 解码，老游戏的开场动画与过场视频可正常播放。
 - **存档重定向**：存档统一重定向到 S: 盘与 Shell Folder，便携存档自动「先搬后链」，并支持存档导出与恢复。
@@ -38,7 +39,7 @@ git checkout upstream/main -- app/src/main/assets app/src/main/jniLibs
 
 - 本应用仅为 galgame 运行外壳，**不含任何游戏本体，不提供破解**；请自备合法获得的游戏副本。
 - 检测到加密的游戏仅作提示，不做破解。
-- 第三方原生播放器为可选唤起功能，使用风险自负。
+- 内嵌原生引擎（Ren'Py / Kirikiroid2）按其各自开源许可随 APK 分发，许可信息见 [`NOTICE`](NOTICE)；第三方原生播放器为可选回退唤起功能，使用风险自负。
 - 开源许可与源码获取方式见应用内「关于」及 [`NOTICE`](NOTICE)。
 
 ## 构建
