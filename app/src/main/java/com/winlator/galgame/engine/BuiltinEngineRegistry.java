@@ -7,7 +7,7 @@ import com.winlator.galgame.EngineDetector;
 /**
  * 引擎 → 内置运行时的映射表。
  *
- * 收录判据只有一条：**许可证允许静态并入 LGPL-2.1 项目**（详见 DOCS/native-engine-integration.md §2）。
+ * 收录判据只有一条：**许可证允许静态并入 LGPL-2.1 项目**（详见 README.md「许可证」；完整判据属对内文档，仅本机保留、不随仓库分发）。
  * 目前全域只有 Kirikiri 满足，故映射表里只有一项；其余引擎继续走
  * {@link com.winlator.galgame.NativeRouteLauncher}（外部 APK 唤起）或 A 路由（wine/box64）。
  */

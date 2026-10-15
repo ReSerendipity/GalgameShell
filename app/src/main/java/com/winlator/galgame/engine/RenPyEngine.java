@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ren'Py 内置运行时（Ren'Py 引擎本体 LGPL-2.1，详见 DOCS/native-engine-integration.md §2）。
+ * Ren'Py 内置运行时（Ren'Py 引擎本体 LGPL-2.1，详见 README.md「许可证」；完整设计说明属对内文档，仅本机保留、不随仓库分发）。
  *
- * <p>集成要点（已核实，见 DOCS/native-engine-integration.md §4.5）：
+ * <p>集成要点（已核实，见 README.md「内嵌原生引擎」；完整运行契约属对内文档，仅本机保留、不随仓库分发）：
  * <ul>
  *   <li>原生库为合并库 <b>librenpython.so</b>（内含 CPython 3.12 + SDL2 + jnius 桥，
  *       以 {@code SDL_main} 为入口）；Java 侧 SDLActivity 版本须为 SDL2（已核对一致）。</li>

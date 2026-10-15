@@ -16,7 +16,7 @@ import java.io.OutputStream;
  * GalgameShell 内置 Ren'Py 引擎宿主（继承上游 org.renpy.android.PythonSDLActivity）。
  *
  * <p>运行契约（已对 librenpython.so 的 start_python() 与 renpy 源码核实，详见
- * DOCS/native-engine-integration.md §4.5）：
+ * README.md「内嵌原生引擎」；完整运行契约属对内文档，仅本机保留、不随仓库分发）：
  * <ul>
  *   <li>{@code start_python()} 固定执行 {@code getFilesDir()/main.py}；父类
  *       {@code preparePython()} 已把 {@code ANDROID_PRIVATE} 设为 getFilesDir()。</li>

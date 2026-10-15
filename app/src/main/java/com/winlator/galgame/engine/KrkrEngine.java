@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * Kirikiri2 / KirikiriZ 的**内置**运行时（Kirikiroid2，BSD 3-Clause）。
  *
- * 集成要点（已核实，见 DOCS/native-engine-integration.md §3）：
+ * 集成要点（已核实，见 README.md「内嵌原生引擎」；完整设计说明属对内文档，仅本机保留、不随仓库分发）：
  * <ul>
  *   <li>原生库名是 <b>libgame.so</b>（上游 Android.mk 的 {@code LOCAL_MODULE_FILENAME}），
  *       外加 <b>libffmpeg.so</b>（{@code KR2Activity} 静态块里显式 load）。</li>

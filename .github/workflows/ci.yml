@@ -2,7 +2,8 @@ name: GalgameShell CI
 
 # P0/P7 CI（Plan §VIII.3/§VIII.4）：
 #   1) rebase-guard —— 零改铁律 + 资产合法性（无需 Android SDK）
-#   2) galgame-compile —— 用 ci/stubs 对 com.winlator.galgame 包做 javac -Xlint:all 类型门禁
+#   2) galgame-compile —— 用 ci/stubs 对 com.winlator.galgame 全树 + 热点入口清单
+#      （子树外的显式文件列表）做 javac -Xlint:all 类型门禁
 # 说明：本 fork 按设计不含大二进制（wine/box64 运行时 .tzst 与 jniLibs .so），
 #       故不在此做完整 APK 构建；完整构建需先按 README 补齐二进制。
 
@@ -10,7 +11,7 @@ on:
   push:
     branches: [galgame, main]
   pull_request:
-    branches: [galgame]
+    branches: [galgame, main]
 
 jobs:
   rebase-guard:
@@ -57,14 +58,20 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: "类型门禁：com.winlator.galgame（对 ci/stubs）"
+      - name: "类型门禁：com.winlator.galgame + 热点入口清单（对 ci/stubs）"
         run: |
           set -e
-          rm -rf /tmp/stubs-out /tmp/check
-          mkdir -p /tmp/stubs-out /tmp/check
+          rm -rf /tmp/stubs-out /tmp/check /tmp/hot
+          mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
           javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
           javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
-          echo "OK: com.winlator.galgame (whole tree) compiles clean (-Xlint:all)"
+          # 热点入口清单：com.winlator 顶层、不在 galgame 子树里的最热改动文件
+          # （与 ci/pre-push 同列表；GalgameHost.java 是真实源码随编译，不补桩）
+          javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
+            app/src/main/java/com/winlator/ContainersFragment.java \
+            app/src/main/java/com/winlator/GalgameHost.java \
+            app/src/main/java/com/winlator/GalgameHomeFragment.java
+          echo "OK: com.winlator.galgame (whole tree) + hotspot entry classes compile clean (-Xlint:all)"
 
       - name: "EngineDetector 回归测试（tools/detect-test/DetectTest.java）"
         run: |

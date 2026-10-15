@@ -2,13 +2,19 @@
 # ci/pre-push — 推送前类型门禁（本地版 galgame-compile）
 #
 # 与 .github/workflows/ci.yml 的 galgame-compile job 同口径：用 ci/stubs 对
-# com.winlator.galgame 整棵树做 javac -Xlint:all。目的是把 CI 红灯提前到本地
-# 几秒内暴露——历史上两次 CI 失败都是「新代码用了桩里没有的 API」
-# （Log.w 三参重载 / Context.getFilesDir / ValueAnimator.cancel），
+# com.winlator.galgame 整树 + 热点入口清单（子树外的显式文件列表）做 javac -Xlint:all。
+# 目的是把 CI 红灯提前到本地几秒内暴露——历史上两次 CI 失败都是「新代码用了桩里
+# 没有的 API」（Log.w 三参重载 / Context.getFilesDir / ValueAnimator.cancel），
 # 本地无门禁时只能等 CI 才发现。
 #
 # 本文件是版本库内的唯一来源。启用（一次性，在仓库根目录执行）：
-#     cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+#     POSIX / Git-Bash:    cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+#     Windows PowerShell:  Copy-Item ci/pre-push .git/hooks/pre-push
+#                          （无需 chmod；Git for Windows 用自带 sh.exe 执行本钩子，
+#                            宿主 shell 是 pwsh 也能装，不必另装 bash 或开 WSL）
+# 不装钩子时的手动等价调用（PowerShell 版等价 javac 序列），以及「未装钩子 / 缺 javac
+# 放行时由 CI 的 push、pull_request 触发兜底」的口径，见根 README
+# 「本地门禁：推送前类型检查（pre-push）」一节与 ci/README.md。
 #
 # 无 javac 时优雅跳过并提示（不阻断），避免把钩子变成环境依赖门禁。
 set -e
@@ -42,4 +48,16 @@ if ! "$JAVAC" -Xlint:all -cp "$OUT/stubs" -d "$OUT/check" $(find app/src/main/ja
     echo "           新代码用到了 ci/stubs 里没有的 API —— 按 ci/README.md 补桩后重试。" >&2
     exit 1
 fi
-echo "[pre-push] ✓ 类型门禁通过（ci/stubs + com.winlator.galgame 全树，-Xlint:all）"
+
+# 热点入口清单：com.winlator 顶层、不在 galgame 子树里的最热改动文件（与 ci.yml 同列表）。
+# GalgameHost.java 随编译：它是真实源码（热点清单的宿主接口），不补桩、不单测。
+HOT="app/src/main/java/com/winlator/ContainersFragment.java
+app/src/main/java/com/winlator/GalgameHost.java
+app/src/main/java/com/winlator/GalgameHomeFragment.java"
+echo "[pre-push] 类型门禁：热点入口清单（对 ci/stubs + 已编译的 galgame 全树）"
+if ! "$JAVAC" -Xlint:all -cp "$OUT/stubs:$OUT/check" -d "$OUT/hot" $HOT; then
+    echo "[pre-push] ✗ 热点入口类类型门禁未通过，已阻止推送。" >&2
+    echo "           新代码用到了 ci/stubs 里没有的 API —— 按 ci/README.md 补桩后重试。" >&2
+    exit 1
+fi
+echo "[pre-push] ✓ 类型门禁通过（ci/stubs + com.winlator.galgame 全树 + 热点清单，-Xlint:all）"

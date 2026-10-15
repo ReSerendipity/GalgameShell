@@ -3,7 +3,7 @@
 # GalgameShell — 内置 Ren'Py 启动器（等价于 RAPT 的 private/main.py）
 #
 # 运行契约（已对 librenpython.so 的 start_python()、SDK 官方启动器 renpy.py 与
-# renpy 源码逐条核实，详见 DOCS/native-engine-integration.md §4.5）：
+# renpy 源码逐条核实，详见 README.md「内嵌原生引擎」；完整运行契约属对内文档，仅本机保留、不随仓库分发）：
 #   * librenpython.so 的 start_python() 固定执行 getenv("ANDROID_PRIVATE")/main.py，
 #     并 chdir 到该目录（sys.path[0] 与 PYTHONHOME 都指向它）。
 #   * PythonSDLActivity.preparePython() 已把 ANDROID_PRIVATE 设为 getFilesDir()。

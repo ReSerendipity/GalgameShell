@@ -10,7 +10,7 @@ import java.io.File;
  * 用户要求（明确否决外部 APK 方案）：检测到对应引擎后，**用集成在项目里的运行时直接跑**，
  * 不再安装第二个 App、不在第三方 App 里手选目录。本类即这条链路的抽象。
  *
- * 许可证硬约束（见 DOCS/native-engine-integration.md §2）：本仓库为 LGPL-2.1，
+ * 许可证硬约束（见 README.md「许可证」；完整判据属对内文档，仅本机保留、不随仓库分发）：本仓库为 LGPL-2.1，
  * 静态并入的运行时**必须是宽松许可证**——目前只有 Kirikiroid2（BSD 3-Clause）达标；
  * EasyRPG(GPLv3) / ONScripter(GPLv2) / PPSSPP(GPLv2+) 会把整个项目拖成 GPL，故不提供内置实现，
  * JoiPlay / Tyranor 闭源，连源码都没有。

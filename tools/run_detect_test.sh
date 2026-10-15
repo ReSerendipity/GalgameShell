@@ -8,9 +8,26 @@
 # 用法： bash tools/run_detect_test.sh     （退出码非 0 表示有用例失败）
 set -euo pipefail
 
-JDK="C:/Program Files/Eclipse Adoptium/jdk-21.0.11.10-hotspot"
-SRC="C:/Users/Doro/GalgameShell/app/src/main/java/com/winlator/galgame"
-T="C:/Users/Doro/GalgameShell/tools/detect-test"
+# 根路径由 git 推导，不写死用户主目录，换机器/换克隆位置依旧可跑
+R="$(git rev-parse --show-toplevel)"
+SRC="$R/app/src/main/java/com/winlator/galgame"
+T="$R/tools/detect-test"
+
+# javac/java 查找口径与 ci/pre-push:17-21 一致：先查 PATH，再回退 $JAVA_HOME/bin
+JAVAC=""
+JAVA=""
+if command -v javac >/dev/null 2>&1 && command -v java >/dev/null 2>&1; then
+    JAVAC="javac"
+    JAVA="java"
+elif [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/javac" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVAC="$JAVA_HOME/bin/javac"
+    JAVA="$JAVA_HOME/bin/java"
+fi
+
+if [ -z "$JAVAC" ]; then
+    echo "[run_detect_test] 未找到 javac/java（PATH 与 JAVA_HOME 都没有），无法运行测试" >&2
+    exit 1
+fi
 
 rm -rf "$T/src" "$T/classes"
 mkdir -p "$T/src/com/winlator/galgame" "$T/classes"
@@ -18,9 +35,9 @@ mkdir -p "$T/src/com/winlator/galgame" "$T/classes"
 # 始终从真实源码复制，保证测的是当前代码（不是快照）
 cp "$SRC/EngineDetector.java" "$T/src/com/winlator/galgame/"
 
-"$JDK/bin/javac" -encoding UTF-8 -nowarn \
+"$JAVAC" -encoding UTF-8 -nowarn \
   -d "$T/classes" \
   "$T/src/com/winlator/galgame/EngineDetector.java" \
   "$T/DetectTest.java"
 
-"$JDK/bin/java" -Dfile.encoding=UTF-8 -cp "$T/classes" DetectTest
+"$JAVA" -Dfile.encoding=UTF-8 -cp "$T/classes" DetectTest

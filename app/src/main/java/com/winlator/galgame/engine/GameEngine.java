@@ -5,7 +5,7 @@ import android.content.Context;
 /**
  * 一等游戏引擎抽象：把「怎么把一款游戏跑起来」这件事收敛成同一份契约。
  *
- * <p>本 fork 历史上存在<b>三条互不相通</b>的启动路径（见 DOCS/plan-engine-equivalence-ui.md §2.1）：
+ * <p>本 fork 历史上存在<b>三条互不相通</b>的启动路径（见 README.md「引擎识别与 A/B 双路由」；完整设计说明属对内文档，仅本机保留、不随仓库分发）：
  * <ol>
  *   <li>内置原生引擎：{@link BuiltinEngine} → Kirikiroid2 / Ren'Py；</li>
  *   <li>外部 APK 唤起：{@link com.winlator.galgame.NativeRouteLauncher}；</li>

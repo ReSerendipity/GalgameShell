@@ -8,5 +8,8 @@ public class ContainerManager {
     public Context getContext() { return null; }
     public ArrayList<Container> getContainers() { return new ArrayList<>(); }
     public void createContainerAsync(JSONObject data, Callback<Container> callback) {}
+    // GalgameShell：热点入口类 ContainersFragment 用到，签名与真实 ContainerManager 对齐。
+    public void duplicateContainerAsync(Container container, Runnable callback) {}
+    public void removeContainerAsync(Container container, Runnable callback) {}
     public Container getContainerById(int id) { return null; }
 }
