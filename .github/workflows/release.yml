@@ -45,3 +45,40 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+
+  sbom:
+    name: Attach source SBOM (syft, CycloneDX)
+    needs: [validate-tag, ci]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        # v2.9 评估整改（供应链报告 P1-2）：随 Release 附源码 SBOM（CycloneDX），
+        # 消解"无 SBOM 暗箱制品"。CI 检出的是干净的跟踪文件树（不含本机忽略目录），
+        # 排除 .git 后扫源码成分，成分与 NOTICE §3/§8 台账互为机读/人读两份。
+        # 实现方式沿用本仓 gitleaks.yml 的"官方二进制 + 版本 env 集中维护"模式
+        # （syft 即报告建议的扫描器），不新增第三方 Action；SYFT_VERSION 若 404
+        # 请在 env 提升为最新已发布版本（与 GITLEAKS_VERSION 同一维护约定）。
+      - name: Install syft (version pinned via env)
+        env:
+          SYFT_VERSION: '1.18.0'
+        run: |
+          set -e
+          curl -sSfL "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz" -o syft.tgz
+          tar -xzf syft.tgz syft
+          chmod +x syft
+      - name: Generate CycloneDX SBOM of the source tree
+        run: |
+          set -e
+          ./syft dir:. --exclude "./.git" --output cyclonedx-json=sbom.cdx.json
+          ls -l sbom.cdx.json
+      - name: Upload SBOM to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release upload "$RELEASE_TAG" sbom.cdx.json --repo "$GITHUB_REPOSITORY"
+          echo "OK: SBOM attached to release $RELEASE_TAG"

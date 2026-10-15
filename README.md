@@ -109,6 +109,12 @@ Git-Bash / WSL 下则直接执行钩子本体（`sh ci/pre-push`），它与已�
    ```bash
    ./gradlew assembleDebug
    ```
+3. （可选，分发 APK 前）生成运行时资源 SHA-256 校验清单并随包分发，供接收方核验
+   `.tzst` / `.so` 完整性（v2.9 评估整改·供应链 P1-3）：
+
+   ```bash
+   bash tools/make_runtime_checksums.sh   # 输出 RELEASE-RUNTIME-CHECKSUMS.txt（勿提交，随包分发）
+   ```
 
 ## 许可证
 
