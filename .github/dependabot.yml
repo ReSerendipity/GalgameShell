@@ -1,0 +1,14 @@
+# 依赖与第三方 Action 的最低限自动更新（v2.9 评估整改，对应《软件供应链安全_Flash报告》P1-4）
+# 覆盖 gradle（含 gradle/libs.versions.toml version catalog）与 github-actions 两生态。
+# 分工边界：许可证准入走 scripts/check_licenses.py（CI rebase-guard），密钥走 gitleaks.yml；
+# 本文件只负责"有新版本时开 PR 提醒"，准入与合入仍由仓主裁决。
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
