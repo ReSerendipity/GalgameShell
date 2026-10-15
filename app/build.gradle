@@ -10,7 +10,12 @@ android {
         // Android 11 是 MANAGE_EXTERNAL_STORAGE / Scoped Storage 的起点，
         // 也是 README 系统要求里写明的最低版本。
         minSdkVersion 30
-        targetSdkVersion 28
+        // v2.9 评估整改（移动端报告 P1-2）：targetSdk 28 → 30（路线图 P9 落地）。
+        // 前置核对（README.internal §7 P9）：B 路由 FileProvider 化、MANAGE_EXTERNAL_STORAGE
+        // 运行时申请链（GalgameStoragePermission）均已完成；targetSdk 30 不触发
+        // 前台服务类型（34+）/ POST_NOTIFICATIONS 运行时权限（33+）等更高适配项。
+        // 残余发版前置：真机回归 R1–R17（TD-02，需 Adreno + Mali 真机），发版门禁不变。
+        targetSdkVersion 30
         versionCode 33
         versionName "11.2"
     }
