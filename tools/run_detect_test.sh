@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# EngineDetector.detect() 的纯 JVM 回归验证（无需 Android SDK / 设备 / 模拟器）
+# 纯 JVM 回归验证入口（无需 Android SDK / 设备 / 模拟器）
 #
-# 为什么存在：detect() 是纯 java.io.File 逻辑（无 Android 依赖），
-# 因此可以直接用 JDK 编译运行。2026-10-05 修复「Ren'Py 标准布局漏判」时建立，
-# 用于防止该修复回归，并守住 KiriKiri > Ren'Py 的优先级裁决。
+# 为什么存在：被测对象都是纯 java 逻辑（无 Android 依赖），
+# 因此可以直接用 JDK 编译运行。2026-10-05 修复「Ren'Py 标准布局漏判」时建立
+# EngineDetector 回归；v2.9 评估整改（任务 GalgameShell-v29-remediate，
+# 对应《测试_Flash报告》P1-1）扩展 GalgameLanguageDetector 回归。
 #
 # 用法： bash tools/run_detect_test.sh     （退出码非 0 表示有用例失败）
 set -euo pipefail
@@ -29,15 +30,25 @@ if [ -z "$JAVAC" ]; then
     exit 1
 fi
 
+L="$R/tools/lang-detect-test"
+
 rm -rf "$T/src" "$T/classes"
 mkdir -p "$T/src/com/winlator/galgame" "$T/classes"
 
 # 始终从真实源码复制，保证测的是当前代码（不是快照）
 cp "$SRC/EngineDetector.java" "$T/src/com/winlator/galgame/"
+cp "$SRC/GalgameLanguageDetector.java" "$T/src/com/winlator/galgame/"
 
+echo "== EngineDetector 回归（DetectTest）=="
 "$JAVAC" -encoding UTF-8 -nowarn \
   -d "$T/classes" \
   "$T/src/com/winlator/galgame/EngineDetector.java" \
   "$T/DetectTest.java"
-
 "$JAVA" -Dfile.encoding=UTF-8 -cp "$T/classes" DetectTest
+
+echo "== GalgameLanguageDetector 回归（LanguageDetectorTest）=="
+"$JAVAC" -encoding UTF-8 -nowarn \
+  -d "$T/classes" \
+  "$T/src/com/winlator/galgame/GalgameLanguageDetector.java" \
+  "$L/LanguageDetectorTest.java"
+"$JAVA" -Dfile.encoding=UTF-8 -cp "$T/classes" LanguageDetectorTest
