@@ -47,6 +47,28 @@ jobs:
         run: |
           python3 -c "import xml.dom.minidom; xml.dom.minidom.parse('app/src/main/res/values/galgame_strings.xml'); print('OK: galgame_strings.xml valid')"
 
+      - name: "许可证扫描（scripts/check_licenses.py：强 copyleft/SSPL 即阻断，未登记坐标告警）"
+        run: |
+          set -e
+          python3 scripts/check_licenses.py gradle/libs.versions.toml
+
+      # v2.9 评估整改（开源报告 P1-3）：DCO 逐提交校验。仅 PR 生效，push 直推不受影响；
+      # rebase-guard 的 checkout 是 fetch-depth: 0，base.sha 可解析。签署方式见 CONTRIBUTING.md。
+      - name: "DCO 签署校验（仅 pull_request）"
+        if: github.event_name == 'pull_request'
+        run: |
+          set -e
+          BASE="${{ github.event.pull_request.base.sha }}"
+          git cat-file -e "${BASE}^{commit}" 2>/dev/null || BASE="HEAD~20"
+          fail=0
+          for sha in $(git rev-list "${BASE}..HEAD"); do
+            git log -1 --format='%B' "$sha" | grep -q 'Signed-off-by:' || {
+              echo "::error::commit ${sha:0:12} 缺少 DCO 签署（git commit -s 后重推）"
+              fail=1
+            }
+          done
+          exit $fail
+
   galgame-compile:
     runs-on: ubuntu-latest
     needs: rebase-guard
