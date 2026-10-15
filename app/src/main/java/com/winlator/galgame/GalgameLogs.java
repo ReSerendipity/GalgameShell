@@ -1,5 +1,6 @@
 package com.winlator.galgame;
 
+import android.content.Context;
 import android.os.Environment;
 
 import com.winlator.container.Container;
@@ -14,7 +15,8 @@ import java.util.List;
  * 日志查看（Plan Part I §I.6.7）。
  *
  * 定位并聚合运行日志：官方 {@code Documents/Winlator/logs.txt}（由官方 LogView 写入）
- * + 容器目录下常见日志（stderr/stdout/game_log/box64/dxvk/d3d9 等）。
+ * + 容器目录下常见日志（stderr/stdout/game_log/box64/dxvk/d3d9 等）
+ * + 本地崩溃记录（v2.9 评估 P1-1：GalgameCrashHandler crashes/&lt;versionCode&gt;/）。
  * 提供 {@link #tail} 与 {@link #highlights}（按关键词挑要害行）供诊断向导展示。
  */
 public final class GalgameLogs {
@@ -26,6 +28,36 @@ public final class GalgameLogs {
         File parent = new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "Winlator");
         return new File(parent, "logs.txt");
+    }
+
+    /**
+     * 崩溃归档目录（v2.9 评估 P1-1 接入）：与 {@link GalgameCrashHandler#crashDir} 同一落点，
+     * 单一事实源避免双写路径漂移。
+     */
+    public static File crashDir(Context context) {
+        return GalgameCrashHandler.crashDir(context);
+    }
+
+    /**
+     * 崩溃记录文件（crashes/&lt;versionCode&gt;/crash-*.txt）；文件名含时间戳，按名倒序即新→旧；
+     * 最多返回 20 份（诊断查看场景足够，避免整目录加载）。
+     */
+    public static List<File> crashReports(Context context) {
+        List<File> out = new ArrayList<>();
+        File versionRoot = crashDir(context);
+        File[] versionDirs = versionRoot == null ? null : versionRoot.listFiles();
+        if (versionDirs != null) {
+            for (File versionDir : versionDirs) {
+                File[] files = versionDir.listFiles();
+                if (files == null) continue;
+                for (File f : files) {
+                    if (f.isFile() && f.getName().endsWith(".txt")) out.add(f);
+                }
+            }
+        }
+        out.sort((a, b) -> b.getName().compareTo(a.getName()));
+        if (out.size() > 20) out.subList(20, out.size()).clear();
+        return out;
     }
 
     /** 候选日志文件（按重要性排序）。 */

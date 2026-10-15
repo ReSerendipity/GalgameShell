@@ -309,8 +309,13 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     private void showLogs(Container container) {
         List<File> files = GalgameLogs.candidates(container);
-        if (files.isEmpty()) {
+        List<File> crashes = GalgameLogs.crashReports(this);   // v2.9 评估 P1-1：崩溃记录接入
+        if (files.isEmpty() && crashes.isEmpty()) {
             snack(getString(R.string.galgame_logs_none));
+            return;
+        }
+        if (files.isEmpty()) {            // 无运行日志但有崩溃记录：直接展示最新一份
+            showCrashReport(crashes.get(0));
             return;
         }
 
@@ -321,8 +326,23 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         StringBuilder sb = new StringBuilder();
         for (String line : lines) sb.append(line).append("\n");
 
-        new AlertDialog.Builder(this)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(logFile.getName())
+                .setMessage(sb.toString())
+                .setPositiveButton(R.string.galgame_ok, null);
+        if (!crashes.isEmpty()) {         // 有崩溃记录时提供直达入口（最新一份）
+            builder.setNeutralButton(R.string.galgame_logs_crashes, (d, w) -> showCrashReport(crashes.get(0)));
+        }
+        builder.show();
+    }
+
+    /** 展示单份崩溃记录（v2.9 评估 P1-1：本地崩溃采集 crashes/<versionCode>/ 的查看入口）。 */
+    private void showCrashReport(File crashFile) {
+        List<String> lines = GalgameLogs.tail(crashFile, 40);
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines) sb.append(line).append("\n");
+        new AlertDialog.Builder(this)
+                .setTitle(crashFile.getName())
                 .setMessage(sb.toString())
                 .setPositiveButton(R.string.galgame_ok, null)
                 .show();
