@@ -1,0 +1,9 @@
+# 热点入口清单（唯一来源）
+#
+# com.winlator 顶层、不在 com.winlator.galgame 子树里、靠显式清单纳入类型门禁的文件。
+# 消费者：.github/workflows/ci.yml（galgame-compile）、ci/pre-push、
+#         scripts/gen_galgame_stubs.py（R 桩扫描范围）、AGENTS.md / README.md 的本地等价命令。
+# 改这里即可，不要在别处再抄一份文件列表；核对：bash ci/check-hotspot-sync.sh
+app/src/main/java/com/winlator/ContainersFragment.java
+app/src/main/java/com/winlator/GalgameHost.java
+app/src/main/java/com/winlator/GalgameHomeFragment.java
