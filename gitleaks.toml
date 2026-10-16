@@ -5,9 +5,16 @@
 [extend]
 useDefault = true
 
+# 豁免一律**定点**：只豁免造成误报的那一处路径或取值，不做整文件豁免。
+# 为什么强调这点：原先按文件名整体豁免 GalgameSettings.java，实测同一枚 ghp_ 形态令牌
+# 写在别的文件会命中 github-pat、写进该文件则被静默放行——豁免范围大到一个第一方源文件，
+# 等于把「这个文件不再受密钥扫描」。恢复整文件覆盖后，误报只该豁免它自己的那一处。
 [allowlist]
-description = "经人工核验的统一误报清单（第三方 vendored 源码中的密钥样式字面量；SharedPreferences 布尔键名被通用 API key 规则误伤）"
+description = "经人工核验的定点误报清单（第三方 vendored 路径；一处被通用 API key 规则误伤的 SharedPreferences 布尔键名取值）"
 paths = [
   '''virglrenderer''',
-  '''GalgameSettings\.java''',
+]
+regexes = [
+  # 键名取值本身被 generic-api-key 误伤；仅豁免这一个值，其余命中一律照报
+  '''^broute_tier2_enabled$''',
 ]
