@@ -25,27 +25,38 @@ CI 用 `git diff` 名单比对这些**官方真实路径**（`ci/stubs/` 下的�
 - `app/src/main/java/com/winlator/core/LocaleHelper.java`
 - `app/src/main/res/values/strings.xml`（现有条目）
 
-命中即 CI 失败。galgame 价值一律放新包 `com.winlator.galgame` + 新资源文件
-（`res/values/galgame_strings.xml` 等）。登记例外（如 A7 `LocaleHelper.supportedLocales`
-增加 `zh_CN`）记在被忽略的 `docs/`，改动这些文件前须先核对既有登记。
+命中即 CI 失败（实现：`ci/check-zero-mod.sh`，按事件取权威基线；基线取不到即失败，**不回落 `HEAD~1`**）。
+galgame 价值一律放新包 `com.winlator.galgame` + 新资源文件（`res/values/galgame_strings.xml` 等）。
+**改动上表任一路径前，先核对入库的例外登记 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)**；
+新增例外也登记在那里——`docs/` 克隆后为空，不能作为改前核对的依据。
 
 ## ✅ 被 CI 强制的门禁清单（`.github/workflows/ci.yml`）
 
 CI 在**无 Android SDK、无大二进制**的条件下可跑；`./gradlew assembleDebug` 不是 CI 门禁
 （本仓按设计不含 `*.tzst` / `jniLibs/*.so`，clone 后无法直接出完整 APK，补齐口径见 `README.md`）。
 
-| job | 门禁内容 |
+| job | 门禁内容（与 `ci.yml` 的 step 一一对应，勿凭记忆增删） |
 |---|---|
-| `rebase-guard` | 零改铁律校验；`engine_presets.json` / `galgame_fonts.json` 可解析；`galgame_strings.xml` 为合法 XML |
-| `galgame-compile`（依赖 `rebase-guard`） | `com.winlator.galgame` 全树 + 热点入口清单 `javac -Xlint:all` 类型门禁（对 `ci/stubs`）；EngineDetector 回归测试 `DetectTest` |
+| `rebase-guard` | ① 零改铁律校验 `bash ci/check-zero-mod.sh`（tag 触发时按事件跳过，并由下一步打印说明）；② `engine_presets.json` / `galgame_fonts.json` 可解析；③ `galgame_strings.xml` 为合法 XML；④ **许可证扫描** `python3 scripts/check_licenses.py gradle/libs.versions.toml`（强 copyleft / SSPL 即阻断）；⑤ **DCO 逐提交签署校验（仅 `pull_request` 事件）** |
+| `galgame-compile`（依赖 `rebase-guard`） | ① 热点清单唯一性巡检 `bash ci/check-hotspot-sync.sh`；② `com.winlator.galgame` 全树 + 热点入口清单 `javac -Xlint:all` 类型门禁（对 `ci/stubs`）；③ **JVM 回归 `bash tools/run_detect_test.sh`（EngineDetector + LanguageDetector 双套件）** |
+
+### 提交签署（DCO）——别到 PR 才发现
+
+`pull_request` 上 ⑤ 会逐提交要求 `Signed-off-by:`，缺签署的提交被拦下；签署方式与缘由见
+[`CONTRIBUTING.md`](CONTRIBUTING.md) 的「DCO 签署（必需）」。**直推 main 不会触发 ⑤**，
+落地前的把关由本地钩子 `ci/pre-push` 承担（它同样逐提交查签署）。
+
+```bash
+git commit -s -m "..."          # 新提交直接带签署
+```
 
 ### 类型门禁的覆盖边界（如实声明）
 
-- 编译范围 = `com.winlator.galgame` **整子树** + **显式热点清单**（当前为
-  `ContainersFragment.java`、`GalgameHost.java`、`GalgameHomeFragment.java`，与
-  `com.winlator` 顶层同名文件同目录）。清单以文件列表形式硬编码在
-  `.github/workflows/ci.yml` 与 `ci/pre-push` 中，两处必须同步修改；
-  `R` 桩扫描范围由 `scripts/gen_galgame_stubs.py` 的 `SRC` + `HOT` 维护，改热点清单后须重跑。
+- 编译范围 = `com.winlator.galgame` **整子树** + **显式热点清单**。清单的**唯一来源是
+  [`ci/hotspot-entries.txt`](ci/hotspot-entries.txt)**：`ci.yml`、`ci/pre-push`、本文与 README
+  的本地命令都从它读取，改清单只改这一个文件。`bash ci/check-hotspot-sync.sh` 负责证明
+  没有第二份拷贝。`R` 桩扫描范围由 `scripts/gen_galgame_stubs.py` 从同一清单派生
+  （与 galgame 全树同步编译的宿主接口类被显式排除），改资源后须重跑生成脚本。
 - **清单之外的其余 `com.winlator.*` 官方/上游文件不在任何门禁内**；热点类依赖的宽
   依赖官方类（如 `ContainerDetailFragment`）在 `ci/stubs` 中只有同名类型桩，桩不校验
   真实实现，改动这类官方文件时门禁不会报警。
@@ -61,11 +72,9 @@ rm -rf /tmp/stubs-out /tmp/check /tmp/hot
 mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
 javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
-# 热点入口清单（与 ci.yml / ci/pre-push 同列表；GalgameHost.java 为真实源码随编译）
+# 热点入口清单（唯一来源 ci/hotspot-entries.txt；与 CI 取同一份，勿在文档里抄列表）
 javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
-  app/src/main/java/com/winlator/ContainersFragment.java \
-  app/src/main/java/com/winlator/GalgameHost.java \
-  app/src/main/java/com/winlator/GalgameHomeFragment.java
+  $(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt)
 ```
 
 失败含义：新代码用到了 `ci/stubs` 里没有的 API → 按 `ci/README.md` 补桩后重试。
