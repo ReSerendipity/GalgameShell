@@ -13,13 +13,29 @@ import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "app", "src", "main", "java", "com", "winlator", "galgame")
-# 热点入口清单：与 ci/pre-push、.github/workflows/ci.yml 的门禁文件列表同源同口径。
-# 注意只列「非子树、靠显式清单纳入门禁」的文件；其依赖的接口（如 GalgameHost）
-# 若也在同一步 javac 中编译，无需在此重复列。
-HOT = [
-    os.path.join(ROOT, "app", "src", "main", "java", "com", "winlator", "ContainersFragment.java"),
-    os.path.join(ROOT, "app", "src", "main", "java", "com", "winlator", "GalgameHomeFragment.java"),
-]
+# 热点入口清单唯一来源：ci/hotspot-entries.txt（与 .github/workflows/ci.yml、ci/pre-push 同一份）。
+# 扫描排除：GalgameHost.java 与热点清单在同一步 javac 中编译，其 R 引用已由 SRC 步覆盖，
+# 故不重复扫描。排除名单是否仍然有效，由 ci/check-hotspot-sync.sh 核对。
+HOTSPOT_LIST = os.path.join(ROOT, "ci", "hotspot-entries.txt")
+HOT_SCAN_EXCLUDE = {"GalgameHost.java"}
+
+
+def load_hotspot_entries(exclude=HOT_SCAN_EXCLUDE):
+    entries = []
+    with open(HOTSPOT_LIST, encoding="utf-8") as handle:
+        for raw in handle:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if os.path.basename(line) in exclude:
+                continue
+            entries.append(os.path.join(ROOT, *line.split("/")))
+    if not entries:
+        raise SystemExit("[gen_galgame_stubs] %s 没有可扫描的热点条目" % HOTSPOT_LIST)
+    return entries
+
+
+HOT = load_hotspot_entries()
 OUT_APP = os.path.join(ROOT, "ci", "stubs", "com", "winlator", "R.java")
 OUT_ANDROID = os.path.join(ROOT, "ci", "stubs", "android", "R.java")
 
