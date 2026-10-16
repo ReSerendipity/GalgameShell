@@ -20,11 +20,16 @@
 因此 clone 之后**不能直接 `./gradlew assembleDebug` 出完整可用的 APK**，需先从上游补齐这部分资源：
 
 ```bash
-# 从上游取回被排除的运行时资源与 native 库
+# 从上游取回被排除的运行时资源与 native 库（只落工作区，不写索引）
 git remote add upstream https://github.com/brunodev85/winlator-app   # 若尚未添加
 git fetch upstream
-git checkout upstream/main -- app/src/main/assets app/src/main/jniLibs
+git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs
 ```
+
+> ⚠️ 不要用 `git checkout upstream/main -- <路径>` 取这些文件：带 tree-ish 的 checkout 会**同时写索引**，
+> 而 `.gitignore` 对已入索引的路径不再生效，实测会把 2 个 `*.tzst` 变成 `A`（已暂存）状态——
+> 随后一次 `git commit` / `git commit -a` 就把本仓按设计排除的大二进制提交进来。
+> 用上面的 `git restore --worktree` 形式，工作区拿到文件、`git status` 保持干净。
 
 ## 系统要求与免责声明
 
@@ -44,7 +49,7 @@ git checkout upstream/main -- app/src/main/assets app/src/main/jniLibs
 
 ## 无需补齐二进制的最小验证路线
 
-完整 APK 构建（下一节「构建」中的 `./gradlew assembleDebug`）有前置条件：必须**先完成上文的「获取运行时资源」**（`git checkout upstream/main -- app/src/main/assets app/src/main/jniLibs` 取回 `.tzst` 与 `.so`），否则无法产出完整可用的 APK。
+完整 APK 构建（下一节「构建」中的 `./gradlew assembleDebug`）有前置条件：必须**先完成上文的「获取运行时资源」**（`git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs` 取回 `.tzst` 与 `.so`），否则无法产出完整可用的 APK。
 
 若只想在 clone 后立刻验证框架侧代码，可不补齐任何大二进制，直接执行与 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 中 `galgame-compile` job 完全一致的三步检查（仅需 JDK 17，无需 Android SDK；覆盖范围为 `com.winlator.galgame` 全树 + 热点入口清单，边界声明见 `AGENTS.md`）：
 
@@ -55,9 +60,7 @@ mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
 javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
-  app/src/main/java/com/winlator/ContainersFragment.java \
-  app/src/main/java/com/winlator/GalgameHost.java \
-  app/src/main/java/com/winlator/GalgameHomeFragment.java
+  $(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt)
 
 # 2) EngineDetector 回归测试（命令与 ci.yml "EngineDetector 回归测试" step 一致）
 mkdir -p /tmp/detect-out
@@ -90,10 +93,9 @@ Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force "$out\stubs", "$out\check", "$out\hot" | Out-Null
 javac -d "$out\stubs" (Get-ChildItem -Recurse -Filter *.java ci\stubs).FullName
 javac -Xlint:all -cp "$out\stubs" -d "$out\check" (Get-ChildItem -Recurse -Filter *.java app\src\main\java\com\winlator\galgame).FullName
-javac -Xlint:all -cp "$out\stubs;$out\check" -d "$out\hot" `
-  app\src\main\java\com\winlator\ContainersFragment.java `
-  app\src\main\java\com\winlator\GalgameHost.java `
-  app\src\main\java\com\winlator\GalgameHomeFragment.java
+# 热点入口清单唯一来源：ci\hotspot-entries.txt（跳过注释与空行，勿在此抄文件列表）
+$hot = Get-Content ci\hotspot-entries.txt | Where-Object { $_ -and $_ -notmatch '^\s*#' }
+javac -Xlint:all -cp "$out\stubs;$out\check" -d "$out\hot" $hot
 if ($LASTEXITCODE -eq 0) { '[gate] PASS' } else { '[gate] FAIL：新代码用到了 ci/stubs 里没有的 API，按 ci/README.md 补桩' }
 ```
 
