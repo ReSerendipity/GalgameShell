@@ -20,6 +20,16 @@
 set -e
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
+# 落地路径上的逐提交签署校验。CONTRIBUTING.md 要求所有提交带 Signed-off-by，而 CI 侧的
+# 执行体只在 pull_request 事件运行；本仓提交经直推 main 落地，所以把关放在这里。
+# 钩子被 git 以 <remote> <url> <local-ref> <local-sha> <remote-ref> <remote-sha> 调用；
+# 手动 `sh ci/pre-push` 时无参数，脚本自动回落到 @{upstream}..HEAD。
+echo "[pre-push] DCO 逐提交签署校验"
+if ! REMOTE_SHA="${6:-}" LOCAL_SHA="${4:-}" bash ci/check-dco.sh; then
+    echo "[pre-push] ✗ 签署校验未通过，已阻止推送（补签署：git commit -s）。" >&2
+    exit 1
+fi
+
 JAVAC=""
 if command -v javac >/dev/null 2>&1; then
     JAVAC="javac"
@@ -49,11 +59,12 @@ if ! "$JAVAC" -Xlint:all -cp "$OUT/stubs" -d "$OUT/check" $(find app/src/main/ja
     exit 1
 fi
 
-# 热点入口清单：com.winlator 顶层、不在 galgame 子树里的最热改动文件（与 ci.yml 同列表）。
-# GalgameHost.java 随编译：它是真实源码（热点清单的宿主接口），不补桩、不单测。
-HOT="app/src/main/java/com/winlator/ContainersFragment.java
-app/src/main/java/com/winlator/GalgameHost.java
-app/src/main/java/com/winlator/GalgameHomeFragment.java"
+# 热点入口清单：唯一来源 ci/hotspot-entries.txt（与 ci.yml 共用同一份，勿在此复制文件列表）。
+HOT="$(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt || true)"
+if [ -z "$HOT" ]; then
+    echo "[pre-push] ✗ ci/hotspot-entries.txt 没有有效条目，热点门禁无法执行。" >&2
+    exit 1
+fi
 echo "[pre-push] 类型门禁：热点入口清单（对 ci/stubs + 已编译的 galgame 全树）"
 if ! "$JAVAC" -Xlint:all -cp "$OUT/stubs:$OUT/check" -d "$OUT/hot" $HOT; then
     echo "[pre-push] ✗ 热点入口类类型门禁未通过，已阻止推送。" >&2

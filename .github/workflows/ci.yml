@@ -12,6 +12,9 @@ on:
     branches: [galgame, main]
   pull_request:
     branches: [galgame, main]
+  # release.yml 以 `uses:` 复用本工作流；没有 workflow_call 触发声明时复用调用无法调度，
+  # publish / sbom 两个 needs: ci 的作业永不运行（tag 推送从未跑过：主机 release 运行数 0）。
+  workflow_call: {}
 
 jobs:
   rebase-guard:
@@ -22,22 +25,20 @@ jobs:
           fetch-depth: 0
 
       - name: "零改铁律校验（Plan VIII.4）"
+        # 复用调用（release.yml 的 tag 触发）没有可信的推送区间，按 ref_type 显式跳过：
+        # 同一批提交在 push / pull_request 时已由同一份脚本校验过，跳过由下一步打印说明。
+        if: github.ref_type != 'tag'
+        env:
+          GH_EVENT: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash ci/check-zero-mod.sh
+
+      - name: "零改铁律：tag 触发时按事件跳过（说明）"
+        if: github.ref_type == 'tag'
         run: |
-          set -e
-          BASE="${{ github.event.before }}"
-          if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
-            BASE="HEAD~1"
-          fi
-          echo "range: $BASE..HEAD"
-          CHANGED=$(git diff --name-only "$BASE" HEAD 2>/dev/null || true)
-          echo "$CHANGED"
-          # 只锁官方真实路径（避免误伤 ci/stubs 里的同名桩）
-          FORBIDDEN='^app/src/main/java/com/winlator/container/Container\.java$|^app/src/main/java/com/winlator/core/LocaleHelper\.java$|^app/src/main/res/values/strings\.xml$'
-          if echo "$CHANGED" | grep -Eq "$FORBIDDEN"; then
-            echo "FAIL: forbidden official file modified (violates zero-modification rule)"
-            exit 1
-          fi
-          echo "OK: zero-modification guard passed"
+          echo "::notice::零改铁律本次未执行——tag 推送没有可比较的推送区间。"
+          echo "::notice::该校验在 push / pull_request 上对同一批提交生效，见 ci/check-zero-mod.sh。"
 
       - name: "校验 JSON 资产"
         run: |
@@ -87,12 +88,16 @@ jobs:
           mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
           javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
           javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
-          # 热点入口清单：com.winlator 顶层、不在 galgame 子树里的最热改动文件
-          # （与 ci/pre-push 同列表；GalgameHost.java 是真实源码随编译，不补桩）
-          javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
-            app/src/main/java/com/winlator/ContainersFragment.java \
-            app/src/main/java/com/winlator/GalgameHost.java \
-            app/src/main/java/com/winlator/GalgameHomeFragment.java
+          # 热点入口清单唯一来源 = ci/hotspot-entries.txt；先证明没有第二份拷贝
+          bash ci/check-hotspot-sync.sh
+          HOT="$(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt || true)"
+          if [ -z "$HOT" ]; then
+            echo "::error::ci/hotspot-entries.txt 没有有效条目，热点门禁等于没跑"
+            exit 1
+          fi
+          echo "热点清单（来自 ci/hotspot-entries.txt）:"
+          echo "$HOT"
+          javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot $HOT
           echo "OK: com.winlator.galgame (whole tree) + hotspot entry classes compile clean (-Xlint:all)"
 
       - name: "JVM 回归测试（EngineDetector + LanguageDetector，统一入口 tools/run_detect_test.sh）"
