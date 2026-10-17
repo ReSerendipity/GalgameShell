@@ -2,7 +2,7 @@
 # 单一事实源：依赖版本统一在此管理，app/build.gradle 经 libs.* 引用；
 # 升级依赖只改本文件，无需逐处改坐标。新增依赖必须在此登记版本与 library 别名。
 [versions]
-appcompat = "1.4.0"
+appcompat = "1.8.0"
 preference = "1.2.1"
 material = "1.4.0"
 zstdJni = "1.5.2-3"
