@@ -39,15 +39,24 @@ for entry in $ENTRIES; do
 done
 
 # 2) 消费者必须引用清单，而不是自带副本
+#    只强制**入库文件**：AGENTS.md 按 2026-10-13 的决定不入库（.gitignore 排除），
+#    若把它当必需消费者，陌生克隆上会因为「文件不存在」而报 gap——那是假红，不是漂移。
+SKIPPED=""
 for f in $LIST_CONSUMERS; do
+  if ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+    SKIPPED="$SKIPPED $f"
+    echo "SKIP（未入库，不作强制）: $f"
+    continue
+  fi
   refs="$(grep -c "$LIST" "$f" || true)"
   [ "${refs:-0}" -gt 0 ] || say_gap "$f 未引用唯一来源 $LIST（可能仍在硬编码或已脱钩）"
 done
 
-# 3) 除清单文件外，任何消费者不得再硬编码具体热点文件名
+# 3) 除清单文件外，入库消费者不得再硬编码具体热点文件名
 for entry in $ENTRIES; do
   base="$(basename "$entry")"
   for f in $HARD_CODE_TARGETS; do
+    git ls-files --error-unmatch "$f" >/dev/null 2>&1 || continue
     hits="$(grep -c -- "$base" "$f" || true)"
     [ "${hits:-0}" -eq 0 ] || say_gap "$f 硬编码了热点文件名 $base（$hits 处）；清单只应出现在 $LIST"
   done
@@ -68,4 +77,8 @@ if [ "$GAPS" -gt 0 ]; then
   echo "[hotspot-sync] ✗ 发现 $GAPS 个 gap"
   exit 1
 fi
-echo "[hotspot-sync] ✓ clean：清单 $COUNT 条、$LIST 为唯一来源、无硬编码副本、排除名单仍有效"
+if [ -n "$SKIPPED" ]; then
+  echo "[hotspot-sync] ✓ clean：清单 $COUNT 条、$LIST 为唯一来源、无硬编码副本、排除名单仍有效（未入库而跳过:$SKIPPED）"
+else
+  echo "[hotspot-sync] ✓ clean：清单 $COUNT 条、$LIST 为唯一来源、无硬编码副本、排除名单仍有效"
+fi

@@ -1,7 +1,10 @@
 # GalgameShell AGENTS.md — AI 辅助开发指南
 
-本文件是**被跟踪、可移植**的代理指令：陌生 agent 克隆本仓库后，照此即可行动。
-纯本地备忘一律留在被忽略的 `docs/`（见下文分区约定）。
+本文件**不入库**：`.gitignore` 排除 `AGENTS.md`（2026-10-13 决定，分发边界与家族其他仓统一），
+所以陌生 agent 克隆本仓库后**读不到它**。任何 agent 行动所依赖的事实都不能只写在这里，
+必须落在入库载体：`ci/check-zero-mod.sh`、`ci/check-dco.sh`、`ci/check-hotspot-sync.sh`、
+`ci/hotspot-entries.txt`、`ci/zero-mod-exceptions.md`、`ci/pre-push`、`.github/workflows/*.yml`。
+本文件只作本机加速用；纯本地备忘仍留被忽略的 `docs/`（见下文分区约定）。
 
 ## 📂 对内/对外文档分区（最高优先级约定）
 
