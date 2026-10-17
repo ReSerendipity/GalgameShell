@@ -42,13 +42,18 @@ fi
 
 TOTAL=0
 UNSIGNED=""
-for sha in $(git rev-list "$RANGE"); do
+MERGES=0
+# --no-merges：合并提交（尤其 GitHub 为 pull_request 合成的 refs/pull/N/merge）永远不带
+# trailer，把它算进来看守结果会让每个 PR 无故变红。内容提交仍逐笔校验，且被跳过的合并数
+# 显式打印，不做静默豁免。
+for sha in $(git rev-list --no-merges "$RANGE"); do
   TOTAL=$((TOTAL + 1))
   if ! git log -1 --format=%B "$sha" | grep -E -c '^[[:space:]]*Signed-off-by:' >/dev/null 2>&1; then
     UNSIGNED="${UNSIGNED}$(git log -1 --format='  %h %s' "$sha")
 "
   fi
 done
+MERGES="$(git rev-list --merges --count "$RANGE")"
 
 if [ "$TOTAL" -eq 0 ]; then
   echo "[dco] 范围 ${RANGE} 内 0 笔提交（无事可查，非「已校验通过」）"
@@ -56,10 +61,10 @@ if [ "$TOTAL" -eq 0 ]; then
 fi
 
 if [ -n "$UNSIGNED" ]; then
-  echo "::error::DCO：${TOTAL} 笔待落地提交中有缺签署者（范围来自 ${WHY}）" >&2
+  echo "::error::DCO：${TOTAL} 笔内容提交（另跳过 ${MERGES} 笔合并提交）中有缺签署者（范围来自 ${WHY}）" >&2
   printf '%s' "$UNSIGNED" >&2
   echo "::error::补签署：git commit -s（新提交）；已有提交用 rebase 补签，或与维护者确认豁免口径。" >&2
   exit 1
 fi
 
-echo "[dco] ✓ ${TOTAL} 笔提交全部带 Signed-off-by（范围 ${RANGE}，来自 ${WHY}）"
+echo "[dco] ✓ ${TOTAL} 笔内容提交全部带 Signed-off-by（另跳过 ${MERGES} 笔合并提交；范围 ${RANGE}，来自 ${WHY}）"

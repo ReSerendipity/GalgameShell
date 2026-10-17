@@ -61,8 +61,11 @@ jobs:
           set -e
           BASE="${{ github.event.pull_request.base.sha }}"
           git cat-file -e "${BASE}^{commit}" 2>/dev/null || BASE="HEAD~20"
+          # --no-merges：GitHub 为 pull_request 合成的合并提交（refs/pull/N/merge）不带
+          # trailer，算进来会让每个 PR 无故变红；内容提交仍逐笔校验，跳过数显式打印。
+          echo "[dco] 跳过合并提交数: $(git rev-list --merges --count "${BASE}..HEAD")"
           fail=0
-          for sha in $(git rev-list "${BASE}..HEAD"); do
+          for sha in $(git rev-list --no-merges "${BASE}..HEAD"); do
             git log -1 --format='%B' "$sha" | grep -q 'Signed-off-by:' || {
               echo "::error::commit ${sha:0:12} 缺少 DCO 签署（git commit -s 后重推）"
               fail=1
