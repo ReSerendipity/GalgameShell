@@ -10,7 +10,7 @@ xz = "1.7"
 # v2.9 评估整改（供应链报告 P1-4）：1.20 -> 1.26.0，脱离 CVE-2021-36090（修复于 1.21）
 # 与 CVE-2024-25710/CVE-2024-26308（修复于 1.26）影响区间；使用方仅 core/ZipUtils 与
 # core/TarCompressorUtils，均为跨版本稳定 API。构建级验证受阻说明见提交信息。
-commonsCompress = "1.26.0"
+commonsCompress = "1.28.0"
 lifecycleProcess = "2.5.1"
 
 [libraries]
