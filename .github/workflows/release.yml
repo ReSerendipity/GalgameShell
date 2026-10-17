@@ -55,7 +55,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         # v2.9 评估整改（供应链报告 P1-2）：随 Release 附源码 SBOM（CycloneDX），
         # 消解"无 SBOM 暗箱制品"。CI 检出的是干净的跟踪文件树（不含本机忽略目录），
         # 排除 .git 后扫源码成分，成分与 NOTICE §3/§8 台账互为机读/人读两份。
