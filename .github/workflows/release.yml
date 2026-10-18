@@ -75,10 +75,17 @@ jobs:
           set -e
           ./syft dir:. --exclude "./.git" --output cyclonedx-json=sbom.cdx.json
           ls -l sbom.cdx.json
-      - name: Upload SBOM to the release
+      - name: Generate SHA256SUMS for release assets
+        # §10.1 产物可校验：Release 资产须附 SHA256SUMS.txt（防传输损坏；本仓无 GPG、无 Tauri ed25519）。
+        # 当前 Release 上传资产仅 sbom.cdx.json，校验清单覆盖它自身。
+        run: |
+          set -e
+          sha256sum sbom.cdx.json > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Upload SBOM and checksums to the release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          gh release upload "$RELEASE_TAG" sbom.cdx.json --repo "$GITHUB_REPOSITORY"
-          echo "OK: SBOM attached to release $RELEASE_TAG"
+          gh release upload "$RELEASE_TAG" sbom.cdx.json SHA256SUMS.txt --repo "$GITHUB_REPOSITORY"
+          echo "OK: sbom.cdx.json + SHA256SUMS.txt attached to release $RELEASE_TAG"
