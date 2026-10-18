@@ -23,8 +23,8 @@
 ## 2. CHANGELOG 管理
 
 - 口径遵循 **Keep a Changelog**：`Added / Changed / Fixed / Deprecated / Removed / Security`；type 映射 `feat→Added`、`fix→Fixed`、`refactor→Changed`；发版时 `[Unreleased]` → `[VERSION] - YYYY-MM-DD`。
-- **现状**：本仓尚未建立 `CHANGELOG.md`，发版 notes 当前由 `gh release create --generate-notes` 自动生成。
-- **是否新建 `CHANGELOG.md` 及维护人**：待定（负责人：仓库所有者；触发条件：下一次发版前二选一并登记在此——建立 Keep a Changelog 的 `CHANGELOG.md`，或明确沿用自动生成 notes 并废除本小节的人工维护约定）。
+- **现状（2026-10-18 更新）**：根级 `CHANGELOG.md` 已建立（Keep a Changelog），`[Unreleased]` 随提交累积；`v11.2` 的 Release notes 仍由 `gh release create --generate-notes` 生成。
+- **维护人**：仓库所有者；每次合并 `main` 在 `[Unreleased]` 追加条目，发版时改 `[VERSION] - YYYY-MM-DD`。
 
 ## 3. 发布流程（远端）
 
@@ -85,4 +85,4 @@
 | Trivy 报告模式 / 镜像链 | 无镜像构建 | 不适用 |
 | draft → 人工审核 → published | 现状直接 `gh release create` 正式发布 | 本次按「最小修正、不重构」不改，登记为 §3 已知差异 |
 
-> 说明：`check-release-standard.sh` 在本仓会因「缺 `CHANGELOG.md`」报 FAIL——该文件不在本单范围内，本次不新建，列为待办（见 §2）；其余 §10 机器可判项本仓均无 FAIL。
+> 说明：`check-release-standard.sh` 在本仓会因「缺 `CHANGELOG.md`」报 FAIL——该文件已随本单建立（见 §2）；其余 §10 机器可判项本仓均无 FAIL。
