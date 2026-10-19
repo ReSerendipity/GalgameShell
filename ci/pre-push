@@ -20,7 +20,7 @@
 set -e
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-# 落地路径上的逐提交签署校验。CONTRIBUTING.md 要求所有提交带 Signed-off-by，而 CI 侧的
+# 落地路径上的逐提交签署校验。docs/CONTRIBUTING.md 要求所有提交带 Signed-off-by，而 CI 侧的
 # 执行体只在 pull_request 事件运行；本仓提交经直推 main 落地，所以把关放在这里。
 # 钩子被 git 以 <remote> <url> <local-ref> <local-sha> <remote-ref> <remote-sha> 调用；
 # 手动 `sh ci/pre-push` 时无参数，脚本自动回落到 @{upstream}..HEAD。

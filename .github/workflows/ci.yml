@@ -54,7 +54,7 @@ jobs:
           python3 scripts/check_licenses.py gradle/libs.versions.toml
 
       # v2.9 评估整改（开源报告 P1-3）：DCO 逐提交校验。仅 PR 生效，push 直推不受影响；
-      # rebase-guard 的 checkout 是 fetch-depth: 0，base.sha 可解析。签署方式见 CONTRIBUTING.md。
+      # rebase-guard 的 checkout 是 fetch-depth: 0，base.sha 可解析。签署方式见 docs/CONTRIBUTING.md。
       - name: "DCO 签署校验（仅 pull_request）"
         if: github.event_name == 'pull_request'
         run: |
