@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ci/check-dco.sh — 逐提交 DCO 签署校验（本地落地路径 + CI pull_request 共用口径）
 #
-# 为什么存在：CONTRIBUTING.md 声明「所有提交必须带 Signed-off-by」，但唯一的执行体挂在
+# 为什么存在：docs/CONTRIBUTING.md 声明「所有提交必须带 Signed-off-by」，但唯一的执行体挂在
 # pull_request 事件上，而本仓提交实际经直推 main 落地（主机 ci.yml 运行全部为 push 事件），
 # 于是这道闸没有任何流量经过。本脚本把同一检查放到提交真正走的那条路上。
 #
