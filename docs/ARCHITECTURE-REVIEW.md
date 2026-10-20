@@ -1,7 +1,7 @@
 # 架构评审记录（ARCHITECTURE-REVIEW）
 
 > 对应 v2.9 评估《架构技术债_Flash报告》P1-2：补齐「计划→**评审决议**→落地→勘误」中的
-> 评审一环（与 docs/README.internal.md §9 三件套、docs/decision-registry.md A/RK 编号联动，
+> 评审一环（与 local/README.internal.md §9 三件套、docs/decision-registry.md A/RK 编号联动，
 > 后两者仅本地保留，本文件入库、克隆者可见）。
 > 用法：重大变更（新引擎、更新通道/签名方式、本地数据格式、上游铁律文件触碰）开工前
 > 复制下方模板追加一条；单人项目允许自评，但**否决了什么、为什么必须写实**。

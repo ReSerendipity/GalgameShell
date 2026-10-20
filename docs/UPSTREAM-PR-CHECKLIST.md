@@ -2,7 +2,7 @@
 
 > 对应 v2.9 评估《开源治理与合规_Flash报告》P1-1「只取不予」：把滞留 fork 的通用修复
 > 整理成可向上游 `brunodev85/winlator-app` 提交的 PR 清单，逐项回馈、逐项销账。
-> 证据口径：改动要点与 fork 提交号自 `docs/README.internal.md` §5.1（该文件仅本地保留，
+> 证据口径：改动要点与 fork 提交号自 `local/README.internal.md` §5.1（该文件仅本地保留，
 > 本表自带关键事实，不依赖其可读）。实际提交 PR 需 GitHub 账号与联网操作，由维护者执行；
 > 提交后在本表登记 PR 链接与状态。
 
