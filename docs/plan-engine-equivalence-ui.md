@@ -23,7 +23,7 @@
   - ✅ 扩展一律走**新增类 / 新增资源**，不要改既有上游类。
 - **【双分支红线】**：分批提交、**默认不 push**（除非用户当次显式授权）；同一仓库同时只跑一个 fixer；严禁触碰未提交 WIP。
 - **自有屏优先**：R 系列新 UI 在 `com.winlator.galgame.ui.*`；新屏一律用 `?attr` 主题属性，**禁止硬编码颜色**。
-- **构建环境**（本机）：JDK 21（Adoptium）、Gradle 离线用 `C:/Users/Doro/.gradle/manual-dist/gradle-8.14.3`（wrapper 声明 8.14.5）、`ANDROID_HOME=C:/Users/Doro/AppData/Local/Android/Sdk`、NDK 24.0.8215888、AGP **8.4.2**（注意：**不是** DraftPeek 的 8.10.1）、compileSdk 35 / minSdk 30 / targetSdk 28。
+- **构建环境**（本机）：JDK 21（Adoptium）、Gradle 离线用 `C:/Users/Doro/.gradle/manual-dist/gradle-8.14.3`（wrapper 声明 8.14.5）、`ANDROID_HOME=C:/Users/Doro/AppData/Local/Android/Sdk`、NDK 24.0.8215888、AGP **8.4.2**（注意：**不是** DraftPeek 的 8.10.1）、compileSdk 35 / minSdk 30 / targetSdk 30。
   - 勘误（2026-10-11，第二轮移动端评估 T9 文档同步）：原记 `minSdk 26` 与代码不符，实际 **minSdk 30**（Android 11+，与 README「API 30」声明及 MANAGE_EXTERNAL_STORAGE 语义一致）。
   - 默认 APK 仅 `arm64-v8a`；可 `./gradlew assembleDebug -PgalgameUiAbi=x86_64` 出无原生库 UI 调试 APK（模拟器用）。
   - **勿用 gradlew**（离线 PKIX 失败）；本地用 `gradle-8.14.3/bin/gradle assembleDebug --offline`。
@@ -104,7 +104,7 @@
 
 ## 4. 验证手法（模型读不了图，用客观像素分析替代主观描述）
 - 真机取证：`adb -s dc57ebe3 shell am start ...` / `screencap -p` / `adb pull` 到 `C:/Users/Doro/Desktop/GalgameShell验证截图/`。
-- 像素分析脚本：`C:/Users/Doro/GalgameShell/.workbuddy/verify/analyze_png.py`（`python analyze_png.py <png>` 统计黑占比 / 占位灰(170,170,170) / 彩色占比 / 颜色数）。
+- 像素分析脚本：`.workbuddy/verify/analyze_png.py`（仓根相对路径；`.workbuddy/` 为本地不入库目录）（`python analyze_png.py <png>` 统计黑占比 / 占位灰(170,170,170) / 彩色占比 / 颜色数）。
 - UI 改动用截图核对布局/色板（可 `show_widget` 内联 `<img src="C:/绝对路径">` 兜底预览）。
 
 ---
@@ -123,11 +123,14 @@
 - 容器接线：`app/src/main/java/com/winlator/galgame/GalgameLaunchHelper.java`（`injectExecPath`）、`app/src/main/java/com/winlator/XServerDisplayActivity.java`、`Container.java`（只读，勿改）
 - 导入：`app/src/main/java/com/winlator/galgame/ImportFlow.java`（`ImportResult.engine/route`、容器数据构造）
 - UI：`app/src/main/java/com/winlator/galgame/ui/GalgameLibraryActivity.java`、`GalgameLibraryAdapter.java`、`GalgameSettings.java`；资源 `app/src/main/res/values/styles.xml`（`GalgameMainTheme`）、`values-zh-rCN/strings.xml`、各 `layout-*`
-- 集成事实基线：`DOCS/native-engine-integration.md`（Ren'Py/Krkr 集成已验证，含引擎等价化相关背景）
-- 像素验证：`C:/Users/Doro/GalgameShell/.workbuddy/verify/analyze_png.py`
+- 集成事实基线：`docs/native-engine-integration.md`（Ren'Py/Krkr 集成已验证，含引擎等价化相关背景）
+- 像素验证：`.workbuddy/verify/analyze_png.py`（仓根相对路径；`.workbuddy/` 为本地不入库目录）
 
 ---
 
 ## 7. 当前状态
-- 本功能**仍处于计划阶段，尚未实现**，工作树干净（上一轮已提交并推送的是 Ren'Py 真机 E2E 验证工作，与本功能无关）。
+> **本简报已被取代**：本功能已落地，实际结果见 `docs/engine-equivalence-ui-landed.md`（含勘误与真机复测手册）。
+> 以下为 2026-10-05 简报时点的原文状态，保留供追溯，不代表当前状态。
+
+- 【已过时（2026-10-05 快照时的状态）】当时本功能**尚未实现**，工作树干净（上一轮已提交并推送的是 Ren'Py 真机 E2E 验证工作，与本功能无关）。
 - 本简报基于 2026-10-05 代码快照；新会话开工前务必 `git status` + `git log --oneline -5` 确认无未提交改动、无新增相关提交后再动手。

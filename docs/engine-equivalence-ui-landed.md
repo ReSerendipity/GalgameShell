@@ -1,6 +1,6 @@
 # 引擎等价化 + 前端 UI 个性化 —— 落地记录（2026-10-05）
 
-> 来源：`DOCS/plan-engine-equivalence-ui.md`（前置简报）。本文件是对**实际落地结果**的记录：
+> 来源：`docs/plan-engine-equivalence-ui.md`（前置简报）。本文件是对**实际落地结果**的记录：
 > 做了什么、和简报哪里不一样、验证到什么程度、真机复测怎么跑。
 > 读法建议：先看 §1 勘误，再看 §2 提交清单，§5 是真机复测手册。
 
@@ -144,7 +144,7 @@
 
 ```bash
 export MSYS_NO_PATHCONV=1
-cd /c/Users/Doro/GalgameShell
+cd /c/Users/Doro/APP/repository/GalgameShell   # 本机克隆位
 # 1) 安装
 adb -s dc57ebe3 install -r app/build/outputs/apk/debug/app-debug.apk
 
@@ -158,6 +158,7 @@ adb -s dc57ebe3 logcat -d | grep -E "GameLauncher|GalgameShell: import"
 # 3) 取证 + 客观像素分析（模型不"看"图，用统计替代主观描述）
 adb -s dc57ebe3 shell screencap -p /sdcard/ui.png
 adb -s dc57ebe3 pull /sdcard/ui.png C:/Users/Doro/Desktop/GalgameShell验证截图/
+# 注：analyze_png.py 位于 .workbuddy/verify/（本地不入库目录）
 python .workbuddy/verify/analyze_png.py C:/Users/Doro/Desktop/GalgameShell验证截图/ui.png
 ```
 

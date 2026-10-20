@@ -34,7 +34,7 @@
 | ONScripter | GPLv2 | ❌ | 与 LGPL-2.1 组合存在冲突/升级压力 |
 | PPSSPP | GPLv2+ | ❌ | 同上 |
 | JoiPlay / Tyranor | 闭源 | ❌ | 无源码；只能外部唤起（且需免责） |
-| Ren'Py | MIT + 部分 LGPL | 🟡 可内嵌（**未做**） | 2026-10-04 核实：多数代码 MIT，另有部分 LGPL 组件。LGPL 与本仓 LGPL-2.1 **兼容**，可并入（须提供 LGPL 源码链接）。但需集成 Python 运行时（renpy-build/python-for-android），工作量远大于 Kirikiroid2。覆盖 8000+ VN，是下一个最有价值的内嵌候选。 |
+| Ren'Py | MIT + 部分 LGPL | ✅ 已内嵌（2026-10-04～10-05 落地） | 多数代码 MIT，另有部分 LGPL 组件；LGPL 与本仓 LGPL-2.1 **兼容**，已并入并按 `NOTICE` §8 履行 LGPL 源码链接义务。实际产物为**单一** `librenpython.so`（Python 3.12.8 + Ren'Py 8.5.3 + pygame_sdl2 + SDL2 静态合并），无 `libpython*.so` / `librenpy.so` / `libSDL2*.so` 三件套。落地与验证详见 §4.4～§4.7。 |
 
 > Kirikiroid2 的 LICENSE 文件本身是「主许可证 + 第三方声明」的合集，
 > 主许可证为 BSD 3-Clause（W.Dee & contributors），其余为 libjpeg-turbo / libpng / zlib /
@@ -285,7 +285,7 @@ Ren'Py Android 运行时的构成（据 renpy-build 源码 + Ren'Py Android 运�
 ### 实施路径（分阶段）
 
 1. **取参考运行时**：装 SDK + RAPT，构建一棵最小 Ren'Py Android APK（arm64），`unzip` 摘出
-   `libpython*.so` / `librenpy.so` / `libSDL2*.so` / `assets/renpy/**` 与 Java 壳源码。
+   `librenpython.so`（单一合并库，见 §4.4）/ `assets/renpy/**` 与 Java 壳源码。
 2. **移植 Java 壳**：把 `PythonSDLActivity` 移植成我们的 `com.winlator.galgame.engine.renpy.RenPyActivity`
    （继承同一 SDL `SDLActivity`），并把 `mActivity` 指向本壳。
 3. **运行时打包策略**（体积 vs 复杂度）：把引擎字节码+资源放 APK `assets/renpy/`（或首启解压到内部目录），
