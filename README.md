@@ -2,6 +2,8 @@
 
 基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）的 galgame 专用外壳：以 Winlator 为模拟层基座，自动识别游戏引擎，在「内嵌原生引擎 / 原生播放器 (B) / 模拟 (A)」之间智能路由，让 galgame 在 Android 上导入即玩。
 
+> **GalgameShell** is a galgame-dedicated Android shell built on the official [Winlator](https://github.com/brunodev85/winlator-app) (LGPL-2.1). It detects each game's engine automatically and routes between the embedded native engines (Ren'Py / Kirikiri2), an optional external native player, and the Winlator emulation layer — import a game, then play.
+
 ## 功能亮点
 
 - **导入即玩**：选定游戏目录后，自动创建专属容器、复制游戏文件、注入运行环境，导入完成即可从库中启动，无需手工配置 Wine 容器。
@@ -51,7 +53,7 @@ git restore --source=upstream/main --worktree -- app/src/main/assets app/src/mai
 
 完整 APK 构建（下一节「构建」中的 `./gradlew assembleDebug`）有前置条件：必须**先完成上文的「获取运行时资源」**（`git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs` 取回 `.tzst` 与 `.so`），否则无法产出完整可用的 APK。
 
-若只想在 clone 后立刻验证框架侧代码，可不补齐任何大二进制，直接执行与 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 中 `galgame-compile` job 完全一致的三步检查（仅需 JDK 17，无需 Android SDK；覆盖范围为 `com.winlator.galgame` 全树 + 热点入口清单，边界声明见 `AGENTS.md`）：
+若只想在 clone 后立刻验证框架侧代码，可不补齐任何大二进制，直接执行与 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 中 `galgame-compile` job 完全一致的三步检查（仅需 JDK 17，无需 Android SDK；覆盖范围为 `com.winlator.galgame` 全树 + 热点入口清单，边界与补桩方法见 [`ci/README.md`](ci/README.md)）：
 
 ```bash
 # 1) 类型门禁：com.winlator.galgame 全树 + 热点入口清单（对 ci/stubs，命令与 ci.yml "类型门禁" step 一致）
@@ -111,12 +113,19 @@ Git-Bash / WSL 下则直接执行钩子本体（`sh ci/pre-push`），它与已�
    ```bash
    ./gradlew assembleDebug
    ```
+
 3. （可选，分发 APK 前）生成运行时资源 SHA-256 校验清单并随包分发，供接收方核验
-   `.tzst` / `.so` 完整性（v2.9 评估整改·供应链 P1-3）：
+   `.tzst` / `.so` 完整性：
 
    ```bash
    bash tools/make_runtime_checksums.sh   # 输出 RELEASE-RUNTIME-CHECKSUMS.txt（勿提交，随包分发）
    ```
+
+## 参与方式
+
+- 欢迎提交 Issue 与 Pull Request。本仓采用 DCO：所有提交须带 `Signed-off-by` 签署（`git commit -s` 自动追加），CI 会在 PR 上逐提交校验；本地门禁、提交约定与许可证要求见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)。
+- 改动上游核心文件前，先核对入库的例外登记 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)。
+- 项目文档（架构评审、决策记录、技术债登记等）随仓库分发在 [`docs/`](docs/) 下，clone 后可见。
 
 ## 许可证
 
