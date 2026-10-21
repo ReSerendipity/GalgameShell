@@ -4,6 +4,8 @@
 
 > **GalgameShell** is a galgame-dedicated Android shell built on the official [Winlator](https://github.com/brunodev85/winlator-app) (LGPL-2.1). It detects each game's engine automatically and routes between the embedded native engines (Ren'Py / Kirikiri2), an optional external native player, and the Winlator emulation layer — import a game, then play.
 
+> 治理规范：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
+
 ## 功能亮点
 
 - **导入即玩**：选定游戏目录后，自动创建专属容器、复制游戏文件、注入运行环境，导入完成即可从库中启动，无需手工配置 Wine 容器。
