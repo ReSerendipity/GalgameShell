@@ -22,3 +22,7 @@
 ## 交付前
 
 - `git status` 只含本次改动；跑 README 的测试命令；失败如实报告。
+
+## 本仓索引
+
+- 热点入口清单的唯一来源：`ci/hotspot-entries.txt`。
