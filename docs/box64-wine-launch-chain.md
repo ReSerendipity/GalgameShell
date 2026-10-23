@@ -162,3 +162,49 @@ adb shell run-as com.winlator sh files/galgame-fix-prefix.sh \
   无需额外处理。
 - **手工脚本**：必须先 `unset LD_LIBRARY_PATH` 再 `env LD_LIBRARY_PATH=...`，
   否则 bionic 的 `timeout` 会去加载 rootfs 里那个 glibc 文本 `libc.so` 而失败。
+
+## 7. DirectShow 视频链：已证到 Wine 能力边界，止损（2026-10-23）
+
+**结论：分支 ③ —— 滤镜已加载、已实例化，但 Wine 内建 quartz 的 MPEG-I splitter 不接
+MPEG-2 子类型，Intelligent Connect 建图即拆、拆完重试。越过它要改 Wine 源码，而 rootfs
+是上游预编译产物，不在本 fork 可改范围内。此线到此为止，不再试参数。**
+
+### 取证：A/B 差分（同一容器 xuser-15 / sysnnn_sainogami，只动 quartz 覆盖，
+### 通道 `quartz,ole,module`，box64 均为含 #4528 的 gstfix 构建）
+
+| | A：`quartz=builtin` | B：`quartz=native,builtin`（出厂态） |
+|---|---|---|
+| `[BOX64]` GStreamer 桥报错 | **0 条**（#4528 生效） | 0 条 |
+| `winegstreamer.dll` 加载 | 是（syswow64 映射进 0x7a970000） | 是 |
+| `wg_parser_create` 实例化 | **18 次** | 6 次 |
+| 走到 `mpeg_splitter` | 是，拒绝 MPEG-2 **4 次** | **0 次**（更早就失败） |
+| 首个失败点 | `mpeg_splitter_sink_query_accept` 拒 `{e436eb85-…}`(MPEG2_VIDEO) / `{e436eb86-…}`(MPEG2_PROGRAM) | `com_get_class_object class {7d8aa343-6e63-4663-be90-6b80f66540a3} not registered`（CLSID_DirectSound8） |
+| 建图结果 | 两张图各自建完即拆（`GraphConfig_RemoveFilterEx … stub!`） | 未进入建图 |
+| 画面 | 客户区全黑 | 客户区全黑 |
+
+三条判据的落点：**① 排除**（有 load 行）、**② 排除**（`wg_parser_create` 18 次说明
+滤镜真的被创建）、**③ 成立**。B 列同时说明出厂态比 builtin 更差——失败点更靠前。
+
+### 关键反证（别被"没有解码器"误导）
+
+rootfs 的 GStreamer 插件里 **`mpeg2dec` 与 `libav`（3.9MB 静态 ffmpeg）都在**，
+MPEG-2 软解码能力不缺。缺的是 Wine 侧把流交给它的通路：内建
+`dlls/quartz/mpeg_splitter.c` 的 sink pin 只认 MPEG-1 系（`MEDIASUBTYPE_MPEG1VideoCD`
+等在 `enum_media_types_Next` 里能过），MPEG-2 两个子类型直接 `Unsupported subtype`。
+所以这不是配置问题、不是环境变量问题，是 Wine 的实现边界。
+
+### 任何后续配置改动落地前必须过的三格
+
+1. **SystemNNN 出帧**（当前：否）
+2. **Unity 不崩** —— 全局把 dsound/quartz 改 builtin 会让 test_unity
+   `err:seh:NtRaiseException c0000005`（已实测，原生态同局不崩）
+3. **锚点《花瓣！》HANA9 不退化**（六层启动链的回归锚）
+
+第 2 格决定了最终形态大概率是**按引擎分流**而非一个全局开关。
+
+### 本轮未测到的格子
+
+- YU-RIS / AdvHD / BGI / CMVS 在 gstfix box64 下的状态（只测了 SystemNNN 与两个锚点）
+- 非 MPEG-2 编码的片头（如纯 WMV/AVI）能否经 winegstreamer 出帧——若某引擎用 MPEG-1
+  或 GStreamer 直连路径，可能已经能用，这是唯一还没探的方向
+- 分支 ③ 之下的 `+strmbase` 级 trace（用于确认 Intelligent Connect 的候选枚举顺序）
