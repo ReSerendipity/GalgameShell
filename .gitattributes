@@ -2,3 +2,5 @@
 # 钩子/脚本转成 CRLF 导致 shebang 与命令解析异常。
 *.sh   text eol=lf
 ci/pre-push text eol=lf
+# 补丁文件被 CRLF 污染后 git apply 会认不出上下文（tools/box64/build_box64_android.sh 依赖它）
+*.patch text eol=lf
