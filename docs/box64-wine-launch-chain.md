@@ -82,6 +82,37 @@ sysroot 的来源：Debian/Ubuntu arm64 的 `libc6` + `libc6-dev` 解包（`dpkg
 > 0.4.5 当时未记录（提交 `e80db63` 仅记「上游 main 自建」），上表的 hash 是 2026-10-23 从残留
 > 源码树里恢复的；此后每次构建由脚本末尾提示回填。TD-05 的「hash 丢失」部分已关闭。
 
+## 2b. 三方产物状态（2026-10-23 收口，读这里别看别处猜）
+
+实际进 APK 并执行的 box64 是 `jniLibs/arm64-v8a/libbox64.so`（W^X 决定的，见 §6 与
+`GuestProgramLauncherComponent` 的 nativeLibraryDir 分支），**不是** assets 里的 tzst。
+tzst 只是它的来源包。三件东西必须分清：
+
+| 物件 | git 状态 | 内容 | 作用 |
+|---|---|---|---|
+| `assets/box64/box64-0.4.5.tzst` | 已跟踪（force-add 8f86684） | 上游 main `2a062311`，无 gstfix | **构建默认**（`DefaultVersion.BOX64 = "0.4.5"`） |
+| `assets/box64/box64-0.4.5-gstfix.tzst` | 已跟踪（force-add，本轮） | `abfb8c3`（#4528）+ 私有补丁 + 链接三步；5,045,155B；内层二进制 sha 前缀 `3e000661` | 实验产物，真机验证过锚点无回归 |
+| `jniLibs/arm64-v8a/libbox64.so` | **未跟踪**（`.gitignore:30`） | 当前 = gstfix 那份，21,420,104B，sha 前缀 `3e000661` | 下一次构建真正进包的那份 |
+
+**当前不一致这个事实本身**：构建默认声明的是 0.4.5，而工作区 `libbox64.so` 放的是
+0.4.5-gstfix。也就是说此刻直接 `assembleRelease`，产物里跑的是 gstfix，而 `DefaultVersion`
+仍写着 0.4.5。这是**故意的**——gstfix 的用户可见收益目前为 0（SystemNNN 仍黑屏），
+不设为默认；但留在工作区继续测。任何要出正式包的人，先跑一遍
+`tools/prepare_box64_lib.sh`（无参数 = 按 `DefaultVersion.BOX64` 取，即回到 0.4.5）再打。
+
+回滚 / 切换（两条都是实测过的）：
+
+```bash
+bash tools/prepare_box64_lib.sh               # → 0.4.5（sha 9391c9c4，21,412,896B）
+bash tools/prepare_box64_lib.sh 0.4.5-gstfix  # → gstfix（sha 3e000661，21,420,104B）
+bash tools/prepare_box64_lib.sh --list        # 看有哪些版本
+```
+
+`tools/prepare_box64_lib.sh` 的缺省版本从 `DefaultVersion.java` 读，不再写死，
+所以「构建默认」只有一处定义。它同时受 `tools/make_runtime_checksums.sh` 覆盖——
+该脚本原先 `find assets -maxdepth 1`，`assets/box64/` 整批漏出 SHA-256 清单
+（修复前 34 个文件、box64 条目 0 条；修复后 57 个、3 条）。
+
 ## 3. 垫片 libmpshim.so
 
 - 拦截 `mprotect`；对 EXEC 请求收到 EACCES 时，按 `/proc/self/maps` 找到 backing
