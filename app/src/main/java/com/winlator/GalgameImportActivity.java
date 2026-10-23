@@ -42,6 +42,9 @@ import java.util.concurrent.Executors;
  */
 public class GalgameImportActivity extends AppCompatActivity {
 
+    public static final String EXTRA_PATH = "galgame.path";
+    public static final String EXTRA_AUTO = "galgame.auto";
+
     private static final String PREFS = "galgame_import_ui";
     private static final String KEY_DONE_NAME = "pending_done_name";
 
@@ -137,16 +140,37 @@ public class GalgameImportActivity extends AppCompatActivity {
             }
         }
 
-        // 导入过程中引擎会以横屏启动 → 本 Activity 重建；完成态落盘，重建后直接展示
+        // 导入过程中引擎会以横屏启动 → 本 Activity 重建；完成态落盘，重建后直接展示。
+        // 仅在重建（savedInstanceState != null）时消费该标记；全新打开导入页必须先清掉，
+        // 否则上一次导入的「已导入」会劫持下一次导入。
         SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        String pendingDone = prefs.getString(KEY_DONE_NAME, null);
-        if (pendingDone != null) {
+        if (savedInstanceState != null) {
+            String pendingDone = prefs.getString(KEY_DONE_NAME, null);
+            if (pendingDone != null) {
+                prefs.edit().remove(KEY_DONE_NAME).apply();
+                step = 3;
+                doneName.setText("「" + pendingDone + "」已加入游戏库，运行环境已就绪。");
+            }
+        } else {
             prefs.edit().remove(KEY_DONE_NAME).apply();
-            step = 3;
-            doneName.setText("「" + pendingDone + "」已加入游戏库，运行环境已就绪。");
         }
 
         renderStep();
+
+        // 仅调试自动化：adb 指定 path + auto=true 时自动走完 目录→检测→导入
+        if (getIntent().hasExtra(EXTRA_PATH) && getIntent().getBooleanExtra(EXTRA_AUTO, false)) {
+            pathInput.setText(getIntent().getStringExtra(EXTRA_PATH));
+            main.postDelayed(this::autoStep, 800);
+        }
+    }
+
+    private void autoStep() {
+        if (step == 0) { onNext(); main.postDelayed(this::autoStep, 1200); }
+        else if (step == 1) {
+            if (detected != null) { onNext(); main.postDelayed(this::autoStep, 800); }
+            else main.postDelayed(this::autoStep, 1200);
+        }
+        else if (step == 2 && !busy && detected != null) { onNext(); }
     }
 
     private void bindQuick(int id, final String path) {
@@ -186,6 +210,7 @@ public class GalgameImportActivity extends AppCompatActivity {
         } else if (step == 2) {
             startImport();
         } else {
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove(KEY_DONE_NAME).apply();
             finish();
         }
     }

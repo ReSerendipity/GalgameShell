@@ -122,6 +122,9 @@ public class GalgameHomeFragment extends Fragment {
     }
 
     private void refresh() {
+        // 导入会在本 Fragment 存活期间新建容器；ContainerManager 是构造时快照，
+        // 不重载的话新游戏要重启应用才出现。
+        containerManager = new ContainerManager(requireContext());
         master.clear();
 
         java.util.Map<String, GalgameLibraryIndex.Entry> index = new java.util.HashMap<>();

@@ -9,5 +9,15 @@
             android:exported="true"
             tools:node="merge"
             tools:replace="android:exported" />
+        <activity
+            android:name="com.winlator.GalgameImportActivity"
+            android:exported="true"
+            tools:node="merge"
+            tools:replace="android:exported" />
+        <activity
+            android:name="com.winlator.GalgameDetailActivity"
+            android:exported="true"
+            tools:node="merge"
+            tools:replace="android:exported" />
     </application>
 </manifest>

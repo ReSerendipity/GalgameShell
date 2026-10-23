@@ -39,6 +39,8 @@ import java.util.concurrent.Executors;
  */
 public class GalgameDetailActivity extends AppCompatActivity {
 
+    public static final String EXTRA_AUTO_LAUNCH = "galgame.auto_launch";
+
     public static final String EXTRA_CONTAINER = "galgame.container";
     public static final String EXTRA_GAME_ID = "galgame.gameId";
     public static final String EXTRA_LABEL = "galgame.label";
@@ -78,6 +80,9 @@ public class GalgameDetailActivity extends AppCompatActivity {
 
         bindHeader();
         bindActions();
+        if (getIntent().getBooleanExtra(EXTRA_AUTO_LAUNCH, false)) {
+            main.postDelayed(this::launch, 600);
+        }
     }
 
     private Container findContainer(String name) {
