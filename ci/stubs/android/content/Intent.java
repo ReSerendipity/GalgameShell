@@ -25,6 +25,9 @@ public class Intent {
     public Intent putExtra(String name, boolean value) { return this; }
     public Intent putExtra(String name, int value) { return this; }
     public String getAction() { return null; }
+    public String getStringExtra(String name) { return null; }
+    public boolean getBooleanExtra(String name, boolean defaultValue) { return defaultValue; }
+    public boolean hasExtra(String name) { return false; }
     public ComponentName getComponent() { return null; }
     public Intent setComponent(ComponentName component) { return this; }
     public static Intent makeRestartActivityTask(ComponentName mainActivityClassName) { return new Intent(); }
