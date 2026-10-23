@@ -1,6 +1,7 @@
 package com.winlator;
 
 import android.content.SharedPreferences;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +26,8 @@ import com.winlator.galgame.GalgameSaveManager;
 import com.winlator.galgame.ImportFlow;
 import com.winlator.galgame.engine.BuiltinEngine;
 import com.winlator.galgame.engine.BuiltinEngineRegistry;
+import com.winlator.galgame.NativeRouteLauncher;
+import com.winlator.galgame.ui.GalgameSettings;
 
 import org.json.JSONObject;
 
@@ -245,7 +248,8 @@ public class GalgameImportActivity extends AppCompatActivity {
                     GalgameLibraryIndex.putNative(appCtx, result.gameId, source.getName(), result.engine, source);
                     main.post(this::done);
                 } else {
-                    main.post(() -> fail("该引擎需要外部原生播放器；请在设置中开启后重试。"));
+                    // 内置引擎不可用 → 回退外部原生播放器（Tier2 免责门禁与原导入流程一致）
+                    main.post(() -> showExternalRouteDialog(result));
                 }
                 return;
             }
@@ -267,6 +271,42 @@ public class GalgameImportActivity extends AppCompatActivity {
                 });
             }));
         });
+    }
+
+    /** B 路由回退：外部原生播放器（plan → 免责 → 扫描目录 → 唤起）。 */
+    private void showExternalRouteDialog(ImportFlow.ImportResult result) {
+        setBusy(false);
+        final NativeRouteLauncher.Plan plan =
+                NativeRouteLauncher.plan(this, result.engine, GalgameSettings.isTier2Enabled(this));
+        if (plan.target == null) {
+            fail(plan.message);
+            return;
+        }
+        String message = plan.message != null ? plan.message : "";
+        if (plan.needsDisclaimer) message += System.lineSeparator() + System.lineSeparator() + getString(R.string.galgame_broute_disclaimer);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.galgame_route_b) + " · " + plan.target.displayName)
+                .setMessage(message)
+                .setNegativeButton(R.string.galgame_cancel, null);
+
+        if (plan.ready()) {
+            builder.setPositiveButton(R.string.galgame_action_launch, (dialog, which) -> {
+                if (plan.scanDir != null) {
+                    NativeRouteLauncher.prepareScanDir(source, plan.scanDir, result.gameId);
+                }
+                NativeRouteLauncher.launch(this, plan.target);
+                toast("已交由外部播放器启动");
+            });
+        } else if (plan.needsDisclaimer && !plan.allowed) {
+            builder.setPositiveButton(R.string.galgame_broute_enable, (dialog, which) -> {
+                GalgameSettings.setTier2Enabled(this, true);
+                showExternalRouteDialog(result);
+            });
+        } else {
+            builder.setPositiveButton(R.string.galgame_ok, null);
+        }
+        builder.show();
     }
 
     private void done() {

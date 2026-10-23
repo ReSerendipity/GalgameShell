@@ -120,6 +120,7 @@ public class GalgameDetailActivity extends AppCompatActivity {
         findViewById(R.id.BTExport).setOnClickListener(v -> exportSave());
         findViewById(R.id.BTImportSave).setOnClickListener(v -> importSave());
         findViewById(R.id.BTLogs).setOnClickListener(v -> showLogs());
+        findViewById(R.id.BTRemove).setOnClickListener(v -> removeFromLibrary());
 
         advancedView = findViewById(R.id.LLAdvanced);
         findViewById(R.id.BTAdvanced).setOnClickListener(v -> toggleAdvanced());
@@ -187,6 +188,24 @@ public class GalgameDetailActivity extends AppCompatActivity {
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
+    }
+
+    /** 从库中移除：仅删索引记录；有容器的游戏需先在运行环境里清理容器。 */
+    private void removeFromLibrary() {
+        if (container != null) {
+            toast("该游戏有运行环境，请先在「高级设置 → 运行环境」中清理容器后再移除");
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("从库中移除")
+                .setMessage("仅移除「" + item.label + "」的库记录，不删除手机中的游戏文件。")
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .setPositiveButton("移除", (d, w) -> {
+                    GalgameLibraryIndex.remove(this, item.gameId);
+                    toast("已从游戏库移除");
+                    finish();
+                })
                 .show();
     }
 
