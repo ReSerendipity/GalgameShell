@@ -18,6 +18,8 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 : "${BOX64_SRC:?需要 BOX64_SRC=box64 源码 checkout 路径}"
 : "${NDK:?需要 NDK=Android NDK 根目录（配方要求 27.0.12077973）}"
 : "${GLSYSROOT:?需要 GLSYSROOT=Debian arm64 glibc sysroot 路径}"
+# rootfs 内的动态链接器绝对路径（Android linker 解析不了 /lib/…，见下方链接段注释）
+: "${BOX64_INTERP:=/data/data/com.winlator/files/rootfs/lib/ld-linux-aarch64.so.1}"
 REF="${1:?需要上游 ref（commit/branch）作为构建基线}"
 VER="${2:?需要版本号标签，如 0.4.6}"
 
@@ -65,19 +67,47 @@ cmake -G Ninja -B "$BUILD" -S "$BOX64_SRC" \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DARM_DYNAREC=ON -DBOX32=ON -DWINLATOR_GLIBC=ON
 
-# 链接期已知坑：sysroot 里没有 gcc 的 libgcc/crt 配套，ninja 默认链接命令会失败。
-# 先正常试链接；失败就把命令交回人工，不猜参数。
-if ! cmake --build "$BUILD" --target box64; then
-  cat >&2 <<'EOF'
-box64 目标链接失败。历史构建同样在此卡住（见 docs/box64-wine-launch-chain.md §2）。
-请从上面的日志里取出 link 命令，补上 sysroot 的 crt/libgcc 后手工完成，
-再把产物路径回填到本脚本的 STRIP 步骤。不要改用 NDK bionic 目标硬绕——
-rootfs 是 glibc 的，bionic 产物跑不起来。
-EOF
-  exit 2
-fi
+# 只让 ninja 编对象，不让它链接：链接必须手工做，有两处官方配方给不了的坑
+#   1) sysroot 里没有 gcc 的 crtbegin.o/crtend.o 与 libgcc —— clang 对
+#      aarch64-linux-gnu 会把它们按**裸文件名**传给 lld（不受 -L 影响），
+#      所以必须放进链接的工作目录；libgcc.a 用 compiler-rt builtins 顶替。
+#   2) rootfs 的 glibc 不导出 atexit / pthread_atfork（只有 __cxa_atexit /
+#      __register_atfork），box64 main 自 2026-09 起直接引用前者 —— 用
+#      linkshim_glibc_atexit.c 转发补上，语义与 glibc 自身实现一致。
+SHIM="$BOX64_SRC/.galgameshell-linkshim"
+rm -rf "$SHIM"; mkdir -p "$SHIM"
+"$LLVM_STRIP" --version >/dev/null   # 顺带确认 NDK 工具可用
+printf 'static int _q;\n' > "$SHIM/empty.c"
+"$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe" --target=aarch64-linux-gnu \
+  -c "$SHIM/empty.c" -o "$SHIM/crtbegin.o"
+cp "$SHIM/crtbegin.o" "$SHIM/crtend.o"
+BUILTINS="$NDK/lib/clang/18/lib/aarch64-unknown-linux-musl/libclang_rt.builtins.a"
+[ -f "$BUILTINS" ] || { echo "找不到 compiler-rt builtins：$BUILTINS" >&2; exit 1; }
+cp "$BUILTINS" "$SHIM/libgcc.a"
+"$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe" rcs "$SHIM/libgcc_s.a" "$SHIM/crtend.o"
+"$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe" --target=aarch64-linux-gnu -O2 \
+  -c "$ROOT/tools/box64/linkshim_glibc_atexit.c" -o "$SHIM/glibc_atexit_shim.o"
+
+cmake --build "$BUILD" --target mainobj
+cp "$SHIM/crtbegin.o" "$SHIM/crtend.o" "$BUILD/"
+
+# 关键：PT_INTERP 必须是 rootfs 内的绝对路径。Android 的 linker 解析不了
+# /lib/ld-linux-aarch64.so.1，产物会以「正在启动…」卡死且 wine 一行日志都不出。
+cd "$BUILD"
+"$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe" --target=aarch64-linux-gnu \
+  --sysroot="$GLSYSROOT" -O2 -g -DNDEBUG \
+  -Wl,--export-dynamic -rdynamic -Wl,--no-as-needed \
+  -lc -lm -ldl -lrt -lpthread -lresolv -lutil -Wl,--as-needed -pthread \
+  -L"$SHIM" -no-pie -Xlinker --image-base=0x34800000 \
+  -Wl,--dynamic-linker="$BOX64_INTERP" \
+  "$SHIM/glibc_atexit_shim.o" "@CMakeFiles/box64.rsp" -o box64
 
 BIN="$BUILD/box64"
+# 链接产物自检：形态必须与现役 0.4.5 一致，否则装上去只会「正在启动…」
+"$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-readelf.exe" -h "$BIN" | grep -q "AArch64" \
+  || { echo "产物不是 AArch64 ELF" >&2; exit 1; }
+"$NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-readelf.exe" -l "$BIN" \
+  | awk '/INTERP/{print "PT_INTERP bytes:", $6}'
 "$LLVM_STRIP" --strip-all "$BIN"
 
 OUT="$ROOT/app/src/main/assets/box64/box64-$VER.tzst"

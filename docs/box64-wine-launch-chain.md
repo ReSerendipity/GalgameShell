@@ -42,8 +42,23 @@ cmake -G Ninja -DARM_DYNAREC=ON -DBOX32=ON -DWINLATOR_GLIBC=ON -DCMAKE_BUILD_TYP
 sysroot 的来源：Debian/Ubuntu arm64 的 `libc6` + `libc6-dev` 解包（`dpkg-deb -x`）后拼成
 `lib/` + `usr/{include,lib}`。此来源为事后追记，未逐字复现过，重建时以能链通为准。
 
-**已知卡点**：sysroot 不带 gcc 的 `libgcc`/crt 配套，ninja 的默认链接命令会失败，历史上是手工补链接完成的
-（具体命令未记录）。脚本遇到该失败会**停下并把日志交回人工**，不猜参数、不静默改用 bionic。
+**链接期三处必坑（2026-10-23 实测，脚本已内置）**：
+
+1. sysroot 不带 gcc 的 `crtbegin.o`/`crtend.o`/`libgcc.a`。clang 对 `aarch64-linux-gnu`
+   是把 crt 对象按**裸文件名**交给 lld 的，`-L` 不生效 —— 必须把它们放进链接的工作目录。
+   `libgcc.a` 用 NDK 的 `libclang_rt.builtins.a` 顶替，`libgcc_s.a` 建空归档即可。
+2. **rootfs 的 glibc 不导出 `atexit` / `pthread_atfork`**（3070 个动态符号里只有
+   `__cxa_atexit` / `__register_atfork`），而 box64 main 自 2026-09 起在
+   `core.c` / `custommem.c` / `signals.c` 里直接引用前者。用
+   `tools/box64/linkshim_glibc_atexit.c` 转发到 glibc 自己的内部入口补上，语义不变。
+3. **`PT_INTERP` 必须是 rootfs 内的绝对路径**
+   `/data/data/com.winlator/files/rootfs/lib/ld-linux-aarch64.so.1`。
+   用默认 `-lc` 链出来的会是 `/lib/ld-linux-aarch64.so.1`（27B vs 63B），Android linker
+   解析不了，症状就是本文档开头那句——**永远停在「正在启动…」且 wine_exec.log 一行都不出**。
+   用 `-Wl,--dynamic-linker=…` 指定，链接后用 `readelf -l | grep INTERP` 自检。
+
+前两条是历史上「手工补链接」的全部内容；第三条是 2026-10-23 重建时新踩出来的，
+只比对 ELF 段布局看不出来（EXEC/AArch64/base 0x34800000 全一致），必须读 INTERP 字符串。
 
 ### 基线与私有改动（2026-10-23 追记，补 TD-05）
 
