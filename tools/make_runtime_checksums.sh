@@ -21,7 +21,9 @@ command -v sha256sum >/dev/null 2>&1 || { echo "[checksums] FAIL: sha256sum 不�
 
 TMP="$(mktemp)"
 trap 'rm -f "$TMP"' EXIT
-find "$SRC/assets" -maxdepth 1 -type f \( -name '*.tzst' -o -name '*.tar' \) -print0 2>/dev/null | sort -z > "$TMP"
+# 不加 -maxdepth：自建 box64 在 assets/box64/、图形驱动在 assets/graphics_driver/、
+# DXVK/vkd3d 在 assets/dxwrapper/，限一层会让这些运行时资源整批漏出清单。
+find "$SRC/assets" -type f \( -name '*.tzst' -o -name '*.tar' \) -print0 2>/dev/null | sort -z > "$TMP"
 find "$SRC/jniLibs" -type f -name '*.so' -print0 2>/dev/null | sort -z >> "$TMP"
 
 TOTAL=$(tr -cd '\0' < "$TMP" | wc -c | tr -d ' ')
@@ -33,7 +35,7 @@ fi
 {
   echo "# GalgameShell 运行时资源 SHA-256 清单"
   echo "# 生成时间: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-  echo "# 覆盖: assets/*.tzst|*.tar 与 jniLibs/**/*.so（路径相对 app/src/main）"
+  echo "# 覆盖: assets/**/*.tzst|*.tar 与 jniLibs/**/*.so（路径相对 app/src/main）"
   echo "# 核验: 解包后 cd app/src/main && sha256sum -c <清单文件>"
   while IFS= read -r -d '' f; do
     h=$(sha256sum -b "$f" | awk '{print $1}')
