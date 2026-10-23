@@ -394,13 +394,10 @@ public abstract class AppUtils {
         int appTheme = isGameScreen(activity)
             ? preferences.getInt("app_theme", SettingsFragment.APP_THEME_DARK)
             : rawTheme;
-        // GalgameShell：外壳与游戏运行屏统一走 Swiss 主题（亮档）；深档维持上游深色主题
-        if (appTheme == SettingsFragment.APP_THEME_LIGHT) {
+        // GalgameShell：外壳与游戏运行屏统一走 Swiss 主题，明暗由 values-night 反相同一批颜色
+        if (appTheme == SettingsFragment.APP_THEME_LIGHT || appTheme == SettingsFragment.APP_THEME_DARK) {
             activity.setTheme(isGameScreen(activity)
                 ? R.style.GalgameSwissThemeFullscreen : R.style.GalgameSwissTheme);
-        }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK) {
-            activity.setTheme(isGameScreen(activity) ? R.style.AppThemeDark : R.style.GalgameMainThemeDark);
         }
     }
 

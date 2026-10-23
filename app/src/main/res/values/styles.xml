@@ -155,13 +155,13 @@
         <item name="colorSecondaryText">@color/swiss_muted</item>
         <item name="colorPrimarySurface">@color/swiss_paper</item>
         <item name="colorSecondarySurface">@color/swiss_paper</item>
-        <item name="colorSurfaceVariant">#FFF2F2F2</item>
+        <item name="colorSurfaceVariant">@color/swiss_pressed</item>
         <item name="colorSecondaryVariant">@color/swiss_hairline</item>
         <item name="colorHairline">@color/swiss_hairline</item>
         <item name="colorControlNormal">@color/swiss_ink</item>
         <item name="colorOnAccent">@color/swiss_paper</item>
-        <item name="colorOnAccentSubtle">#B3FFFFFF</item>
-        <item name="galgameChipBackground">#FFF2F2F2</item>
+        <item name="colorOnAccentSubtle">@color/swiss_muted</item>
+        <item name="galgameChipBackground">@color/swiss_pressed</item>
         <item name="galgameChipText">@color/swiss_ink</item>
         <item name="galgameBrandStart">@color/swiss_ink</item>
         <item name="galgameBrandEnd">@color/swiss_ink</item>
@@ -171,9 +171,9 @@
         <item name="android:colorBackground">@color/swiss_paper</item>
         <item name="android:windowBackground">@color/swiss_paper</item>
         <item name="android:statusBarColor">@color/swiss_paper</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">@bool/swiss_light_bars</item>
         <item name="android:navigationBarColor">@color/swiss_paper</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightNavigationBar">@bool/swiss_light_bars</item>
     </style>
 
     <style name="SwissFieldSet" parent="@style/FieldSet">

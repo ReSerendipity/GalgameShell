@@ -108,7 +108,7 @@
             android:screenOrientation="sensorLandscape" />
 
         <activity android:name="com.winlator.ExternalControllerBindingsActivity"
-            android:theme="@style/GalgameMainTheme"
+            android:theme="@style/GalgameSwissTheme"
             android:exported="false"
             android:screenOrientation="sensor" />
 

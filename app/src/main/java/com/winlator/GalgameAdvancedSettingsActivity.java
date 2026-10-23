@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -25,6 +26,8 @@ import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 import com.winlator.core.LocaleHelper;
 import com.winlator.core.PreloaderDialog;
+import com.winlator.galgame.GalgameLibraryIndex;
+import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.xenvironment.RootFSInstaller;
 
 import java.util.List;
@@ -87,6 +90,7 @@ public class GalgameAdvancedSettingsActivity extends AppCompatActivity implement
 
     private void bindEnvironments() {
         LinearLayout list = findViewById(R.id.LLEnvironments);
+        list.removeAllViews();
         List<Container> containers = new ContainerManager(this).getContainers();
         int count = 0;
         if (containers != null) {
@@ -94,7 +98,7 @@ public class GalgameAdvancedSettingsActivity extends AppCompatActivity implement
                 String name = c.getName();
                 if (name == null || !name.startsWith("galgame-")) continue;
                 count++;
-                list.addView(envRow(name, c.getExtra("galgame_engine", "?")));
+                list.addView(envRow(c));
             }
         }
         if (count == 0) {
@@ -112,12 +116,17 @@ public class GalgameAdvancedSettingsActivity extends AppCompatActivity implement
                         () -> RootFSInstaller.install(this)));
     }
 
-    private View envRow(String name, String engine) {
+    private View envRow(Container container) {
+        String name = container.getName();
+        String engine = container.getExtra("galgame_engine", "?");
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(20), dp(12), dp(20), dp(12));
         row.setBackgroundResource(R.drawable.swiss_row_line);
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setOnClickListener(v -> showEnvDetail(container));
 
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
@@ -130,7 +139,7 @@ public class GalgameAdvancedSettingsActivity extends AppCompatActivity implement
         col.addView(title);
 
         TextView meta = new TextView(this);
-        meta.setText((engine == null ? "?" : engine) + " · 自动管理");
+        meta.setText((engine == null ? "?" : engine) + " · 点击查看 / 管理");
         meta.setTextSize(9f);
         meta.setAllCaps(true);
         meta.setLetterSpacing(0.1f);
@@ -146,6 +155,59 @@ public class GalgameAdvancedSettingsActivity extends AppCompatActivity implement
         tag.setTextColor(ContextCompat.getColor(this, R.color.swiss_muted));
         row.addView(tag);
         return row;
+    }
+
+    /** 运行环境详情：事实 + 重新注入（确认键）+ 删除（危险行）。 */
+    private void showEnvDetail(final Container container) {
+        final ContentDialog dialog = new ContentDialog(this, R.layout.galgame_env_detail_dialog);
+        dialog.setTitle(container.getName());
+
+        String gameId = gameIdOf(container);
+        ((TextView) dialog.findViewById(R.id.TVEnvRuntime)).setText(
+                "引擎 " + nv(container.getExtra("galgame_engine"))
+                        + "  ·  Windows " + nv(container.getExtra("windows_version")) + "\n"
+                        + "图形 " + nv(container.getDXWrapper())
+                        + "  ·  Box64 " + nv(container.getBox64Preset()));
+        ((TextView) dialog.findViewById(R.id.TVEnvPath)).setText(
+                "环境目录  " + container.getRootDir().getAbsolutePath());
+
+        Button reinject = dialog.findViewById(R.id.BTConfirm);
+        reinject.setText("重新注入语言/字体");
+        reinject.setOnClickListener(v -> { dialog.dismiss(); reinjectLanguage(container); });
+        Button close = dialog.findViewById(R.id.BTCancel);
+        close.setText(R.string.galgame_cancel);
+
+        dialog.findViewById(R.id.RowEnvRemove).setOnClickListener(v -> {
+            dialog.dismiss();
+            ContentDialog.confirm(this, R.string.do_you_want_to_remove_this_container, () ->
+                    new ContainerManager(this).removeContainerAsync(container, () -> {
+                        GalgameLibraryIndex.remove(this, gameId);
+                        runOnUiThread(this::bindEnvironments);
+                    }));
+        });
+        dialog.show();
+    }
+
+    private void reinjectLanguage(final Container container) {
+        preloaderDialog.showOnUiThread(R.string.loading);
+        new Thread(() -> {
+            final GalgameLocaleInjector.Report report =
+                    GalgameLocaleInjector.reapply(container, getApplicationContext());
+            runOnUiThread(() -> {
+                preloaderDialog.closeOnUiThread();
+                AppUtils.showToast(this, report != null ? R.string.galgame_diag_reinject_done
+                        : R.string.galgame_diag_reinject_fail);
+            });
+        }).start();
+    }
+
+    private static String gameIdOf(Container container) {
+        String name = container.getName();
+        return name != null && name.startsWith("galgame-") ? name.substring("galgame-".length()) : "";
+    }
+
+    private static String nv(String v) {
+        return v == null || v.isEmpty() ? "默认" : v;
     }
 
     private void bindWineBox64() {

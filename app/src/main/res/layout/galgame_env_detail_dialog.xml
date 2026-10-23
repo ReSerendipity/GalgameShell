@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 运行环境详情（Swiss）：只读事实 + 危险操作行 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="340dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/TVEnvRuntime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textColor="@color/swiss_ink"
+        android:lineSpacingExtra="3dp" />
+
+    <TextView
+        android:id="@+id/TVEnvPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textSize="9sp"
+        android:letterSpacing="0.05"
+        android:textAllCaps="false"
+        android:maxLines="2"
+        android:ellipsize="middle"
+        android:textColor="@color/swiss_faint" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="14dp"
+        android:background="@color/swiss_hairline" />
+
+    <LinearLayout
+        android:id="@+id/RowEnvRemove"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/swiss_red"
+            android:text="删除运行环境" />
+
+        <TextView
+            style="@style/SwissRowMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="连同容器内的游戏副本一起删除" />
+    </LinearLayout>
+</LinearLayout>

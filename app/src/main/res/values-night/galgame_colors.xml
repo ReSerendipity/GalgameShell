@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Swiss 格栅深色档：只覆盖纸面/墨色/线，品牌红提亮以保持暗底可读性。
-     布局仍引用同名 swiss_*，无需改动在途 UI 文件。 -->
+<!-- Swiss 深色档：纯中性黑白（去掉早期残留的紫蓝底），与亮档同一套语言反相 -->
 <resources>
-    <color name="swiss_paper">#FF17161F</color>
-    <color name="swiss_ink">#FFF2F3F7</color>
+    <color name="swiss_paper">#FF0E0E0E</color>
+    <color name="swiss_ink">#FFF2F2F2</color>
     <color name="swiss_red">#FFFF5C70</color>
-    <color name="swiss_line">#FFF2F3F7</color>
+    <color name="swiss_line">#FFF2F2F2</color>
     <color name="swiss_hairline">#33FFFFFF</color>
-    <color name="swiss_muted">#FFA8AFBD</color>
-    <color name="swiss_faint">#FF7A8290</color>
-    <color name="swiss_pressed">#FF2A2938</color>
-    <color name="swiss_count">#33FFFFFF</color>
+    <color name="swiss_muted">#FF9E9E9E</color>
+    <color name="swiss_faint">#FF6E6E6E</color>
+    <color name="swiss_pressed">#FF1C1C1C</color>
+    <color name="swiss_count">#40FFFFFF</color>
 </resources>
