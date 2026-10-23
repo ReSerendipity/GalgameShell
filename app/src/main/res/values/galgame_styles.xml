@@ -178,5 +178,117 @@
         <item name="android:textAllCaps">true</item>
         <item name="android:textColor">@color/swiss_muted</item>
     </style>
+
+    <!-- 旧设置页重排后用的方框控件（零圆角、1dp 黑线） -->
+    <style name="SwissSpinner">
+        <item name="android:layout_width">160dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@drawable/swiss_spinner_bg</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:popupBackground">@color/swiss_paper</item>
+    </style>
+
+    <style name="SwissToolbox">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:background">@drawable/swiss_toolbox_bg</item>
+    </style>
+
+    <style name="SwissIconButton">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:tint">@color/swiss_ink</item>
+    </style>
+
+    <style name="SwissCheck">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:buttonTint">@color/swiss_ink</item>
+    </style>
+
+    <style name="SwissRadio">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:buttonTint">@color/swiss_ink</item>
+        <item name="android:paddingEnd">24dp</item>
+    </style>
+
+    <style name="SwissEdit">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:background">@drawable/swiss_fieldset</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:textColorHint">@color/swiss_muted</item>
+    </style>
+
+    <style name="SwissConfirmBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:background">@color/swiss_ink</item>
+        <item name="android:textColor">@color/swiss_paper</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.18</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- 系统弹窗：纸面 + 1dp 黑框 + 黑色大写按钮（AppCompat 与 framework 两套） -->
+    <style name="SwissDialogButton" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="SwissAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/swiss_ink</item>
+        <item name="android:textColorPrimary">@color/swiss_ink</item>
+        <item name="android:windowBackground">@drawable/swiss_dialog_bg</item>
+        <item name="buttonBarPositiveButtonStyle">@style/SwissDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/SwissDialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/SwissDialogButton</item>
+    </style>
+
+    <style name="SwissFrameworkDialogButton">
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="SwissFrameworkAlertDialog" parent="android:Theme.Material.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/swiss_ink</item>
+        <item name="android:textColorPrimary">@color/swiss_ink</item>
+        <item name="android:windowBackground">@drawable/swiss_dialog_bg</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/SwissFrameworkDialogButton</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/SwissFrameworkDialogButton</item>
+        <item name="android:buttonBarNeutralButtonStyle">@style/SwissFrameworkDialogButton</item>
+    </style>
 </resources>
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 抽屉头反白块：纯黑实底，零圆角（渐变里的 ?attr 在 shape 里不解析，故直接给色值） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/swiss_ink" />
+    <corners android:radius="0dp" />
+</shape>

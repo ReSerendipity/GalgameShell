@@ -1,39 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Wine 调试通道标签（Swiss：方框 + 方图标） -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="40dp"
     android:orientation="horizontal"
-    android:layout_marginRight="8dp"
-    android:gravity="center_vertical">
+    android:layout_marginEnd="8dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/swiss_toolbox_bg">
 
     <TextView
         android:id="@+id/TextView"
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:textSize="16dp"
-        android:textColor="?attr/colorPrimaryVariant"
-        android:textStyle="bold"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:layout_marginRight="2dp"
-        android:gravity="center_vertical"
-        android:background="@drawable/left_side_button" />
+        android:layout_height="match_parent"
+        android:textSize="12sp"
+        android:textColor="@color/swiss_ink"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:gravity="center_vertical" />
 
     <ImageView
-        style="@style/LeftSideButton"
         android:id="@+id/BTAdd"
+        style="@style/SwissIconButton"
         android:src="@drawable/icon_add"
-        android:layout_marginRight="4dp"
         android:visibility="gone" />
 
     <ImageView
-        style="@style/RightSideButton"
         android:id="@+id/BTReset"
+        style="@style/SwissIconButton"
         android:src="@drawable/icon_reset"
         android:visibility="gone" />
 
     <ImageView
-        style="@style/RightSideButton"
         android:id="@+id/BTRemove"
+        style="@style/SwissIconButton"
         android:src="@drawable/icon_remove2" />
 </LinearLayout>

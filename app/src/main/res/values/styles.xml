@@ -163,6 +163,10 @@
         <item name="colorOnAccentSubtle">#B3FFFFFF</item>
         <item name="galgameChipBackground">#FFF2F2F2</item>
         <item name="galgameChipText">@color/swiss_ink</item>
+        <item name="galgameBrandStart">@color/swiss_ink</item>
+        <item name="galgameBrandEnd">@color/swiss_ink</item>
+        <item name="alertDialogTheme">@style/SwissAlertDialog</item>
+        <item name="android:alertDialogTheme">@style/SwissFrameworkAlertDialog</item>
         <item name="android:colorBackground">@color/swiss_paper</item>
         <item name="android:windowBackground">@color/swiss_paper</item>
         <item name="android:statusBarColor">@color/swiss_paper</item>
@@ -232,6 +236,13 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
 
+    <!-- 游戏运行屏：沿用 Swiss 纸面语言（抽屉 / 对话框 / 预加载都跟外壳一致） -->
+    <style name="GalgameSwissThemeFullscreen" parent="@style/GalgameSwissTheme">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
     <!--
       内置 Kirikiroid2 运行时的 Activity 主题。
       刻意不复用 AppThemeFullscreenDark：那条主题带 windowTranslucentStatus/Navigation，
@@ -294,12 +305,12 @@
         <item name="android:windowFullscreen">true</item>
         <!-- GalgameShell：上游 ?attr/popupMenuBackground 在本主题无解析来源（背景从未生效）。
              对话框主题独立于 Activity，这里显式补齐品牌属性并按亮/深由代码选择 -->
-        <item name="android:windowBackground">@drawable/galgame_dialog_bg</item>
-        <item name="colorAccent">#FF6A5AE0</item>
-        <item name="colorPrimaryVariant">#FF6A5AE0</item>
-        <item name="colorSecondaryVariant">#FFE6E9F0</item>
-        <item name="colorPrimaryText">#FF1F2430</item>
-        <item name="colorSecondaryText">#FF6B7280</item>
+        <item name="android:windowBackground">@drawable/swiss_dialog_bg</item>
+        <item name="colorAccent">@color/swiss_ink</item>
+        <item name="colorPrimaryVariant">@color/swiss_ink</item>
+        <item name="colorSecondaryVariant">@color/swiss_hairline</item>
+        <item name="colorPrimaryText">@color/swiss_ink</item>
+        <item name="colorSecondaryText">@color/swiss_muted</item>
     </style>
     <!-- GalgameShell：ContentDialog 深色档（ContentDialog 构造按 Activity 主题亮度选择） -->
     <style name="ContentDialogDark" parent="@android:style/Theme.Dialog">

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  次按钮：描边 + 按压涟漪（替代上游灰色 9-patch）。
-  颜色走主题属性：亮色档=白底紫描边，深色档=紫黑底浅紫描边。
+  次按钮：Swiss 描边（白底 1dp 黑线，零圆角）。
 -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#336A5AE0">
+    android:color="#1A000000">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="?attr/colorSecondarySurface" />
-            <corners android:radius="12dp" />
+            <solid android:color="?attr/colorPrimarySurface" />
+            <corners android:radius="0dp" />
             <stroke android:width="1dp" android:color="?attr/colorPrimaryVariant" />
         </shape>
     </item>

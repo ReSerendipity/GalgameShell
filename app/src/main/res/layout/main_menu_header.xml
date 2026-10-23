@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  抽屉头：品牌紫渐变（与游戏库顶栏一致）+ GalgameShell 品牌名 + 标语。
+  抽屉头：Swiss 反白块（纯黑底 + 白字 + 1dp 反白分隔），与全站纸面语言一致。
 -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="148dp"
-    android:background="@drawable/galgame_header_bg"
-    android:paddingLeft="18dp"
-    android:paddingRight="18dp"
-    android:paddingBottom="20dp">
+    android:layout_height="128dp"
+    android:background="@drawable/swiss_header_block"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingBottom="16dp">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -21,16 +21,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/galgame_app_name"
-            android:textSize="24sp"
+            android:textSize="11sp"
             android:textStyle="bold"
+            android:letterSpacing="0.18"
+            android:textAllCaps="true"
             android:textColor="#FFFFFFFF" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="6dp"
             android:text="@string/galgame_tagline"
-            android:textSize="12sp"
-            android:textColor="#D9FFFFFF" />
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.02"
+            android:textColor="#FFFFFFFF" />
     </LinearLayout>
 </FrameLayout>

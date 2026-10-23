@@ -177,14 +177,14 @@
                 android:paddingEnd="20dp"
                 android:paddingTop="16dp"
                 android:paddingBottom="4dp">
-                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="兼容" />
-                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LEGACY" />
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="更多" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MORE" />
             </LinearLayout>
 
             <LinearLayout android:id="@+id/rowLegacy" style="@style/SwissRow">
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="完整设置（旧版布局）" />
-                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="手柄 / 音色库 / MIDI / 调试通道等全部选项" />
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="更多设置" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="手柄 / 音色库 / MIDI / 调试通道" />
                 </LinearLayout>
                 <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
             </LinearLayout>
