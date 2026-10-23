@@ -1,0 +1,106 @@
+diff --git a/src/elfs/elfhacks.c b/src/elfs/elfhacks.c
+index a750902..7885aa4 100644
+--- a/src/elfs/elfhacks.c
++++ b/src/elfs/elfhacks.c
+@@ -197,7 +197,7 @@ int eh_init_obj(eh_obj_t *obj)
+ 	obj->gnu_hash = NULL;
+ 	obj->symtab = NULL;
+ 	p = 0;
+-	while (obj->dynamic[p].d_tag != DT_NULL) {
++	while (obj->dynamic[p].d_tag != DT_NULL && p < 16384) {
+ 		if (obj->dynamic[p].d_tag == DT_STRTAB) {
+ 			if (obj->strtab)
+ 				return ENOTSUP;
+@@ -435,7 +435,7 @@ int eh_find_next_dyn(eh_obj_t *obj, ElfW_Sword tag, int i, ElfW(Dyn) **next)
+ 	*next = NULL;
+ 
+ 	p = i + 1;
+-	while (obj->dynamic[p].d_tag != DT_NULL) {
++	while (obj->dynamic[p].d_tag != DT_NULL && p < 16384) {
+ 		if (obj->dynamic[p].d_tag == tag) {
+ 			*next = &obj->dynamic[p];
+ 			return 0;
+@@ -505,7 +505,7 @@ int eh_set_rel(eh_obj_t *obj, const char *sym, void *val)
+ 	ElfW(Dyn) *pltrel;
+ 	int ret, p = 0;
+ 
+-	while (obj->dynamic[p].d_tag != DT_NULL) {
++	while (obj->dynamic[p].d_tag != DT_NULL && p < 16384) {
+ 		/* DT_JMPREL contains .rel.plt or .rela.plt */
+ 		if (obj->dynamic[p].d_tag == DT_JMPREL) {
+ 			/* DT_PLTREL tells if it is Rela or Rel */
+@@ -591,7 +591,7 @@ int eh_iterate_rel(eh_obj_t *obj, eh_iterate_rel_callback_func callback, void *a
+ 	ElfW(Dyn) *pltrel;
+ 	int ret, p = 0;
+ 
+-	while (obj->dynamic[p].d_tag != DT_NULL) {
++	while (obj->dynamic[p].d_tag != DT_NULL && p < 16384) {
+ 		if (obj->dynamic[p].d_tag == DT_JMPREL) {
+ 			eh_find_next_dyn(obj, DT_PLTREL, p, &pltrel);
+ 
+diff --git a/src/elfs/elfloader.c b/src/elfs/elfloader.c
+index 0217e9c..d92101b 100644
+--- a/src/elfs/elfloader.c
++++ b/src/elfs/elfloader.c
+@@ -2126,7 +2126,11 @@ int dl_iterate_phdr_findsymbol(eh_obj_t* obj, search_symbol_t* s)
+             char* strtab = NULL;
+             ElfW(Dyn)* dyn = (ElfW(Dyn)*)(obj->addr + obj->phdr[j].p_vaddr);
+             // grab the needed info
+-            while (dyn->d_tag != DT_NULL) {
++            // defensive bound: some objects may expose a dynamic segment whose
++            // DT_NULL is beyond what we expect; avoid an endless scan (observed
++            // as a userspace spin loop on 39-bit va hosts with lld-linked box64)
++            ElfW(Dyn)* dyn_end = dyn + 0x8000 / sizeof(ElfW(Dyn));
++            while (dyn->d_tag != DT_NULL && dyn < dyn_end) {
+                 switch (dyn->d_tag) {
+                     case DT_STRTAB:
+                         strtab = (char*)(dyn->d_un.d_ptr);
+diff --git a/src/libtools/libdl.c b/src/libtools/libdl.c
+index fe80621..ab721bf 100644
+--- a/src/libtools/libdl.c
++++ b/src/libtools/libdl.c
+@@ -63,9 +63,25 @@ static void*(*real_dlopen)(const char*, int) = NULL;
+ static int (*real_dlclose)(void*) = NULL;
+ static void* (*real_dlsym)(void*, const char*) = NULL;
+ 
++
++/* Find a symbol inside libc.so.6 only. GetNativeSymbolUnversioned(RTLD_NEXT, ...)
++   iterates ALL loaded objects and can hit box64's own exported dl* wrappers
++   (exported name "dlsym" etc.), which tail-calls back into these bridges and
++    spins forever. Scoping to libc avoids the self-interposition entirely. */
++static void* find_real_in_libc(const char* name)
++{
++    eh_obj_t obj;
++    void* sym = NULL;
++    if (!eh_find_obj(&obj, "*libc.so.6")) {
++        eh_find_sym(&obj, name, &sym);
++        eh_destroy_obj(&obj);
++    }
++    return sym;
++}
++
+ EXPORT void* dlopen(const char* path, int flags)
+ {
+-    if (!real_dlopen) real_dlopen = GetNativeSymbolUnversioned(RTLD_NEXT, "dlopen");
++    if (!real_dlopen) real_dlopen = find_real_in_libc("dlopen");
+ 
+     // will look only for libs loaded with full path (and only on 64bits for now)
+     if(path && strchr(path, '/') && (/*(box64_is32bits && FileIsX86ELF(path)) ||*/ (!box64_is32bits && FileIsX64ELF(path)))) {
+@@ -92,7 +108,7 @@ EXPORT void* dlopen(const char* path, int flags)
+ 
+ EXPORT int dlclose(void* handle)
+ {
+-    if (!real_dlclose) real_dlclose = GetNativeSymbolUnversioned(RTLD_NEXT, "dlclose");
++    if (!real_dlclose) real_dlclose = find_real_in_libc("dlclose");
+ 
+     if((uintptr_t)handle>=HOOKLIB && (uintptr_t)handle<HOOKLIB+hooked_size) {
+         uint32_t i = (uintptr_t)handle-HOOKLIB;
+@@ -107,7 +123,7 @@ EXPORT int dlclose(void* handle)
+ 
+ EXPORT void* dlsym(void* handle, const char* symbol)
+ {
+-    if (!real_dlsym) real_dlsym = GetNativeSymbolUnversioned(RTLD_NEXT, "dlsym");
++    if (!real_dlsym) real_dlsym = find_real_in_libc("dlsym");
+ 
+     if((uintptr_t)handle>=HOOKLIB && (uintptr_t)handle<HOOKLIB+hooked_size) {
+         uint32_t i = (uintptr_t)handle-HOOKLIB;

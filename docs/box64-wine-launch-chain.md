@@ -19,23 +19,53 @@ Windows 程序要在这台设备上跑起来，需要同时满足六件事（缺
 
 ## 2. 构建 box64（可复现配方）
 
-```bash
-cmake -G Ninja \
-  -DCMAKE_TOOLCHAIN_FILE=$ANDROID_HOME/ndk/27.0.12077973/build/cmake/android.toolchain.cmake \
-  -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-34 \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DARM_DYNAREC=ON -DBOX32=ON -DWINLATOR_GLIBC=ON \
-  <box64src>
-# 关键：BOX32=ON（galgame exe 绝大多数是 32 位）
-# ninja 的默认链接命令会缺 crt/libgcc，需自行链接（绕过 ninja 的 link 步骤）
+入口脚本：`tools/box64/build_box64_android.sh`（生成工具链文件 → configure → 链接 → strip → 打 tzst）。
+它不覆盖既有产物，新版本另出一个 `box64-<ver>.tzst`，应用里可按容器回退。
+
+关键参数（**注意：不是 NDK 的 `android.toolchain.cmake`**，rootfs 是 glibc 的，产物必须是
+`aarch64-linux-gnu` 的 glibc ELF，用 bionic 目标编出来的跑不起来）：
+
+```cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(CMAKE_C_COMPILER <NDK>/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe)
+set(CMAKE_C_COMPILER_TARGET aarch64-linux-gnu)   # ASM 同理
+set(CMAKE_SYSROOT <Debian arm64 glibc sysroot>)  # lib/{libc.so.6,ld-linux-aarch64.so.1,libm.so.6…} + usr/lib/{crt1.o,libc.so}
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 ```
 
-产物经 `llvm-strip --strip-all` 后打成 `app/src/main/assets/box64/box64-<ver>.tzst`
-（内部结构对齐官方：`./usr/local/bin/box64`，zstd -19）。
+```bash
+cmake -G Ninja -DARM_DYNAREC=ON -DBOX32=ON -DWINLATOR_GLIBC=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo …
+# 关键：BOX32=ON（galgame exe 绝大多数是 32 位，走 WOW64）
+```
 
-> **可复现约定（2026-10-11，评估整改 P2-8）**：每次自建 box64 必须在此记录上游 commit hash，使重建可复现。
-> 0.4.5 构建时未记录（提交 `e80db63` 仅记「上游 main 自建」），现无法从仓内恢复精确 hash——如需精确重建，
-> 需人工提供当时 upstream commit；缺失期间以「配方 + 日期」近似复现（见 tech-debt-register.md TD-05）。
+sysroot 的来源：Debian/Ubuntu arm64 的 `libc6` + `libc6-dev` 解包（`dpkg-deb -x`）后拼成
+`lib/` + `usr/{include,lib}`。此来源为事后追记，未逐字复现过，重建时以能链通为准。
+
+**已知卡点**：sysroot 不带 gcc 的 `libgcc`/crt 配套，ninja 的默认链接命令会失败，历史上是手工补链接完成的
+（具体命令未记录）。脚本遇到该失败会**停下并把日志交回人工**，不猜参数、不静默改用 bionic。
+
+### 基线与私有改动（2026-10-23 追记，补 TD-05）
+
+| 项 | 值 |
+|---|---|
+| 在用的 `box64-0.4.5.tzst` 上游基线 | `2a0623116931c391819277f462dfb5b47a18fcb9`（2026-09-30，main） |
+| 依据 | 源码 checkout 的 HEAD；私有改动 mtime 均为 09-30，早于出厂 tzst 的 10-01 19:10 |
+| 私有改动 | `tools/box64/box64-galgameshell.patch`（3 文件 28 行，已双向校验：能在干净基线上重放，也能反向还原当前工作树） |
+
+补丁内容对应本文档 §1 表的第 1、2 层，**丢了就会在这台设备上死循环或 SIGSEGV**：
+
+- `src/elfs/elfhacks.c` / `src/elfs/elfloader.c`：动态段扫描加 `DT_NULL` 之外的迭代上界
+  （39-bit VA 主机 + lld 链接的 box64 会退化成用户态死循环）
+- `src/libtools/libdl.c`：新增 `find_real_in_libc()`，把 `dlopen/dlclose/dlsym` 的 real 解析
+  限定在 `libc.so.6`，避开 box64 自身导出的 `dl*` 形成 interpose 环（见 §3）
+
+> 生成物 `src/wrapped/generated/functions_list.txt` 当时也带一行本地差异（`wrappedandroidshmem:`，
+> 对应源文件已不存在），属陈旧生成残留，**不随补丁携带**，需要时由 `rebuild_wrappers.py` 重生成。
+
+> **可复现约定（2026-10-11，评估整改 P2-8）**：每次自建 box64 必须在此记录上游 commit hash。
+> 0.4.5 当时未记录（提交 `e80db63` 仅记「上游 main 自建」），上表的 hash 是 2026-10-23 从残留
+> 源码树里恢复的；此后每次构建由脚本末尾提示回填。TD-05 的「hash 丢失」部分已关闭。
 
 ## 3. 垫片 libmpshim.so
 
