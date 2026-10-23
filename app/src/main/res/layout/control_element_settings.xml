@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 控件元素设置（Swiss）：类型 / 形状 / 缩放 / 透明度 / 区间 / 绑定 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:scrollbars="none">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp">
+        android:orientation="vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/type" />
-
-        <Spinner
-            style="@style/ComboBox"
-            android:id="@+id/SType"
-            android:layout_width="match_parent" />
+        <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/type" />
+        <Spinner style="@style/SwissSpinner" android:id="@+id/SType" android:layout_width="match_parent" android:layout_marginTop="4dp" />
 
         <LinearLayout
             android:id="@+id/LLShape"
@@ -26,22 +22,11 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/shape" />
-
-            <Spinner
-                style="@style/ComboBox"
-                android:id="@+id/SShape"
-                android:layout_width="match_parent" />
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/shape" />
+            <Spinner style="@style/SwissSpinner" android:id="@+id/SShape" android:layout_width="match_parent" android:layout_marginTop="4dp" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/scale"/>
-
+        <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/scale" />
         <com.winlator.widget.SeekBar
             android:id="@+id/SBScale"
             android:layout_width="match_parent"
@@ -51,11 +36,7 @@
             app:minValue="50"
             app:maxValue="300" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/opacity" />
-
+        <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/opacity" />
         <com.winlator.widget.SeekBar
             android:id="@+id/SBOpacity"
             android:layout_width="match_parent"
@@ -71,45 +52,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/range" />
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/range" />
+            <Spinner style="@style/SwissSpinner" android:id="@+id/SRange" android:layout_width="match_parent" android:layout_marginTop="4dp" />
 
-            <Spinner
-                style="@style/ComboBox"
-                android:id="@+id/SRange"
-                android:layout_width="match_parent" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/orientation" />
-
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/orientation" />
             <RadioGroup
                 android:id="@+id/RGOrientation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <RadioButton
-                    android:id="@+id/RBHorizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/horizontal" />
-
-                <RadioButton
-                    android:id="@+id/RBVertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/vertical" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <RadioButton android:id="@+id/RBHorizontal" style="@style/SwissRadio" android:text="@string/horizontal" />
+                <RadioButton android:id="@+id/RBVertical" style="@style/SwissRadio" android:text="@string/vertical" />
             </RadioGroup>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/columns" />
-
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/columns" />
             <com.winlator.widget.NumberPicker
                 android:id="@+id/NPColumns"
                 android:layout_width="match_parent"
@@ -124,15 +81,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/note" />
-
-            <Spinner
-                style="@style/ComboBox"
-                android:id="@+id/SNote"
-                android:layout_width="match_parent" />
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/note" />
+            <Spinner style="@style/SwissSpinner" android:id="@+id/SNote" android:layout_width="match_parent" android:layout_marginTop="4dp" />
         </LinearLayout>
 
         <LinearLayout
@@ -141,11 +91,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/bindings" />
-
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/bindings" />
             <com.winlator.widget.NumberPicker
                 android:id="@+id/NPBindings"
                 android:layout_width="match_parent"
@@ -162,14 +108,16 @@
 
         <CheckBox
             android:id="@+id/CBToggleSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/SwissCheck"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
             android:text="@string/toggle_switch" />
 
         <CheckBox
             android:id="@+id/CBMouseMoveMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/SwissCheck"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
             android:text="@string/move_mouse_when_pressed" />
 
         <LinearLayout
@@ -178,28 +126,22 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/custom_text" />
-
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/custom_text" />
             <EditText
-                style="@style/EditText"
+                style="@style/SwissEdit"
                 android:id="@+id/ETCustomText"
                 android:maxLength="8"
                 android:layout_width="match_parent"
                 android:hint="@string/none"
                 android:inputType="textCapCharacters" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/icon" />
+            <TextView style="@style/SwissRowMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/icon" />
 
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp">
+                android:layout_marginTop="4dp"
+                android:scrollbars="none">
 
                 <LinearLayout
                     android:id="@+id/LLIconList"

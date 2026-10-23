@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 控件编辑器：悬浮工具条改 Swiss 方框（纸面 + 1dp 黑线 + 黑色图标） -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/FLContainer"
@@ -12,53 +13,56 @@
         android:orientation="horizontal"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
-        android:background="@drawable/input_controls_toolbar"
+        android:background="@drawable/swiss_toolbar_bg"
         android:gravity="center_vertical"
-        android:padding="4dp">
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
         <ImageButton
             android:id="@+id/BTMove"
-            style="@style/ToolButton"
-            android:src="@drawable/icon_move"  />
+            style="@style/SwissToolButton"
+            android:src="@drawable/icon_move" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp">
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:textColor="#ffffff"
+                style="@style/SwissLabel"
                 android:text="@string/profile" />
 
             <TextView
                 android:id="@+id/TVProfileName"
                 android:layout_width="wrap_content"
-                android:textColor="?attr/colorAccent"
-                android:textSize="14sp"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="@color/swiss_ink"
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <View style="@style/VerticalLine" />
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/swiss_ink" />
 
         <ImageButton
             android:id="@+id/BTAddElement"
-            style="@style/ToolButton"
-            android:src="@drawable/icon_add"  />
+            style="@style/SwissToolButton"
+            android:src="@drawable/icon_add" />
 
         <ImageButton
             android:id="@+id/BTRemoveElement"
-            style="@style/ToolButton"
-            android:src="@drawable/icon_remove"  />
+            style="@style/SwissToolButton"
+            android:src="@drawable/icon_remove" />
 
         <ImageButton
             android:id="@+id/BTElementSettings"
-            style="@style/ToolButton"
-            android:src="@drawable/icon_settings"  />
+            style="@style/SwissToolButton"
+            android:src="@drawable/icon_settings" />
     </LinearLayout>
 </FrameLayout>

@@ -85,7 +85,8 @@ public class GalgameSettingsActivity extends AppCompatActivity {
         capture.setOnCheckedChangeListener((b, checked) ->
                 prefs.edit().putBoolean("capture_pointer_on_external_mouse", checked).apply());
 
-        findViewById(R.id.rowInputControls).setOnClickListener(v -> openAdvanced());
+        findViewById(R.id.rowInputControls).setOnClickListener(v ->
+                startActivity(new Intent(this, GalgameInputControlsActivity.class)));
         findViewById(R.id.rowController).setOnClickListener(v ->
                 startActivity(new Intent(this, ExternalControllerBindingsActivity.class)));
         findViewById(R.id.rowShortcuts).setOnClickListener(v -> openAdvanced());

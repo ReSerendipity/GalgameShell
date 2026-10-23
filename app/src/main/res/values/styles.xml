@@ -165,6 +165,7 @@
         <item name="galgameChipText">@color/swiss_ink</item>
         <item name="galgameBrandStart">@color/swiss_ink</item>
         <item name="galgameBrandEnd">@color/swiss_ink</item>
+        <item name="toolboxBackground">@drawable/swiss_toolbox_bg</item>
         <item name="alertDialogTheme">@style/SwissAlertDialog</item>
         <item name="android:alertDialogTheme">@style/SwissFrameworkAlertDialog</item>
         <item name="android:colorBackground">@color/swiss_paper</item>

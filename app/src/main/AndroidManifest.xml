@@ -77,7 +77,13 @@
             android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
 
         <activity android:name="com.winlator.GalgameSettingsActivity"
-            android:theme="@style/GalgameMainTheme"
+            android:theme="@style/GalgameSwissTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
+
+        <activity android:name="com.winlator.GalgameInputControlsActivity"
+            android:theme="@style/GalgameSwissTheme"
             android:exported="false"
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
