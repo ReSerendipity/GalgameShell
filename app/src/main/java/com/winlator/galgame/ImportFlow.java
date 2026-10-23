@@ -281,6 +281,24 @@ public final class ImportFlow {
         }
     }
 
+    /** 工具/安装程序类 exe 词根：命中后基本不可能是游戏主程序。 */
+    private static final String[] TOOL_EXE_MARKERS = {
+            "unins", "uninstall", "setup", "installer", "config", "hookfont",
+            "bhvc", "crashhandler", "vcredist", "dxsetup", "dxwebsetup", "oalinst",
+            "dotnet", "update", "patch", "crack", "savedata",
+            "ファイル破損", "エンジン設定", "アンインストール", "セットアップ", "削除"
+    };
+
+    /** 汉化/区服后缀：同目录同时存在原版与汉化版时优先原版。 */
+    private static final String[] LOCALE_SUFFIXES = {"_cn", "_chs", "_cht", "_tw", "_jp", "_zh"};
+
+    /**
+     * 选启动 exe：优先引擎固定名，其次与游戏目录同名，排除工具程序（BHVC / nnnConfig /
+     * HookFont / 卸载器…），控制台子系统降权，同分取体积大者。
+     *
+     * <p>此前只取「固定名，否则目录里第一个 .exe」，目录按字母序时会把 BHVC.exe、
+     * nnnConfig2.exe、HookFont.exe 当成游戏启动，表现为黑屏/卡启动/立刻退出。
+     */
     private static File findExecutable(File dir, EngineDetector.Engine engine) {
         if (dir == null || !dir.isDirectory()) return null;
         String preferred = null;
@@ -296,11 +314,68 @@ public final class ImportFlow {
         }
         File[] files = dir.listFiles();
         if (files == null) return null;
-        if (preferred != null) {
-            for (File f : files) if (preferred.equalsIgnoreCase(f.getName())) return f;
+
+        File best = null;
+        int bestScore = Integer.MIN_VALUE;
+        String dirKey = normalizeName(dir.getName());
+        for (File f : files) {
+            if (!f.isFile()) continue;
+            String name = f.getName();
+            if (!name.toLowerCase().endsWith(".exe")) continue;
+            String stem = name.substring(0, name.length() - 4);
+            String lowerStem = stem.toLowerCase();
+            String key = normalizeName(stem);
+
+            int score = 0;
+            if (preferred != null && preferred.equalsIgnoreCase(name)) score += 10000;
+            if (!dirKey.isEmpty() && !key.isEmpty()) {
+                if (key.equals(dirKey)) score += 4000;
+                else if (dirKey.contains(key)) score += 1500;
+            }
+            boolean tool = false;
+            for (String marker : TOOL_EXE_MARKERS) {
+                if (lowerStem.contains(marker)) { tool = true; break; }
+            }
+            if (tool) score -= 100000;
+            if (isConsoleSubsystem(f)) score -= 2000;
+            for (String suffix : LOCALE_SUFFIXES) {
+                if (lowerStem.endsWith(suffix)) { score -= 500; break; }
+            }
+            score += (int)Math.min(f.length() / (1024 * 1024), 100);
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = f;
+            }
         }
-        for (File f : files) if (f.getName().toLowerCase().endsWith(".exe")) return f;
-        return null;
+        return best;
+    }
+
+    private static String normalizeName(String s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = Character.toLowerCase(s.charAt(i));
+            if (Character.isLetterOrDigit(c)) sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    /** PE 可选头 Subsystem == 3（CUI），用于把命令行工具降权；解析失败按 GUI 处理。 */
+    private static boolean isConsoleSubsystem(File f) {
+        try (java.io.RandomAccessFile raf = new java.io.RandomAccessFile(f, "r")) {
+            if (raf.length() < 0x40) return false;
+            raf.seek(0x3C);
+            int peOffset = Integer.reverseBytes(raf.readInt());
+            if (peOffset <= 0 || peOffset + 0x5E > raf.length()) return false;
+            raf.seek(peOffset);
+            if (raf.read() != 'P' || raf.read() != 'E') return false;
+            raf.seek(peOffset + 0x5C);
+            return raf.readUnsignedShort() == 3;
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     private static void writeOverlay(File root, ImportResult result, File gameDir) {

@@ -71,11 +71,18 @@ public abstract class ProcessHelper {
         int pid = -1;
         try {
             ProcessBuilder processBuilder = (new ProcessBuilder(splitCommand(command))).directory(workingDir);
+            // GalgameShell: keep the last run's output on disk instead of /dev/null so
+            // launch failures are diagnosable; overwritten on every exec. 开启 Wine 调试
+            // （DebugDialog 回调）时也必须落盘，否则诊断向导读不到任何输出。
+            File logFile = new File("/data/data/com.winlator/files/wine_exec.log");
             if (debugCallbacks.isEmpty()) {
-                // GalgameShell: keep the last run's output on disk instead of /dev/null so
-                // launch failures are diagnosable; overwritten on every exec.
-                File logFile = new File("/data/data/com.winlator/files/wine_exec.log");
                 processBuilder.redirectOutput(logFile).redirectErrorStream(true);
+            }
+            else {
+                try {
+                    java.nio.file.Files.write(logFile.toPath(), new byte[0]);
+                }
+                catch (Exception ignored) {}
             }
 
             Map<String, String> environment = processBuilder.environment();
@@ -88,8 +95,8 @@ public abstract class ProcessHelper {
             pidField.setAccessible(false);
 
             if (!debugCallbacks.isEmpty()) {
-                createDebugThread(process.getInputStream());
-                createDebugThread(process.getErrorStream());
+                createDebugThread(process.getInputStream(), logFile);
+                createDebugThread(process.getErrorStream(), logFile);
             }
 
             if (terminationCallback != null) createWaitForThread(process, terminationCallback);
@@ -98,11 +105,24 @@ public abstract class ProcessHelper {
         return pid;
     }
 
-    private static void createDebugThread(final InputStream inputStream) {
+    private static void createDebugThread(final InputStream inputStream, final File logFile) {
         Executors.newSingleThreadExecutor().execute(() -> {
+            java.io.FileWriter writer = null;
+            try {
+                if (logFile != null) writer = new java.io.FileWriter(logFile, true);
+            }
+            catch (IOException ignored) {}
+            final java.io.FileWriter logWriter = writer;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    if (logWriter != null) {
+                        // stdout/stderr 两个线程共写一个文件，按行加锁避免交错
+                        synchronized (ProcessHelper.class) {
+                            logWriter.write(line + "\n");
+                            logWriter.flush();
+                        }
+                    }
                     synchronized (debugCallbacks) {
                         if (!debugCallbacks.isEmpty()) {
                             for (Callback<String> callback : debugCallbacks) callback.call(line);
@@ -112,6 +132,11 @@ public abstract class ProcessHelper {
                 }
             }
             catch (IOException e) {}
+            finally {
+                if (logWriter != null) {
+                    try { logWriter.close(); } catch (IOException ignored) {}
+                }
+            }
         });
     }
 

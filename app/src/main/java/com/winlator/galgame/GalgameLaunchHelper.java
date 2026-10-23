@@ -33,7 +33,32 @@ public final class GalgameLaunchHelper {
      */
     public static void injectExecPath(Container container, Intent intent) {
         String exe = readOverlayExe(container);
-        if (exe != null) intent.putExtra("exec_path", exe);
+        if (exe != null) {
+            intent.putExtra("exec_path", exe);
+            // 日文 exe 名直接作为宿主路径交给 wine 会打不开（loader 按 ANSI 打开宿主路径），
+            // 另带一份 C:\ 路径供启动命令使用；宿主路径仍用于工作目录。
+            String winePath = toWindowsPath(container, exe);
+            if (winePath != null) intent.putExtra(EXTRA_EXEC_PATH_WINE, escapeSpaces(winePath));
+        }
+    }
+
+    public static final String EXTRA_EXEC_PATH_WINE = "exec_path_wine";
+
+    /** 容器内 drive_c 下的宿主路径转 Windows 路径；不在 drive_c 下返回 null。 */
+    static String toWindowsPath(Container container, String hostPath) {
+        try {
+            String prefix = new File(container.getRootDir(), ".wine/drive_c").getAbsolutePath();
+            if (hostPath.startsWith(prefix + "/")) {
+                return "C:\\" + hostPath.substring(prefix.length() + 1).replace('/', '\\');
+            }
+        }
+        catch (Exception ignored) {}
+        return null;
+    }
+
+    /** splitCommand 用反斜杠转义空格，且会把引号原样保留，故只转义不引号。 */
+    private static String escapeSpaces(String s) {
+        return s.replace(" ", "\\ ");
     }
 
     /** 读取容器根目录 galgame_overlay.json 的 exe 字段（unix 绝对路径），无则返回 null。 */
