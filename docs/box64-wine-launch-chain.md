@@ -165,6 +165,10 @@ adb shell run-as com.winlator sh files/galgame-fix-prefix.sh \
 
 ## 7. DirectShow 视频链：已证到 Wine 能力边界，止损（2026-10-23）
 
+> **先读 §7.1**：本节把黑屏归因于"MPEG-2 被拒"，同日追加的普查与反证已推翻该因果归属
+> （全库 0 个 MPEG-2；一条零报错的 MPEG-1 链路同样全黑）。本节对 ①② 的排除仍有效，
+> 对"黑屏原因"的结论以 §7.1 为准。
+
 **结论：分支 ③ —— 滤镜已加载、已实例化，但 Wine 内建 quartz 的 MPEG-I splitter 不接
 MPEG-2 子类型，Intelligent Connect 建图即拆、拆完重试。越过它要改 Wine 源码，而 rootfs
 是上游预编译产物，不在本 fork 可改范围内。此线到此为止，不再试参数。**
@@ -208,3 +212,46 @@ MPEG-2 软解码能力不缺。缺的是 Wine 侧把流交给它的通路：内�
 - 非 MPEG-2 编码的片头（如纯 WMV/AVI）能否经 winegstreamer 出帧——若某引擎用 MPEG-1
   或 GStreamer 直连路径，可能已经能用，这是唯一还没探的方向
 - 分支 ③ 之下的 `+strmbase` 级 trace（用于确认 Intelligent Connect 的候选枚举顺序）
+
+### 7.1 普查与反证：§7 的因果归属不成立（2026-10-23 同日追加）
+
+**普查**（静态，按实际编码不按扩展名）：14 个源目录 + `/sdcard/Games`，86 个候选文件，
+取每个文件头 64B 判 magic，`.mpg` 另取 512KB 扫 MPEG 起始码并用 ffprobe 9.0.1 定名。
+
+| 实际编码 | 数 | 归类 |
+|---|---|---|
+| ASF / WMV（magic `30 26 B2 75 8E 66 CF 11`） | 69 | (a) 内建 quartz 可试 |
+| MPEG-1（ffprobe `mpeg1video` + `mp2`；有 `00 00 01 B3`，**无** `B5`/`BC`） | 5 | (a) |
+| 非视频（`unins000.dat`、`yscfg.dat`、`Gameexe.dat`、984B 的 `scene.dat` 等） | 12 | 排除 |
+| **MPEG-2** | **0** | (b) 空集 |
+| Bink / CRIWARE | 0 | (c) 空集 |
+
+全库没有 MPEG-2 片头。SystemNNN 的 OP 是 `movie/sainogami_op.wmv`（179,983,768B，ASF），
+AdvHD 全部 `.dat` 实为 ASF，YU-RIS 的 `.mpg` 是 MPEG-1。
+
+**反证实验**（一局，条件 = gstfix box64 + `quartz=builtin` + 通道 `quartz,ole,module`，
+容器 xuser-10 / yuris_lufia，媒体属 (a) 中"内建 splitter 明确接受"的那一族）：
+
+- `[BOX64]` 报错 **0 条**（#4528 生效）
+- `wg_parser_create` 3 次（winegstreamer 滤镜被实例化）
+- **`fixme:quartz` / `err:quartz` / `err:ole` 全为零** —— DirectShow 层没有任何失败
+- `MEDIASUBTYPE_MPEG1System` / `MPEG1Payload` / `MPEG1AudioPayload` 正常枚举
+- `quartz:VideoWindow_put_WindowStyle` + `BaseControlWindowImpl_put_Owner window … owner 0x20036`
+  → 视频渲染窗口已创建并挂上父窗口
+- `ddraw` / `wined3d` 相关行 175 条 → 引擎确实进了渲染路径
+- **画面：全黑**
+
+**因此 §7 正文那条"卡在 MPEG-2 被拒"的因果归属作废**：那些
+`mpeg_splitter_sink_query_accept Unsupported subtype {e436eb85}/{e436eb86}` 是
+Intelligent Connect 枚举候选滤镜时的正常探测噪声，不是阻塞点。一条零报错的
+MPEG-1 链路同样全黑，说明真因在渲染面/窗口面，不在视频解码链。
+①②的排除仍然成立（winegstreamer 确实加载、滤镜确实注册），错的只是我把
+"分支 ③"当成了"黑屏的原因"。
+
+**收益判定**：gstfix 修的是一个真实缺陷（GStreamer 桥加载失败），但用户可见收益 = 0。
+按约定**不设为构建默认**；工作区 `libbox64.so` 已用 `tools/prepare_box64_lib.sh`（无参数）
+退回 0.4.5，§2b 记录的"构建默认与工作区不一致"状态已消除。gstfix 产物留在仓内作可复现资产。
+
+本线终止，登记为 TD-09（不计划偿还）。
+
+> 边界提醒：Ren'Py 的 `.ogv` / `.webm` 走内嵌原生引擎，不经 Wine，不在本普查范围内。
