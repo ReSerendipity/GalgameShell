@@ -133,7 +133,8 @@ public final class EngineDetector {
             String name = f.getName();
             String lowerName = name.toLowerCase();
             // 闭源 Windows 引擎指纹：仅用于 A 路由预设选择与展示名，不改变运行方式
-            if (lowerName.equals("unityplayer.dll")) return Engine.UNITY;
+            if (lowerName.equals("unityplayer.dll") || lowerName.equals("vk_swiftshader.dll")) return Engine.UNITY;
+            if (lowerName.endsWith(".ypf")) return Engine.YURIS;
             if (lowerName.endsWith(".exe") && lowerName.contains("advhd")) return Engine.ADVHD;
             if (lowerName.startsWith("nnnconfig") || lowerName.equals("systemnnn.exe")) return Engine.SYSTEMNNN;
             if (lowerName.equals("bgi.exe") || lowerName.equals("bgi_tsk.exe") || lowerName.equals("bhvc.exe")) return Engine.BGI;
@@ -173,6 +174,27 @@ public final class EngineDetector {
         for (File f : files) {
             if (f.isDirectory() && f.getName().toLowerCase().endsWith("_data")
                     && new File(f, "globalgamemanagers").isFile()) return Engine.UNITY;
+        }
+
+        // 2b) 浅层下钻（仅一层）：真实发布包常把 exe/资源收在单层子目录，
+        // 导入时不做深扫会一律判 UNKNOWN，导致预设与展示名失准。
+        for (File d : files) {
+            if (!d.isDirectory()) continue;
+            File[] sub = d.listFiles();
+            if (sub == null) continue;
+            for (File f : sub) {
+                if (!f.isFile()) continue;
+                String n = f.getName().toLowerCase();
+                if (n.endsWith(".xp3") && startsWith(f, XP3_MAGIC)) return Engine.KIRIKIRI;
+                if (n.endsWith(".rpa") && (startsWith(f, RPA_MAGIC) || startsWith(f, ARC_MAGIC))) return Engine.RENPY;
+                if (n.endsWith(".ypf")) return Engine.YURIS;
+                if (n.equals("unityplayer.dll") || n.equals("vk_swiftshader.dll")) return Engine.UNITY;
+                if (n.equals("siglusengine.exe")) return Engine.SIGLUS;
+                if (n.endsWith(".exe") && n.contains("advhd")) return Engine.ADVHD;
+                if (n.equals("bgi.exe") || n.equals("bgi_tsk.exe") || n.equals("bhvc.exe")) return Engine.BGI;
+                if (n.startsWith("nnnconfig") || n.equals("systemnnn.exe")) return Engine.SYSTEMNNN;
+                if (n.equals("cmvs.exe") || n.equals("cmvs32.exe") || n.equals("cmvs64.exe")) return Engine.CMVS;
+            }
         }
 
         // 3) A 路由可执行名（RK-11：启发式，待样本校准）
