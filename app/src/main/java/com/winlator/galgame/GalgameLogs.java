@@ -71,11 +71,24 @@ public final class GalgameLogs {
             File root = container.getRootDir();
             String[] names = {
                     "logs.txt", "stderr.txt", "stdout.txt", "game_log.txt",
-                    "box64.log", "dxvk.log", "d3d9.log", "wine.log"
+                    "box64.log", "dxvk.log", "d3d9.log", "wine.log", "wine_exec.log"
             };
             for (String n : names) {
                 File f = new File(root, n);
                 if (f.isFile()) out.add(f);
+            }
+            // ProcessHelper 的 wine 输出固定落在应用私有目录（见 core/ProcessHelper）。
+            File appWineLog = new File("/data/data/com.winlator/files/wine_exec.log");
+            if (appWineLog.isFile()) out.add(appWineLog);
+            // fork 的 ProcessHelper 把 wine 输出落在游戏工作目录（workingDirOverride）下。
+            File galgameRoot = new File(root, ".wine/drive_c/galgame");
+            File[] gameDirs = galgameRoot.listFiles();
+            if (gameDirs != null) {
+                for (File gd : gameDirs) {
+                    if (!gd.isDirectory()) continue;
+                    File w = new File(gd, "wine_exec.log");
+                    if (w.isFile()) out.add(w);
+                }
             }
             File driveC = new File(root, ".wine/drive_c");
             File[] files = driveC.listFiles();

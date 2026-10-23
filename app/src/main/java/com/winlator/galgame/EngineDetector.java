@@ -169,6 +169,37 @@ public final class EngineDetector {
     }
 
     /**
+     * 启动期重检测：先按常规浅扫，未命中再有限深度下钻。
+     *
+     * <p>导入登记可能因「xp3 在子目录」而误判为 UNKNOWN；启动时深层扫描把它救回原生路线。
+     * 仅用于 {@link GameLauncher} 的升级判定，导入本身仍用 {@link #detect(File)}，
+     * 以免提前改写登记值、失去升级日志与 override 语义。
+     */
+    public static Engine detectDeep(File gameDir) {
+        return detectDeep(gameDir, 0, new int[]{4000});
+    }
+
+    private static Engine detectDeep(File dir, int depth, int[] budget) {
+        if (dir == null || !dir.isDirectory()) return Engine.UNKNOWN;
+        Engine hit = detect(dir);
+        if (hit != Engine.UNKNOWN) return hit;
+        if (depth >= 3) return Engine.UNKNOWN;
+        File[] files = dir.listFiles();
+        if (files == null) return Engine.UNKNOWN;
+        for (File f : files) {
+            if (budget[0]-- <= 0) return Engine.UNKNOWN;
+            if (!f.isDirectory()) continue;
+            String n = f.getName();
+            if (n.startsWith(".")) continue;
+            if (n.equalsIgnoreCase("savedata") || n.equalsIgnoreCase("save")
+                    || n.equalsIgnoreCase("plugin")) continue;
+            Engine sub = detectDeep(f, depth + 1, budget);
+            if (sub != Engine.UNKNOWN) return sub;
+        }
+        return Engine.UNKNOWN;
+    }
+
+    /**
      * 加密特征检测（A5：仅检测 + 提示，不破解）。
      * @return 命中的标记描述（空列表 = 未检测到）
      */

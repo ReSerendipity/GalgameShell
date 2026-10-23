@@ -44,6 +44,11 @@ android {
         release {
             minifyEnabled false
             signingConfig signingConfigs.debug
+            // 本仓发布基线为 arm64-v8a（README 系统要求）；不锁定时会尝试 armeabi-v7a，
+            // 而 libadrenotools 不支持该 ABI，release 构建会直接失败。
+            ndk {
+                abiFilters 'arm64-v8a'
+            }
         }
     }
 
@@ -77,7 +82,8 @@ dependencies {
     implementation libs.androidx.appcompat
     implementation libs.androidx.preference
     implementation libs.material
-    implementation libs.zstd.jni
+    // 版本目录不支持 artifactType；zstd-jni 的 AAR 才带 Android JNI 库，必须显式选 AAR。
+    implementation(libs.zstd.jni) { artifact { type = "aar" } }
     implementation libs.xz
     implementation libs.commons.compress
     implementation libs.androidx.lifecycle.process

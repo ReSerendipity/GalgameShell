@@ -2,6 +2,7 @@ package com.winlator.xenvironment.components;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.os.Process;
 
 import androidx.preference.PreferenceManager;
@@ -116,7 +117,15 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
         File shmDir = new File(rootDir, "/tmp/shm");
         if (!shmDir.isDirectory()) shmDir.mkdirs();
 
-        String command = rootDir+"/usr/local/bin/box64 "+guestExecutable;
+        // targetSdk>=29 的 W^X 禁止从 app 数据目录 exec；box64 以 libbox64.so 随 APK 放到
+        // nativeLibraryDir（可执行），优先用它，rootfs 里的副本仅作旧系统回退。
+        String box64Path = rootDir+"/usr/local/bin/box64";
+        ApplicationInfo ai = environment.getContext().getApplicationInfo();
+        if (ai != null && ai.nativeLibraryDir != null) {
+            File nativeBox64 = new File(ai.nativeLibraryDir, "libbox64.so");
+            if (nativeBox64.isFile()) box64Path = nativeBox64.getAbsolutePath();
+        }
+        String command = box64Path+" "+guestExecutable;
 
         return ProcessHelper.exec(command, envVars, workingDirOverride != null ? workingDirOverride : rootDir, (status) -> {
             synchronized (lock) {

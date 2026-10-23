@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss：1dp 发丝行（底边线） -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/swiss_paper" />
+        </shape>
+    </item>
+    <item android:gravity="bottom" android:height="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/swiss_hairline" />
+        </shape>
+    </item>
+</layer-list>

@@ -185,12 +185,16 @@ public final class GameLauncher {
                                                 EngineDetector.Engine override, Context context) {
         if (override != null) return override;
 
+        boolean declaredIsNative = isNative(declared);
         EngineDetector.Engine detected = null;
         if (gamePath != null && gamePath.isDirectory()) {
-            detected = EngineDetector.detect(gamePath);
+            // 登记为原生引擎时只做浅扫；登记非原生（UNKNOWN/外部播放器）才允许有限下钻，
+            // 把「xp3 在子目录」的误判救回原生路线（§8 重检测升级）。
+            detected = declaredIsNative
+                    ? EngineDetector.detect(gamePath)
+                    : EngineDetector.detectDeep(gamePath);
         }
 
-        boolean declaredIsNative = isNative(declared);
         if (detected != null && detected != EngineDetector.Engine.UNKNOWN
                 && isNative(detected) && !declaredIsNative
                 && GameEngineRegistry.isRunnable(context, detected)) {

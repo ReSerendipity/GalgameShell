@@ -79,4 +79,104 @@
         <item name="android:background">?attr/colorSecondarySurface</item>
         <item name="android:elevation">@dimen/gal_space_1</item>
     </style>
+
+    <!-- ===== Swiss grid (04) 组件样式：黑白纸面、1dp 黑线、零圆角、单点红 ===== -->
+    <style name="SwissLabel">
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.18</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+    </style>
+
+    <style name="SwissMeta">
+        <item name="android:textSize">9sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/swiss_muted</item>
+    </style>
+
+    <style name="SwissTitle">
+        <item name="android:textSize">26sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+    </style>
+
+    <style name="SwissSubtitle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+    </style>
+
+    <style name="SwissRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:background">@drawable/swiss_row_line</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="SwissRowTitle">
+        <item name="android:textSize">13.5sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="SwissRowMeta">
+        <item name="android:textSize">9sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/swiss_muted</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="SwissButtonSolid">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/swiss_button_solid</item>
+        <item name="android:textColor">@color/swiss_paper</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.18</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <style name="SwissButtonOutline" parent="SwissButtonSolid">
+        <item name="android:background">@drawable/swiss_button_outline</item>
+        <item name="android:textColor">@color/swiss_ink</item>
+    </style>
+
+    <style name="SwissTag">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/swiss_tag_line</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:paddingTop">2dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/swiss_muted</item>
+    </style>
 </resources>
+

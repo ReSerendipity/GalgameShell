@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 游戏详情（竖屏） -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/swiss_paper">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="4dp">
+
+            <TextView
+                android:id="@+id/BTBack"
+                style="@style/SwissLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="center_vertical"
+                android:paddingEnd="12dp"
+                android:text="←  返回" />
+
+            <TextView
+                android:id="@+id/TVMetaTop"
+                style="@style/SwissMeta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp">
+
+                    <ImageView
+                        android:id="@+id/IVCover"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="@string/galgame_library_title"
+                        android:src="@drawable/galgame_placeholder" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_gravity="bottom"
+                        android:background="@color/swiss_ink" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="14dp">
+
+                    <TextView
+                        android:id="@+id/TVEyebrow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAllCaps="true"
+                        android:textSize="9sp"
+                        android:letterSpacing="0.18"
+                        android:textColor="@color/swiss_red" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="bottom">
+
+                        <TextView
+                            android:id="@+id/TVTitle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="-0.03"
+                            android:textColor="@color/swiss_ink" />
+
+                        <TextView
+                            android:id="@+id/TVPlayed"
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="4dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/TVMeta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textAllCaps="true"
+                        android:textSize="9sp"
+                        android:letterSpacing="0.14"
+                        android:textColor="@color/swiss_muted" />
+
+                    <Button
+                        android:id="@+id/BTLaunch"
+                        style="@style/SwissButtonSolid"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/galgame_action_launch" />
+                </LinearLayout>
+
+                <!-- 维护 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/swiss_row_line"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="5dp">
+
+                    <TextView
+                        style="@style/SwissLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/galgame_section_maintain" />
+
+                    <TextView
+                        style="@style/SwissMeta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/galgame_section_maintain_en" />
+                </LinearLayout>
+
+                <include layout="@layout/swiss_detail_rows" />
+
+                <!-- 高级 -->
+                <LinearLayout
+                    android:id="@+id/BTAdvanced"
+                    style="@style/SwissRow"
+                    android:layout_marginTop="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/TVAdvancedTitle"
+                            style="@style/SwissRowTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/galgame_advanced_expand" />
+
+                        <TextView
+                            style="@style/SwissRowMeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/galgame_advanced_meta" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/TVAdvancedAction"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="@color/swiss_ink"
+                        android:text="+" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/LLAdvanced"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/BTRoute"
+                        style="@style/SwissRow">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                style="@style/SwissRowTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/galgame_route_title" />
+                            <TextView
+                                android:id="@+id/TVRouteValue"
+                                style="@style/SwissRowMeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="切换  ›" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/SwissRow">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                style="@style/SwissRowTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/galgame_env_title" />
+                            <TextView
+                                style="@style/SwissRowMeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/galgame_env_meta" />
+                        </LinearLayout>
+                        <TextView
+                            android:id="@+id/TVEnvValue"
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/BTReinject"
+                        style="@style/SwissRow">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                style="@style/SwissRowTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/galgame_reinject" />
+                            <TextView
+                                style="@style/SwissRowMeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/galgame_reinject_meta" />
+                        </LinearLayout>
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="›" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="24dp" />
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+</FrameLayout>

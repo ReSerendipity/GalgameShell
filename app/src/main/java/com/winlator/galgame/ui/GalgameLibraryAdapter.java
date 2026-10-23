@@ -167,6 +167,8 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         ImageView iv = view.findViewById(R.id.IVCover);
         tv.setText(item.label);
         sub.setText(item.sub);
+        TextView index = view.findViewById(R.id.TVIndex);
+        if (index != null) index.setText(String.format(java.util.Locale.US, "%02d", position + 1));
 
         // 交互必须挂在 item view 自身：卡片根为 clickable（涟漪需要），
         // 会吞掉触摸事件，GridView 的 onItemClick/onItemLongClick 不会触发。

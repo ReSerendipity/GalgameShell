@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 高级设置宿主：原完整设置（Wine / Box64 / 语言 / 运行环境） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/swiss_paper">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="6dp">
+
+        <TextView
+            android:id="@+id/BTBack"
+            style="@style/SwissLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:paddingEnd="12dp"
+            android:text="←  返回" />
+
+        <TextView
+            style="@style/SwissMeta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="ADVANCED" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/SwissTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="6dp"
+        android:text="高级设置" />
+
+    <!-- 原设置 Fragment 会调用 getSupportActionBar().setTitle()，宿主需提供一个 ActionBar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/advancedToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:visibility="invisible" />
+
+    <FrameLayout
+        android:id="@+id/advancedContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

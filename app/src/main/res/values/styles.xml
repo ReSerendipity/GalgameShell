@@ -120,7 +120,10 @@
              这里用具体 drawable 覆盖：冷启动即显示品牌字形（窗口 + 酒杯），不再是一块空白/黑屏 -->
         <item name="android:windowBackground">@drawable/galgame_splash</item>
         <item name="android:colorBackground">#FFF7F8FC</item>
-        <item name="android:statusBarColor">#FF4B3DBF</item>
+        <item name="android:statusBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <!-- GalgameShell R1 语义 token（亮档） -->
         <item name="colorSurfaceVariant">#FFF2F4FA</item>
         <item name="colorHairline">#FFEAEAF2</item>
@@ -142,6 +145,41 @@
     </style>
 
     <!-- GalgameShell 外壳深色主题：紫黑品牌色（设置里选「深色」时使用） -->
+    <!-- Swiss（04）：高级设置宿主的黑白主题；保留原布局结构，仅替换语义 token -->
+    <style name="GalgameSwissTheme" parent="@style/GalgameMainTheme">
+        <item name="colorPrimary">@color/swiss_ink</item>
+        <item name="colorPrimaryDark">@color/swiss_ink</item>
+        <item name="colorAccent">@color/swiss_ink</item>
+        <item name="colorPrimaryVariant">@color/swiss_ink</item>
+        <item name="colorPrimaryText">@color/swiss_ink</item>
+        <item name="colorSecondaryText">@color/swiss_muted</item>
+        <item name="colorPrimarySurface">@color/swiss_paper</item>
+        <item name="colorSecondarySurface">@color/swiss_paper</item>
+        <item name="colorSurfaceVariant">#FFF2F2F2</item>
+        <item name="colorSecondaryVariant">@color/swiss_hairline</item>
+        <item name="colorHairline">@color/swiss_hairline</item>
+        <item name="colorControlNormal">@color/swiss_ink</item>
+        <item name="colorOnAccent">@color/swiss_paper</item>
+        <item name="colorOnAccentSubtle">#B3FFFFFF</item>
+        <item name="galgameChipBackground">#FFF2F2F2</item>
+        <item name="galgameChipText">@color/swiss_ink</item>
+        <item name="android:colorBackground">@color/swiss_paper</item>
+        <item name="android:windowBackground">@color/swiss_paper</item>
+        <item name="android:statusBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="SwissFieldSet" parent="@style/FieldSet">
+        <item name="android:background">@drawable/swiss_fieldset</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:layout_marginTop">14dp</item>
+    </style>
+
     <style name="GalgameMainThemeDark" parent="@style/AppThemeBase">
         <item name="colorAccent">#FF8B7BF0</item>
         <item name="colorPrimary">#FF32305A</item>
@@ -162,6 +200,9 @@
         <item name="android:windowBackground">@drawable/galgame_splash_dark</item>
         <item name="android:colorBackground">#FF17161F</item>
         <item name="android:statusBarColor">#FF23203F</item>
+        <!-- 深色档状态栏/导航栏用浅色图标，避免继承亮色主题的深色图标 -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <!-- GalgameShell R1 语义 token（深档） -->
         <item name="colorSurfaceVariant">#FF2A2938</item>
         <item name="colorHairline">#FF33324A</item>

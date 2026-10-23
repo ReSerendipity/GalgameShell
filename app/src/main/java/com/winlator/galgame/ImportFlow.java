@@ -1,6 +1,7 @@
 package com.winlator.galgame;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.winlator.container.Container;
 
@@ -55,6 +56,10 @@ public final class ImportFlow {
 
         EngineDetector.Engine engine = EngineDetector.detect(sourceFolder);
         EngineDetector.Route route = engine.route;
+        String[] children = sourceFolder.list();
+        Log.i("GalgameShell: import", "source=" + sourceFolder.getAbsolutePath()
+                + " gameId=" + gameId + " engine=" + engine + " route=" + route
+                + " files=" + (children == null ? 0 : children.length));
         List<String> markers = EngineDetector.encryptionMarkers(sourceFolder);
         boolean encrypted = !markers.isEmpty();   // A5：仅检测，不破解
 

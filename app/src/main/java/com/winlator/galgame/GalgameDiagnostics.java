@@ -186,6 +186,11 @@ public final class GalgameDiagnostics {
         }
 
         File exe = new File(exePath);
+        if (!exe.isFile()) {
+            // 兼容 overlay 里记录为相对名/旧路径的情况：回退到游戏目录下同名文件。
+            String gameDir = overlay != null ? opt(overlay, "game_dir") : "";
+            if (gameDir != null && !gameDir.isEmpty()) exe = new File(gameDir, new File(exePath).getName());
+        }
         int machine = peMachine(exe);
 
         String desc;
@@ -217,11 +222,11 @@ public final class GalgameDiagnostics {
                     | ((dos[0x3E] & 0xFF) << 16) | ((dos[0x3F] & 0xFF) << 24);
             if (peOff < 0) return -1;
 
-            long skipped = 0;
-            while (skipped < peOff) {
-                long s = in.skip(peOff - skipped);
+            long toSkip = peOff - 64L;
+            while (toSkip > 0) {
+                long s = in.skip(toSkip);
                 if (s <= 0) break;
-                skipped += s;
+                toSkip -= s;
             }
 
             byte[] pe = new byte[6];

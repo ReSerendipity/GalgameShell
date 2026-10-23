@@ -62,17 +62,24 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings.Secure;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.DisplayCutout;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 public class KR2Activity extends Cocos2dxActivity {
 
@@ -151,6 +158,87 @@ public class KR2Activity extends Cocos2dxActivity {
         } catch (Throwable e) {
             Log.w("KR2Activity", "initDump failed", e);
         }
+        addRecentLaunchButton();
+    }
+
+    /**
+     * GalgameShell: 引擎浏览器把 recent 项与 fileList 分栏，皮肤白底白字，▶ 不可见。
+     * 这里加一个可见入口，按 RecentListItem 的 btn_play 布局运行时换算坐标，再用引擎
+     * 自己的 nativeTouchesBegin/End 注入。三点（▶ 中心/左/右）用于标定，点按使用已
+     * 固化的点（默认中心），长按切换标定点，选择写入 SharedPreferences。
+     *
+     * <p>布局换算（源码 .workbuddy/tmp/kr2src）：设计画布宽 960，recentList 高 100 的
+     * 空白头项 + 120 高的 HistoryCell；btn_play 中心在设计坐标 (114.048, 190)，即
+     * 画布顶部下第 100+90 单位。画布不含刘海侧的安全区，故 x 按左右 cutout 内缩换算。
+     */
+    private static final String KR2_PREF = "org.tvp.kirikiri2_preferences";
+    private static final String PREF_RECENT_TAP = "recent_tap_index";
+    private static final float RECENT_CANVAS_W = 960f;
+    private static final float RECENT_PLAY_X = 114.048f; // btn_play 中心 X（设计单位）
+    private static final float RECENT_PLAY_Y = 190f;     // 空白头项 100 + 单元内中心 90
+    private static final float[] RECENT_PLAY_DX = {0f, -18f, 18f}; // 中心 / 左 / 右
+
+    private void addRecentLaunchButton() {
+        Button recent = new Button(this);
+        recent.setText("启动最近游戏");
+        recent.setAlpha(0.82f);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.gravity = Gravity.TOP | Gravity.START;
+        lp.leftMargin = 24;
+        lp.topMargin = 24;
+        ViewGroup content = findViewById(android.R.id.content);
+        if (content != null) content.addView(recent, lp);
+        recent.setOnClickListener(v -> injectRecentTap(false));
+        recent.setOnLongClickListener(v -> {
+            injectRecentTap(true);
+            return true;
+        });
+    }
+
+    private void injectRecentTap(boolean advance) {
+        SharedPreferences prefs = getSharedPreferences(KR2_PREF, MODE_PRIVATE);
+        int idx = prefs.getInt(PREF_RECENT_TAP, 0) % RECENT_PLAY_DX.length;
+        if (advance) {
+            idx = (idx + 1) % RECENT_PLAY_DX.length;
+            prefs.edit().putInt(PREF_RECENT_TAP, idx).apply();
+        }
+
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int canvasW = dm.widthPixels;
+        int glX = 0, glW = 0;
+        Cocos2dxGLSurfaceView gl = getGLSurfaceView();
+        if (gl != null && gl.getWidth() > 0) {
+            int[] loc = new int[2];
+            gl.getLocationOnScreen(loc);
+            glX = loc[0];
+            glW = gl.getWidth();
+            canvasW = glW;
+        }
+        int cutL = 0, cutR = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WindowInsets insets = getWindow().getDecorView().getRootWindowInsets();
+            DisplayCutout cutout = insets == null ? null : insets.getDisplayCutout();
+            if (cutout != null) {
+                cutL = cutout.getSafeInsetLeft();
+                cutR = cutout.getSafeInsetRight();
+            }
+        }
+        if (canvasW <= 0) canvasW = dm.widthPixels - cutL - cutR;
+        float unit = canvasW / RECENT_CANVAS_W;
+        // nativeTouches 用的是 GLSurfaceView 本地坐标（真实触摸走 MotionEvent.getX()），
+        // 不能叠加视图在屏幕上的偏移；glX 仅用于日志定位。
+        int x = Math.round((RECENT_PLAY_X + RECENT_PLAY_DX[idx]) * unit);
+        int y = Math.round(RECENT_PLAY_Y * unit);
+
+        Log.i("GalgameKrkr", "recent-tap idx=" + idx + " x=" + x + " y=" + y
+                + " unit=" + unit + " gl=" + glW + "@" + glX + " cutL=" + cutL + " cutR=" + cutR
+                + " screen=" + dm.widthPixels + "x" + dm.heightPixels
+                + (advance ? " (calibrate)" : ""));
+        nativeTouchesBegin(0, x, y);
+        nativeTouchesEnd(0, x, y);
+        Toast.makeText(this, (advance ? "校准点 " : "启动点 ") + idx + " (" + x + "," + y + ")",
+                Toast.LENGTH_SHORT).show();
     }
 
     @Override

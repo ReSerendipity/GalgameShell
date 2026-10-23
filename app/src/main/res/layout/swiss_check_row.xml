@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/swiss_row_line"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
+
+    <View
+        android:id="@+id/VStatusDot"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_marginEnd="12dp"
+        android:background="@color/swiss_ink" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/TVCheckTitle"
+            style="@style/SwissRowTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/TVCheckMeta"
+            style="@style/SwissRowMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/TVCheckStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.14"
+        android:textAllCaps="true"
+        android:textColor="@color/swiss_muted" />
+</LinearLayout>

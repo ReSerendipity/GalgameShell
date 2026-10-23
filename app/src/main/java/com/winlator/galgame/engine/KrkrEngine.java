@@ -89,11 +89,9 @@ public final class KrkrEngine extends BuiltinEngine {
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(context.getPackageName(), ACTIVITY_CLASS));
         intent.putExtra(EXTRA_GAME_PATH, absPath);
-        // 仅在非 Activity 上下文（Application / Service / 通知点击）下才另起 task；
-        // 从游戏库 Activity 起时留在同一个 task，返回键才能退回游戏库而不是回桌面。
-        if (!(context instanceof android.app.Activity)) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
+        // Cocos2dxActivity.onCreate 的 !isTaskRoot() workaround 会直接 finish 非 task root 的实例；
+        // 从游戏库（已有 Activity 的 task）启动时必须强制独立 task，否则 KR2 秒退。
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
             context.startActivity(intent);
             return true;

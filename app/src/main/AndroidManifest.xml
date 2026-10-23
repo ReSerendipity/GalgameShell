@@ -50,12 +50,43 @@
             android:theme="@style/GalgameMainTheme"
             android:exported="true"
             android:screenOrientation="sensor"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation">
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- Swiss 单首页衍生页面：详情 / 诊断 / 导入向导 / 设置 -->
+        <activity android:name="com.winlator.GalgameDetailActivity"
+            android:theme="@style/GalgameMainTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
+
+        <activity android:name="com.winlator.GalgameDiagnosticsActivity"
+            android:theme="@style/GalgameMainTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
+
+        <activity android:name="com.winlator.GalgameImportActivity"
+            android:theme="@style/GalgameMainTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
+
+        <activity android:name="com.winlator.GalgameSettingsActivity"
+            android:theme="@style/GalgameMainTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
+
+        <activity android:name="com.winlator.GalgameAdvancedSettingsActivity"
+            android:theme="@style/GalgameSwissTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
 
         <activity android:name="com.winlator.XServerDisplayActivity"
             android:exported="false"

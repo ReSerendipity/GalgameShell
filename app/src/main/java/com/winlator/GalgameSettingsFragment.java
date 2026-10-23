@@ -82,7 +82,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>PreloaderDialog 优先经 {@link GalgameHost#getPreloaderDialog()} 取得（宿主可为任意
  *       实现 GalgameHost 的壳），取不到时回退新建。</li>
  *   <li>confirm 移除上游 {@code NavigationView}/{@code FLFragmentContainer} 抽屉跳转
- *       （在底部导航壳中不存在、会 NPE）；改为「主题/语言变更则 {@link AppUtils#restartActivity}
+ *       （在底部导航壳中不存在、会 NPE）；改为「主题/语言变更则 {@link AppUtils#restartApplication}
  *       重启生效，其余设置直接留存当前页」。</li>
  * </ol>
  */
@@ -149,7 +149,7 @@ public class GalgameSettingsFragment extends Fragment {
         loadBox64PresetSpinner(view, sBox64Preset);
 
         final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
-        final int oldAppThemeId = preferences.getInt("app_theme", APP_THEME_DARK) == APP_THEME_DARK ? R.id.RBDark : R.id.RBLight;
+        final int oldAppThemeId = preferences.getInt("app_theme", APP_THEME_LIGHT) == APP_THEME_DARK ? R.id.RBDark : R.id.RBLight;
         rgAppTheme.check(oldAppThemeId);
 
         final CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
@@ -293,7 +293,7 @@ public class GalgameSettingsFragment extends Fragment {
             // 主题/语言变更需重启 Activity 生效，其余设置直接留存当前页。
             if (editor.commit()) {
                 if (restartApp) {
-                    AppUtils.restartActivity(getActivity());
+                    AppUtils.restartApplication(getActivity());
                 }
             }
         });

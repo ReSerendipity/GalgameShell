@@ -451,7 +451,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
             runOnUiThread(() -> setProgress(40, getString(R.string.galgame_import_step_create)));
 
             // A 路由：建每游戏容器 → stage（A3 复制 + B4 S: + P2 日文化）→ P4 存档重定向
-            containerManager.createContainerAsync(result.containerData, (container) -> {
+            createContainerOnMainThread(result.containerData, (container) -> {
                 if (container == null) {
                     runOnUiThread(() -> {
                         dismissProgressDialog();
@@ -491,6 +491,12 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 });
             });
         });
+    }
+
+    /** ContainerManager.createContainerAsync 内部 new Handler() 需要当前线程有 Looper；导入跑在后台线程，须切主线程。 */
+    private void createContainerOnMainThread(org.json.JSONObject data,
+                                             com.winlator.core.Callback<Container> callback) {
+        runOnUiThread(() -> containerManager.createContainerAsync(data, callback));
     }
 
     // ---- 导入进度对话框（确定进度条 + 百分比 + 平滑推进）----

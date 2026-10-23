@@ -1,71 +1,66 @@
 package com.winlator;
 
-import android.animation.ValueAnimator;
-import android.app.AlertDialog;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ProgressBar;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-
-import com.winlator.R;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
-import com.winlator.galgame.EngineDetector;
-import com.winlator.galgame.GalgameDiagnostics;
+import com.winlator.galgame.GalgameCoverProvider;
 import com.winlator.galgame.GalgameLibraryIndex;
-import com.winlator.galgame.GalgameLocaleInjector;
-import com.winlator.galgame.GalgameLogs;
-import com.winlator.galgame.GalgameSaveManager;
-import com.winlator.galgame.GameLauncher;
-import com.winlator.galgame.ui.GalgameSettings;
-import com.winlator.galgame.ImportFlow;
-import com.winlator.galgame.NativeRouteLauncher;
 import com.winlator.galgame.ui.GalgameLibraryAdapter;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.winlator.galgame.engine.BuiltinEngine;
-import com.winlator.galgame.engine.BuiltinEngineRegistry;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * GalgameShell R2 游戏库首页 Fragment（移植自 {@code GalgameLibraryActivity} 的数据层）。
+ * 游戏库（Swiss 单首页）：报头 + 继续游玩 + 全部游戏索引网格。
  *
- * <p>列出本外壳导入的游戏（容器名以 {@code galgame-} 前缀标识），提供：启动（复用官方
- * {@link XServerDisplayActivity}）、诊断向导、存档导出/导入、日志查看，以及「导入游戏」入口。
- * 复用 {@link GalgameLibraryAdapter} 与 {@code galgame_progress_dialog} 等既有资源。
+ * <p>点击卡片进入详情页（不再长按弹菜单）；齿轮进设置；FAB 进导入向导。
  */
 public class GalgameHomeFragment extends Fragment {
 
     private static final String CONTAINER_PREFIX = "galgame-";
-    private static final String DEFAULT_IMPORT_PATH = "/sdcard/Download";
 
     private ContainerManager containerManager;
     private GalgameLibraryAdapter adapter;
-    private FloatingActionButton fabImport;
-    private View rootView;
+    private final List<GalgameLibraryAdapter.Item> master = new ArrayList<>();
+    private final List<GalgameLibraryAdapter.Item> shown = new ArrayList<>();
 
-    private final List<GalgameLibraryAdapter.Item> items = new ArrayList<>();
+    private View rootView;
+    private View emptyView;
+    private GridView grid;
+    private EditText search;
+    private TextView countView;
+    private TextView allCountView;
+    private LinearLayout recentRow;
+    private View recentContainer;
+
+    private final ExecutorService coverExecutor = Executors.newFixedThreadPool(2);
+    private final Handler main = new Handler(Looper.getMainLooper());
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable android.view.ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_galgame_home, container, false);
         return rootView;
     }
@@ -73,34 +68,36 @@ public class GalgameHomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         containerManager = new ContainerManager(requireContext());
 
-        adapter = new GalgameLibraryAdapter(requireContext(), items);
-        // 点封面即玩（对标 GameNative）；长按弹操作菜单。监听挂在 item view 自身（适配器内）。
+        adapter = new GalgameLibraryAdapter(requireContext(), shown);
         adapter.setOnGameActionListener(new GalgameLibraryAdapter.OnGameActionListener() {
             @Override
-            public void onGameClick(GalgameLibraryAdapter.Item item) { launchGame(item); }
+            public void onGameClick(GalgameLibraryAdapter.Item item) { openDetail(item); }
 
             @Override
-            public void onGameLongClick(GalgameLibraryAdapter.Item item) { showGameActions(item); }
+            public void onGameLongClick(GalgameLibraryAdapter.Item item) { openDetail(item); }
         });
-        GridView grid = view.findViewById(R.id.GVGalgames);
+
+        grid = view.findViewById(R.id.GVGalgames);
         grid.setAdapter(adapter);
+        emptyView = view.findViewById(R.id.LEmpty);
+        search = view.findViewById(R.id.ETSearch);
+        countView = view.findViewById(R.id.TVCount);
+        allCountView = view.findViewById(R.id.TVAllCount);
+        recentRow = view.findViewById(R.id.LLRecent);
+        recentContainer = view.findViewById(R.id.HSVRecent);
 
-        // 导入 FAB（现代主行动）+ 空态行动按钮
-        fabImport = view.findViewById(R.id.FABImport);
-        fabImport.setOnClickListener(v -> showImportDialog());
-        // FAB 入场：缩放淡入
-        fabImport.setScaleX(0f);
-        fabImport.setScaleY(0f);
-        fabImport.setAlpha(0f);
-        fabImport.animate().scaleX(1f).scaleY(1f).alpha(1f).setStartDelay(180).setDuration(260).start();
+        view.findViewById(R.id.BTSettings).setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), GalgameSettingsActivity.class)));
+        view.findViewById(R.id.FABImport).setOnClickListener(v -> openImport());
+        view.findViewById(R.id.BTImportEmpty).setOnClickListener(v -> openImport());
 
-        view.findViewById(R.id.BTAbout).setOnClickListener(v -> showAbout());
-        view.findViewById(R.id.BTImportEmpty).setOnClickListener(v -> showImportDialog());
-
-        refresh();
+        search.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { applyFilter(); }
+            @Override public void afterTextChanged(android.text.Editable s) {}
+        });
     }
 
     @Override
@@ -109,16 +106,23 @@ public class GalgameHomeFragment extends Fragment {
         refresh();
     }
 
-    // ---- 列表 ----
+    private void openImport() {
+        startActivity(new Intent(requireContext(), GalgameImportActivity.class));
+    }
 
-    /**
-     * 列表 = 容器条目 + 自有索引里的原生条目。
-     *
-     * <p>原生游戏走 Route.B，导入时不建容器（历史行为），以前因此永远进不了库；
-     * 现在由 {@link GalgameLibraryIndex} 记档，这里合并进来一并展示。
-     */
+    private void openDetail(GalgameLibraryAdapter.Item item) {
+        Intent i = new Intent(requireContext(), GalgameDetailActivity.class);
+        i.putExtra(GalgameDetailActivity.EXTRA_CONTAINER, item.container != null ? item.container.getName() : null);
+        i.putExtra(GalgameDetailActivity.EXTRA_GAME_ID, item.gameId);
+        i.putExtra(GalgameDetailActivity.EXTRA_LABEL, item.label);
+        i.putExtra(GalgameDetailActivity.EXTRA_ENGINE, item.engineName);
+        i.putExtra(GalgameDetailActivity.EXTRA_PREFERRED, item.preferredEngine);
+        startActivity(i);
+        requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
     private void refresh() {
-        items.clear();
+        master.clear();
 
         java.util.Map<String, GalgameLibraryIndex.Entry> index = new java.util.HashMap<>();
         for (GalgameLibraryIndex.Entry e : GalgameLibraryIndex.load(requireContext())) {
@@ -132,541 +136,91 @@ public class GalgameHomeFragment extends Fragment {
                 if (name == null || !name.startsWith(CONTAINER_PREFIX)) continue;
                 String gameId = name.substring(CONTAINER_PREFIX.length());
                 GalgameLibraryIndex.Entry e = index.get(gameId);
-                items.add(GalgameLibraryAdapter.fromContainer(c, e != null ? e.preferredEngine : null));
+                master.add(GalgameLibraryAdapter.fromContainer(c, e != null ? e.preferredEngine : null));
             }
         }
-
-        // 只补「没有容器、也没被上面覆盖」的原生条目
         for (GalgameLibraryIndex.Entry e : index.values()) {
             if (e.containerized) continue;
-            boolean alreadyListed = false;
-            for (GalgameLibraryAdapter.Item it : items) {
-                if (it.gameId.equals(e.gameId)) { alreadyListed = true; break; }
+            boolean listed = false;
+            for (GalgameLibraryAdapter.Item it : master) {
+                if (it.gameId.equals(e.gameId)) { listed = true; break; }
             }
-            if (alreadyListed) continue;
-            items.add(GalgameLibraryAdapter.fromIndexEntry(e));
+            if (!listed) master.add(GalgameLibraryAdapter.fromIndexEntry(e));
         }
 
+        if (countView != null) countView.setText(String.format(Locale.US, "%02d", master.size()));
+        populateRecent();
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        String q = search != null && search.getText() != null
+                ? search.getText().toString().trim().toLowerCase(Locale.ROOT) : "";
+        shown.clear();
+        for (GalgameLibraryAdapter.Item it : master) {
+            if (q.isEmpty() || (it.label != null && it.label.toLowerCase(Locale.ROOT).contains(q))) shown.add(it);
+        }
         adapter.notifyDataSetChanged();
+        if (allCountView != null) allCountView.setText(getString(R.string.galgame_index_count, shown.size()));
 
-        TextView subtitle = rootView.findViewById(R.id.TVSubtitle);
-        if (subtitle != null && !items.isEmpty()) {
-            subtitle.setText(getString(R.string.galgame_library_count, items.size()));
-        }
-
-        View empty = rootView.findViewById(R.id.LEmpty);
-        GridView grid = rootView.findViewById(R.id.GVGalgames);
-        boolean isEmpty = items.isEmpty();
-        empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-        grid.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        // 空态已有「导入游戏」按钮，FAB 隐藏避免重复行动点
-        if (fabImport != null) {
-            fabImport.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        }
-        if (!isEmpty) {
-            // 每次刷新重放错峰入场动画（衔接感）
-            grid.startLayoutAnimation();
-        }
+        boolean empty = shown.isEmpty();
+        if (emptyView != null) emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
+        if (grid != null) grid.setVisibility(empty ? View.GONE : View.VISIBLE);
+        View fab = rootView != null ? rootView.findViewById(R.id.FABImport) : null;
+        if (fab != null) fab.setVisibility(master.isEmpty() ? View.GONE : View.VISIBLE);
+        if (!empty && grid != null) grid.startLayoutAnimation();
     }
 
-    /**
-     * 长按菜单。容器专属操作（诊断 / 存档 / 日志）只对有容器的条目开放——
-     * 原生游戏没有 wine 容器，这些按钮点了也只会报错。
-     */
-    private void showGameActions(final GalgameLibraryAdapter.Item item) {
-        if (item == null) return;
-
-        java.util.List<String> actions = new ArrayList<>();
-        java.util.List<Integer> codes = new ArrayList<>();   // 0=启动 1=诊断 2=导出存档 3=导入存档 4=日志 5=切换运行方式
-
-        actions.add(getString(R.string.galgame_action_launch));         codes.add(0);
-        actions.add(getString(R.string.galgame_action_switch_engine));  codes.add(5);
-        if (item.hasContainer()) {
-            actions.add(getString(R.string.galgame_action_diagnose));       codes.add(1);
-            actions.add(getString(R.string.galgame_action_export_save));    codes.add(2);
-            actions.add(getString(R.string.galgame_action_import_save));    codes.add(3);
-            actions.add(getString(R.string.galgame_action_logs));           codes.add(4);
-        }
-
-        String[] actionItems = actions.toArray(new String[0]);
-        final java.util.List<Integer> finalCodes = codes;
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle(item.label)
-                .setItems(actionItems, (dialog, which) -> {
-                    if (which < 0 || which >= finalCodes.size()) return;
-                    Container container = item.container;
-                    switch (finalCodes.get(which)) {
-                        case 0: launchGame(item); break;
-                        case 1: showDiagnostics(container); break;
-                        case 2: exportSave(container); break;
-                        case 3: importSave(container); break;
-                        case 4: showLogs(container); break;
-                        case 5: showEnginePicker(item); break;
-                        default: break;
-                    }
-                })
-                .setNegativeButton(R.string.galgame_cancel, null)
-                .show();
-    }
-
-    /** 「切换运行方式」：把玩家的偏好记进自有索引，下次启动按它裁决。 */
-    private void showEnginePicker(final GalgameLibraryAdapter.Item item) {
-        final java.util.List<GameLauncher.Option> options =
-                GameLauncher.options(item.hasContainer(), getString(R.string.galgame_switch_engine_auto));
-
-        String[] labels = new String[options.size()];
-        int current = 0;
-        for (int i = 0; i < options.size(); i++) {
-            labels[i] = options.get(i).label;
-            String id = options.get(i).id;
-            if (id != null && id.equals(item.preferredEngine)) current = i;
-            if (id == null && item.preferredEngine == null) current = i;
-        }
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.galgame_switch_engine_title, item.label))
-                .setSingleChoiceItems(labels, current, (dialog, which) -> {
-                    GameLauncher.Option picked = options.get(which);
-                    GalgameLibraryIndex.setPreferredEngine(requireContext(), item.gameId, picked.id);
-                    snack(picked.id == null
-                            ? getString(R.string.galgame_switch_engine_reset)
-                            : getString(R.string.galgame_switch_engine_done, picked.label));
-                    dialog.dismiss();
-                    refresh();
-                })
-                .setNegativeButton(R.string.galgame_cancel, null)
-                .show();
-    }
-
-    /**
-     * 启动游戏：走统一裁决入口 {@link GameLauncher}。
-     *
-     * <p>此前这里无条件 {@code startActivity(XServerDisplayActivity)}，已容器化的 Kirikiri /
-     * Ren'Py 从库里启动会被一刀切送进 wine。现在由 {@link GameLauncher} 按
-     * 「用户 override → 启动前重检测 → 登记值 → 容器兜底」裁决。
-     */
-    private void launchGame(final GalgameLibraryAdapter.Item item) {
-        if (item == null) return;
-
-        // 原生游戏本体仍在原地：目录没了就得重新导入，不能让引擎自己去猜
-        if (!item.hasContainer() && (item.gameDir == null || !item.gameDir.isDirectory())) {
-            snackLong(getString(R.string.galgame_source_missing));
+    private void populateRecent() {
+        if (recentRow == null || recentContainer == null) return;
+        recentRow.removeAllViews();
+        if (master.isEmpty()) {
+            recentContainer.setVisibility(View.GONE);
             return;
         }
+        recentContainer.setVisibility(View.VISIBLE);
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        int n = Math.min(3, master.size());
+        for (int i = 0; i < n; i++) {
+            final GalgameLibraryAdapter.Item item = master.get(i);
+            View v = inflater.inflate(R.layout.item_recent_swiss, recentRow, false);
+            TextView title = v.findViewById(R.id.TVRecentTitle);
+            TextView meta = v.findViewById(R.id.TVRecentMeta);
+            ImageView cover = v.findViewById(R.id.IVCoverSmall);
+            title.setText(item.label);
+            meta.setText(item.sub);
+            cover.setTag(R.id.IVCoverSmall, item);
+            v.setOnClickListener(x -> openDetail(item));
+            recentRow.addView(v);
+            loadCover(item, cover);
+        }
+    }
 
-        snack(getString(R.string.galgame_launching, item.label));
-
-        GameLauncher.Result result = GameLauncher.launch(
-                requireContext(), item.gameDir, item.container, item.engineName, item.preferredEngine);
-
-        if (!result.launched) {
-            snackLong(result.message != null ? result.message : getString(R.string.galgame_import_failed));
+    private void loadCover(final GalgameLibraryAdapter.Item item, final ImageView iv) {
+        if (item.coverBitmap != null) {
+            iv.setImageBitmap(item.coverBitmap);
             return;
         }
-
-        GalgameLibraryIndex.touchPlayedAsync(requireContext(), item.gameId);
-        // 界面切换过渡（淡入淡出，配合主题 windowAnimationStyle）
-        requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-    }
-
-    // ---- 诊断 / 日志 / 存档 ----
-
-    private void showDiagnostics(Container container) {
-        GalgameDiagnostics.Report report = GalgameDiagnostics.run(requireContext(), container);
-
-        StringBuilder sb = new StringBuilder();
-        for (GalgameDiagnostics.Check check : report.checks) {
-            sb.append("[").append(check.severity).append("] ").append(check.title).append("\n");
-            sb.append("  ").append(check.detail).append("\n");
-            if (check.fix != null && !check.fix.isEmpty()) sb.append("  → ").append(check.fix).append("\n");
-            sb.append("\n");
-        }
-        sb.append(report.summary());
-
-        boolean needsReinject = false;
-        for (GalgameDiagnostics.Check check : report.checks) {
-            if (("locale".equals(check.id) || "font".equals(check.id))
-                    && (check.severity == GalgameDiagnostics.Severity.WARN
-                        || check.severity == GalgameDiagnostics.Severity.ERROR)) {
-                needsReinject = true;
-                break;
-            }
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.galgame_diag_title)
-                .setMessage(sb.toString())
-                .setPositiveButton(R.string.galgame_ok, null);
-
-        if (needsReinject) {
-            builder.setNeutralButton(R.string.galgame_diag_reinject, (dialog, which) -> {
-                GalgameLocaleInjector.Report re = GalgameLocaleInjector.reapply(container, requireActivity());
-                snack(getString(re != null ? R.string.galgame_diag_reinject_done
-                        : R.string.galgame_diag_reinject_fail));
-                showDiagnostics(container);
-            });
-        }
-
-        builder.show();
-    }
-
-    private void showLogs(Container container) {
-        List<File> files = GalgameLogs.candidates(container);
-        List<File> crashes = GalgameLogs.crashReports(requireContext());   // v2.9 评估 P1-1：崩溃记录接入
-        if (files.isEmpty() && crashes.isEmpty()) {
-            snack(getString(R.string.galgame_logs_none));
-            return;
-        }
-        if (files.isEmpty()) {            // 无运行日志但有崩溃记录：直接展示最新一份
-            showCrashReport(crashes.get(0));
-            return;
-        }
-
-        File logFile = files.get(0);
-        List<String> lines = GalgameLogs.highlights(logFile, 40);
-        if (lines.isEmpty()) lines = GalgameLogs.tail(logFile, 40);
-
-        StringBuilder sb = new StringBuilder();
-        for (String line : lines) sb.append(line).append("\n");
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
-                .setTitle(logFile.getName())
-                .setMessage(sb.toString())
-                .setPositiveButton(R.string.galgame_ok, null);
-        if (!crashes.isEmpty()) {         // 有崩溃记录时提供直达入口（最新一份）
-            builder.setNeutralButton(R.string.galgame_logs_crashes, (d, w) -> showCrashReport(crashes.get(0)));
-        }
-        builder.show();
-    }
-
-    /** 展示单份崩溃记录（v2.9 评估 P1-1：本地崩溃采集 crashes/<versionCode>/ 的查看入口）。 */
-    private void showCrashReport(File crashFile) {
-        List<String> lines = GalgameLogs.tail(crashFile, 40);
-        StringBuilder sb = new StringBuilder();
-        for (String line : lines) sb.append(line).append("\n");
-        new AlertDialog.Builder(requireContext())
-                .setTitle(crashFile.getName())
-                .setMessage(sb.toString())
-                .setPositiveButton(R.string.galgame_ok, null)
-                .show();
-    }
-
-    private void exportSave(Container container) {
-        String gameId = gameIdOf(container);
-        GalgameSaveManager manager = new GalgameSaveManager(gameId);
-        boolean ok = manager.exportBackup(GalgameSaveManager.defaultBackupDir());
-        snack(getString(ok ? R.string.galgame_save_export_done : R.string.galgame_save_export_fail));
-    }
-
-    /** 从备份目录恢复存档（M3）：列出本游戏的历史备份，选一则恢复到 S: 盘。 */
-    private void importSave(Container container) {
-        String gameId = gameIdOf(container);
-        GalgameSaveManager manager = new GalgameSaveManager(gameId);
-
-        File backupRoot = GalgameSaveManager.defaultBackupDir();
-        File[] all = backupRoot.listFiles();
-        if (all == null) {
-            snack(getString(R.string.galgame_save_no_backup));
-            return;
-        }
-
-        List<File> candidates = new ArrayList<>();
-        for (File f : all) {
-            if (f.isDirectory() && f.getName().startsWith(gameId + "-")) candidates.add(f);
-        }
-        if (candidates.isEmpty()) {
-            snack(getString(R.string.galgame_save_no_backup));
-            return;
-        }
-
-        // 按时间戳倒序（最新的在前）
-        candidates.sort((a, b) -> b.getName().compareTo(a.getName()));
-        String[] names = new String[candidates.size()];
-        for (int i = 0; i < candidates.size(); i++) names[i] = candidates.get(i).getName();
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.galgame_action_import_save)
-                .setItems(names, (dialog, which) -> {
-                    boolean ok = manager.restoreBackup(candidates.get(which));
-                    snack(getString(ok ? R.string.galgame_save_restored
-                            : R.string.galgame_save_export_fail));
-                })
-                .setNegativeButton(R.string.galgame_cancel, null)
-                .show();
-    }
-
-    // ---- 导入 ----
-
-    private void showImportDialog() {
-        final EditText input = new EditText(requireContext());
-        input.setHint(R.string.galgame_import_hint);
-        input.setText(DEFAULT_IMPORT_PATH);
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.galgame_import_title)
-                .setView(input)
-                .setPositiveButton(R.string.galgame_ok, (dialog, which) -> {
-                    String path = input.getText() != null ? input.getText().toString().trim() : "";
-                    if (!path.isEmpty()) startImport(new File(path));
-                })
-                .setNegativeButton(R.string.galgame_cancel, null)
-                .show();
-    }
-
-    private void startImport(final File source) {
-        if (!source.isDirectory()) {
-            snack(getString(R.string.galgame_import_invalid));
-            return;
-        }
-
-        // 后台线程内复用同一宿主引用，避免反复 requireActivity()（脱离时抛异常）
-        final android.app.Activity host = requireActivity();
-        final String gameId = sanitize(source.getName());
-        showProgressDialog(getString(R.string.galgame_import_step_detect));
-
-        // ImportFlow.run（引擎检测）与 stageGameFiles（复制游戏文件）都是重 IO，移到后台线程执行，
-        // 主线程只做对话框/Toast/refresh（此前会卡死主线程）。
-        final ExecutorService exec = Executors.newSingleThreadExecutor();
-        final android.content.Context appCtx = requireContext().getApplicationContext();
-
-        exec.execute(() -> {
-            final ImportFlow.ImportResult result;
+        coverExecutor.execute(() -> {
             try {
-                result = ImportFlow.run(source, gameId, appCtx);
-                Log.d("GalgameShell", "import engine=" + result.engine + " route=" + result.route + " gameId=" + gameId);
-            }
-            catch (Exception e) {
-                host.runOnUiThread(() -> {
-                    dismissProgressDialog();
-                    snackLong(getString(R.string.galgame_import_failed) + ": " + e.getMessage());
-                });
-                return;
-            }
-
-            // B 路由：原生播放器唤起
-            if (result.route == EngineDetector.Route.B) {
-                host.runOnUiThread(() -> {
-                    dismissProgressDialog();
-                    showNativeRouteDialog(result, source);
-                });
-                return;
-            }
-
-            host.runOnUiThread(() -> setProgress(40, getString(R.string.galgame_import_step_create)));
-
-            // A 路由：建每游戏容器 → stage → P4 存档重定向
-            containerManager.createContainerAsync(result.containerData, (container) -> {
-                if (container == null) {
-                    host.runOnUiThread(() -> {
-                        dismissProgressDialog();
-                        snackLong(getString(R.string.galgame_import_failed));
-                    });
-                    return;
-                }
-                exec.execute(() -> {
-                    try {
-                        host.runOnUiThread(() -> setProgress(70, getString(R.string.galgame_import_step_copy)));
-                        ImportFlow.stageGameFiles(container, result, source, appCtx);
-
-                        GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
-                        saveManager.redirectShellFolders(container);
-                        // 走出数据库的游戏有了自己的容器，索引里就不必再按「无容器」展示
-                        GalgameLibraryIndex.markContainerized(appCtx, gameId);
-                        File stagedGameDir = new File(container.getRootDir(),
-                                ".wine/drive_c/galgame/" + gameId);
-                        saveManager.symlinkPortableSaves(stagedGameDir);
-
-                        // C 修复（2026-09-28）：拷贝完成但找不到启动 exe 时，明确告警而非假成功。
-                        // 否则 overlay 无 exe → 启动静默弹回文件管理器（或经 B 修复拦截），用户无从知晓。
-                        final boolean exeFound = result.gameExe != null;
-                        host.runOnUiThread(() -> {
-                            setProgress(100, getString(R.string.galgame_import_step_done));
-                            dismissProgressDialog();
-                            snackLong(exeFound ? getString(R.string.galgame_import_done)
-                                              : getString(R.string.galgame_import_no_exe));
-                            refresh();
-                        });
-                    }
-                    catch (Exception e) {
-                        host.runOnUiThread(() -> {
-                            dismissProgressDialog();
-                            snackLong(getString(R.string.galgame_import_failed) + ": " + e.getMessage());
-                        });
-                    }
-                });
+                if (item.cover == null) item.cover = GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                if (item.cover != null && item.cover.isFile()) item.coverBitmap = decodeSampled(item.cover, 256);
+            } catch (Throwable ignored) {}
+            main.post(() -> {
+                if (iv.getTag(R.id.IVCoverSmall) != item) return;
+                if (item.coverBitmap != null) iv.setImageBitmap(item.coverBitmap);
             });
         });
     }
 
-    // ---- 导入进度对话框（确定进度条 + 百分比 + 平滑推进）----
-
-    private AlertDialog progressDialog;
-    private TextView progressTextView;
-    private TextView progressPercentView;
-    private ProgressBar progressBar;
-    // GalgameShell：进度条补间动画需持有引用——导入过快时 dismissProgressDialog 会把
-    // progressBar 置 null，若不 cancel 仍存活的 animator，下一帧回调即 NPE 崩掉主进程
-    // （真机实证：log13 FATAL EXCEPTION at GalgameHomeFragment.setProgressSmooth）。
-    private ValueAnimator progressAnimator;
-
-    private void showProgressDialog(String text) {
-        View view = LayoutInflater.from(requireContext()).inflate(R.layout.galgame_progress_dialog, null);
-        progressTextView = view.findViewById(R.id.TVProgressText);
-        progressPercentView = view.findViewById(R.id.TVProgressPercent);
-        progressBar = view.findViewById(R.id.PBImport);
-        progressTextView.setText(text);
-        if (progressBar != null) progressBar.setProgress(0);
-        if (progressPercentView != null) progressPercentView.setText("0%");
-
-        progressDialog = new AlertDialog.Builder(requireContext())
-                .setView(view)
-                .setCancelable(false)
-                .create();
-        progressDialog.show();
-        // 去掉 AlertDialog 默认的方角背景，露出自定义圆角
-        if (progressDialog.getWindow() != null) {
-            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-        setProgressSmooth(12);
-    }
-
-    /** 推进到指定阶段：更新文案并平滑推进进度条（避免生硬跳变）。 */
-    private void setProgress(int percent, String text) {
-        if (progressTextView != null && text != null) progressTextView.setText(text);
-        setProgressSmooth(percent);
-    }
-
-    private void setProgressText(String text) {
-        if (progressTextView != null) progressTextView.setText(text);
-    }
-
-    /** 进度条平滑动画：从当前值补间到目标值，同步刷新百分比文本。 */
-    private void setProgressSmooth(int target) {
-        if (progressBar == null) return;
-        cancelProgressAnimator();
-        int from = progressBar.getProgress();
-        progressAnimator = ValueAnimator.ofInt(from, target);
-        progressAnimator.setDuration(450);
-        progressAnimator.addUpdateListener(a -> {
-            if (progressBar == null) return; // 对话框已被 dismiss：跳过余下帧，防 NPE
-            int v = (Integer) a.getAnimatedValue();
-            progressBar.setProgress(v);
-            if (progressPercentView != null) progressPercentView.setText(v + "%");
-        });
-        progressAnimator.start();
-    }
-
-    private void cancelProgressAnimator() {
-        if (progressAnimator != null) {
-            progressAnimator.cancel();
-            progressAnimator = null;
-        }
-    }
-
-    private void dismissProgressDialog() {
-        cancelProgressAnimator();
-        if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
-        progressDialog = null;
-        progressTextView = null;
-        progressPercentView = null;
-        progressBar = null;
-    }
-
-    /** 友好提示条（现代 Snackbar，替代 Toast）。 */
-    private void snack(String message) {
-        View root = requireActivity().findViewById(android.R.id.content);
-        if (root == null) return;
-        Snackbar.make(root, message, Snackbar.LENGTH_SHORT).show();
-    }
-
-    private void snackLong(String message) {
-        View root = requireActivity().findViewById(android.R.id.content);
-        if (root == null) return;
-        Snackbar.make(root, message, Snackbar.LENGTH_LONG).show();
-    }
-
-    // ---- B 路由对话框（Tier 分层 + 免责）----
-
-    private void showNativeRouteDialog(final ImportFlow.ImportResult result, final File source) {
-        // GalgameShell：内置原生引擎优先——检测到对应引擎且运行时已随包打包时，
-        // 直接用集成在我们自己 APK 里的引擎跑，不再唤起/安装第三方播放器。
-        BuiltinEngine builtin = BuiltinEngineRegistry.resolve(result.engine);
-        if (builtin != null && builtin.isAvailable(requireContext())) {
-            if (builtin.launch(requireContext(), source)) {
-                // 原生路线不建容器，这里补一条索引记录，游戏才有「库入口」：
-                // 退出引擎后还能从封面墙一点即玩，而不是重新手打路径。
-                GalgameLibraryIndex.putNative(requireContext(), result.gameId, source.getName(),
-                        result.engine, source);
-                return;
-            }
-            Snackbar.make(requireView(), "内置引擎启动失败：" + builtin.displayName,
-                    Snackbar.LENGTH_LONG).show();
-            return;
-        }
-
-        final NativeRouteLauncher.Plan plan =
-                NativeRouteLauncher.plan(requireContext(), result.engine, GalgameSettings.isTier2Enabled(requireContext()));
-
-        if (plan.target == null) {
-            new AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.galgame_route_b)
-                    .setMessage(plan.message)
-                    .setPositiveButton(R.string.galgame_ok, null)
-                    .show();
-            return;
-        }
-
-        String message = plan.message;
-        if (plan.needsDisclaimer) {
-            message += "\n\n" + getString(R.string.galgame_broute_disclaimer);
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext())
-                .setTitle(getString(R.string.galgame_route_b) + " · " + plan.target.displayName)
-                .setMessage(message)
-                .setNegativeButton(R.string.galgame_cancel, null);
-
-        if (plan.ready()) {
-            builder.setPositiveButton(R.string.galgame_action_launch, (dialog, which) -> {
-                if (plan.scanDir != null) {
-                    NativeRouteLauncher.prepareScanDir(source, plan.scanDir, result.gameId);
-                }
-                NativeRouteLauncher.launch(requireActivity(), plan.target);
-            });
-        }
-        else if (plan.needsDisclaimer && !plan.allowed) {
-            builder.setPositiveButton(R.string.galgame_broute_enable, (dialog, which) -> {
-                GalgameSettings.setTier2Enabled(requireContext(), true);
-                showNativeRouteDialog(result, source);
-            });
-        }
-        else {
-            builder.setPositiveButton(R.string.galgame_ok, null);
-        }
-
-        builder.show();
-    }
-
-    // ---- 工具 ----
-
-    /** 关于 / 源码获取（LGPL-2.1 源码提供义务，A6 / AC-18）。 */
-    private void showAbout() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.galgame_about)
-                .setMessage(R.string.galgame_about_message)
-                .setPositiveButton(R.string.galgame_ok, null)
-                .show();
-    }
-
-    private static String gameIdOf(Container container) {
-        String name = container.getName();
-        if (name == null) return "";
-        return name.startsWith(CONTAINER_PREFIX) ? name.substring(CONTAINER_PREFIX.length()) : name;
-    }
-
-    private static String sanitize(String name) {
-        if (name == null || name.isEmpty()) return "game";
-        return name.replaceAll("[^A-Za-z0-9._-]", "_");
+    private static Bitmap decodeSampled(File f, int target) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(f.getAbsolutePath(), o);
+        int sample = 1;
+        while (o.outWidth / (sample * 2) >= target || o.outHeight / (sample * 2) >= target) sample *= 2;
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = sample;
+        return BitmapFactory.decodeFile(f.getAbsolutePath(), o2);
     }
 }

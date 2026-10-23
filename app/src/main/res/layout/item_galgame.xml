@@ -1,70 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  游戏库封面卡片（现代 Material 卡片）：大封面 + 粗体名 + 引擎 chip，
-  带按压缩放反馈与 Material 涟漪。
--->
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<!-- Swiss 游戏卡：1dp 黑框封面 + 编号索引 + 发丝线 + 全大写引擎 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="2dp"
+    android:orientation="vertical"
+    android:paddingBottom="6dp"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?attr/selectableItemBackground"
-    android:stateListAnimator="@animator/card_press"
-    app:cardBackgroundColor="?attr/colorSecondarySurface"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    app:strokeColor="?attr/colorSecondaryVariant"
-    app:strokeWidth="1dp">
+    android:foreground="?attr/selectableItemBackground">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:background="@drawable/swiss_frame">
+
+        <ImageView
+            android:id="@+id/IVCover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="1dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/galgame_library_title"
+            android:src="@drawable/galgame_placeholder" />
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="6dp"
+        android:background="@color/swiss_ink" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="5dp">
 
-        <!-- GalgameShell: 封面裁为圆角缩略图，呼应卡片圆角语言 -->
-        <ImageView
-            android:id="@+id/IVCover"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:scaleType="centerCrop"
-            android:background="@drawable/galgame_cover_radius"
-            android:clipToOutline="true"
-            android:contentDescription="@string/galgame_library_title"
-            android:src="@drawable/galgame_placeholder" />
+        <TextView
+            android:id="@+id/TVIndex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="18dp"
+            android:textSize="9sp"
+            android:textColor="@color/swiss_faint"
+            android:fontFamily="monospace" />
 
         <TextView
             android:id="@+id/TVLabel"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
+            android:layout_weight="1"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textSize="15sp"
+            android:textSize="12.5sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorPrimaryText" />
-
-        <TextView
-            android:id="@+id/TVSub"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginBottom="2dp"
-            android:background="@drawable/galgame_chip_pill"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:textColor="?attr/galgameChipText" />
+            android:textColor="@color/swiss_ink" />
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+    <TextView
+        android:id="@+id/TVSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:textAllCaps="true"
+        android:textSize="8.5sp"
+        android:letterSpacing="0.1"
+        android:textColor="@color/swiss_muted" />
+
+</LinearLayout>

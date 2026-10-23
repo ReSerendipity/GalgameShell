@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 最近游玩卡：封面 + 标题 + 时间 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="200dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="8dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="8dp"
+    android:background="@drawable/swiss_recent_bg"
+    android:clickable="true"
+    android:focusable="true">
+
+    <FrameLayout
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/swiss_frame">
+
+        <ImageView
+            android:id="@+id/IVCoverSmall"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="1dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/galgame_library_title"
+            android:src="@drawable/galgame_placeholder" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/TVRecentTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/swiss_ink" />
+
+        <TextView
+            android:id="@+id/TVRecentMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textAllCaps="true"
+            android:textSize="8.5sp"
+            android:letterSpacing="0.1"
+            android:textColor="@color/swiss_muted" />
+    </LinearLayout>
+
+</LinearLayout>
