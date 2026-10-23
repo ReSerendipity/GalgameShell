@@ -18,7 +18,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
 import com.winlator.core.AppUtils;
+import com.winlator.galgame.EngineDetector;
 import com.winlator.galgame.GalgameCoverProvider;
+import com.winlator.galgame.engine.GameEngineRegistry;
 import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.galgame.GalgameLogs;
@@ -91,15 +93,16 @@ public class GalgameDetailActivity extends AppCompatActivity {
         findViewById(R.id.BTBack).setOnClickListener(v -> finish());
 
         TextView metaTop = findViewById(R.id.TVMetaTop);
-        metaTop.setText(getString(R.string.galgame_detail_meta, item.engineName != null ? item.engineName : "?"));
+        String engineDisplay = EngineDetector.displayName(GameEngineRegistry.parseEngine(item.engineName));
+        metaTop.setText(getString(R.string.galgame_detail_meta, engineDisplay));
 
         TextView eyebrow = findViewById(R.id.TVEyebrow);
-        eyebrow.setText("GALGAME / " + (item.engineName != null ? item.engineName : "?"));
+        eyebrow.setText("GALGAME / " + engineDisplay);
 
         ((TextView) findViewById(R.id.TVTitle)).setText(item.label);
         ((TextView) findViewById(R.id.TVPlayed)).setText(container != null ? "已就绪" : "原生目录");
         ((TextView) findViewById(R.id.TVMeta)).setText(
-                (item.engineName != null ? item.engineName : "?") + "  ·  " +
+                engineDisplay + "  ·  " +
                 (container != null ? "运行环境已就绪" : "无容器 · 内嵌引擎"));
 
         ImageView cover = findViewById(R.id.IVCover);

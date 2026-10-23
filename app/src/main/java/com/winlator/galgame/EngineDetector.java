@@ -34,6 +34,11 @@ public final class EngineDetector {
         YURIS(Route.A, null),
         ARTEMIS(Route.A, null),
         CATSYSTEM2(Route.A, null),
+        ADVHD(Route.A, null),        // あかべぇそふとつぅ 系 Windows 引擎（A 路由）
+        SYSTEMNNN(Route.A, null),    // SystemNNN 系（A 路由）
+        BGI(Route.A, null),          // BGI/Ethornell 系（A 路由）
+        CMVS(Route.A, null),         // CMVS 系（A 路由）
+        UNITY(Route.A, null),        // Unity 独立游戏（A 路由）
         UNKNOWN(Route.A, null);
 
         public final Route route;
@@ -126,6 +131,13 @@ public final class EngineDetector {
         // 2) 文件名/特征文件：TyranoScript / ONScripter
         for (File f : files) {
             String name = f.getName();
+            String lowerName = name.toLowerCase();
+            // 闭源 Windows 引擎指纹：仅用于 A 路由预设选择与展示名，不改变运行方式
+            if (lowerName.equals("unityplayer.dll")) return Engine.UNITY;
+            if (lowerName.endsWith(".exe") && lowerName.contains("advhd")) return Engine.ADVHD;
+            if (lowerName.startsWith("nnnconfig") || lowerName.equals("systemnnn.exe")) return Engine.SYSTEMNNN;
+            if (lowerName.equals("bgi.exe") || lowerName.equals("bgi_tsk.exe") || lowerName.equals("bhvc.exe")) return Engine.BGI;
+            if (lowerName.equals("cmvs.exe") || lowerName.equals("cmvs32.exe") || lowerName.equals("cmvs64.exe")) return Engine.CMVS;
             if ("tyrano".equalsIgnoreCase(name) || name.endsWith(".nsa")
                     || ("index.html".equalsIgnoreCase(name) && hasSubDir(files, "tyrano"))
                     || ("data".equalsIgnoreCase(name) && hasSubDir(files, "scenario"))) {
@@ -157,6 +169,12 @@ public final class EngineDetector {
                 return Engine.PSP;
             }
         }
+        // Unity 备用布局：<Game>_Data/globalgamemanagers
+        for (File f : files) {
+            if (f.isDirectory() && f.getName().toLowerCase().endsWith("_data")
+                    && new File(f, "globalgamemanagers").isFile()) return Engine.UNITY;
+        }
+
         // 3) A 路由可执行名（RK-11：启发式，待样本校准）
         for (File f : files) {
             String n = f.getName();
@@ -222,5 +240,31 @@ public final class EngineDetector {
 
     public static boolean isEncrypted(File gameDir) {
         return !encryptionMarkers(gameDir).isEmpty();
+    }
+
+    /** 面向用户的引擎展示名（库/详情/导入向导统一使用）。 */
+    public static String displayName(Engine e) {
+        if (e == null) return "未知";
+        switch (e) {
+            case KIRIKIRI:   return "Kirikiri";
+            case RENPY:      return "Ren'Py";
+            case TYRANO:     return "Tyrano";
+            case ONSCRIPTER: return "ONScripter";
+            case RPGMAKER2K: return "RPG Maker 2k";
+            case RPGMAKERRGSS: return "RPG Maker XP/VX";
+            case RPGMAKERMV: return "RPG Maker MV";
+            case WOLFRPG:    return "Wolf RPG";
+            case PSP:        return "PSP";
+            case SIGLUS:     return "Siglus";
+            case YURIS:      return "YURIS";
+            case ARTEMIS:    return "Artemis";
+            case CATSYSTEM2: return "CatSystem2";
+            case ADVHD:      return "AdvHD";
+            case SYSTEMNNN:  return "SystemNNN";
+            case BGI:        return "BGI";
+            case CMVS:       return "CMVS";
+            case UNITY:      return "Unity";
+            default:         return "未识别";
+        }
     }
 }

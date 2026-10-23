@@ -239,6 +239,11 @@ public final class ImportFlow {
             case YURIS:     return "yrg";
             case ARTEMIS:   return "artemis";
             case CATSYSTEM2:return "cat_system2";
+            case ADVHD:     return "advhd";
+            case SYSTEMNNN: return "systemnnn";
+            case BGI:       return "bgi";
+            case CMVS:      return "cmvs";
+            case UNITY:     return "unity";
             default:        return "unknown";
         }
     }
@@ -284,6 +289,9 @@ public final class ImportFlow {
             case YURIS:     preferred = "YurisEngine.exe"; break;
             case ARTEMIS:   preferred = "REALLIVE.exe"; break;
             case CATSYSTEM2:preferred = "CatSystem2.exe"; break;
+            case ADVHD:      preferred = "AdvHD.exe"; break;
+            case BGI:        preferred = "BGI.exe"; break;
+            case CMVS:       preferred = "cmvs.exe"; break;
             default: break;
         }
         File[] files = dir.listFiles();

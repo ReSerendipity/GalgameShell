@@ -14,7 +14,9 @@ import android.widget.TextView;
 
 import com.winlator.R;
 import com.winlator.container.Container;
+import com.winlator.galgame.EngineDetector;
 import com.winlator.galgame.GalgameCoverProvider;
+import com.winlator.galgame.engine.GameEngineRegistry;
 import com.winlator.galgame.GalgameLibraryIndex;
 
 import org.json.JSONObject;
@@ -95,7 +97,7 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         File exe = overlayExe(container);
         String engine = (container == null) ? null
                 : container.getExtra("galgame_engine", null);
-        return new Item(container, gameId, gameId, (engine == null || engine.isEmpty()) ? "?" : engine,
+        return new Item(container, gameId, gameId, displayOf(engine),
                 gameDir, exe, engine, preferredEngine);
     }
 
@@ -104,9 +106,15 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         File dir = (entry.sourcePath == null || entry.sourcePath.isEmpty())
                 ? null : new File(entry.sourcePath);
         String title = (entry.title == null || entry.title.isEmpty()) ? entry.gameId : entry.title;
-        String sub = entry.engineName == null ? "?" : entry.engineName;
+        String sub = displayOf(entry.engineName);
         return new Item(null, entry.gameId, title, sub, dir, null,
                 entry.engineName, entry.preferredEngine);
+    }
+
+    private static String displayOf(String engine) {
+        if (engine == null || engine.isEmpty()) return "?";
+        String d = EngineDetector.displayName(GameEngineRegistry.parseEngine(engine));
+        return d == null ? engine : d;
     }
 
     /** 容器前缀名 → gameId（两者保持一致的 sanitary helper）。 */

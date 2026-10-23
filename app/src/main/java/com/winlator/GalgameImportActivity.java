@@ -127,7 +127,7 @@ public class GalgameImportActivity extends AppCompatActivity {
             encrypted = savedInstanceState.getBoolean("encrypted", false);
             int files = savedInstanceState.getInt("files", 0);
             if (detected != null) {
-                engineView.setText(detected.name());
+                engineView.setText(EngineDetector.displayName(detected));
                 boolean nativeRoute = detected.route == EngineDetector.Route.B;
                 routeView.setText(nativeRoute ? "原生路由 · 内嵌引擎优先" : "模拟路由 · Winlator 容器");
                 filesView.setText(String.format(Locale.US, "%d", files));
@@ -215,7 +215,7 @@ public class GalgameImportActivity extends AppCompatActivity {
                 next.setText(getString(R.string.galgame_import_next));
                 scanning.setVisibility(View.GONE);
                 detectedPanel.setVisibility(View.VISIBLE);
-                engineView.setText(e == EngineDetector.Engine.UNKNOWN ? getString(R.string.galgame_import_engine_unknown) : e.name());
+                engineView.setText(e == EngineDetector.Engine.UNKNOWN ? getString(R.string.galgame_import_engine_unknown) : EngineDetector.displayName(e));
                 boolean nativeRoute = e.route == EngineDetector.Route.B;
                 routeView.setText(nativeRoute ? "原生路由 · 内嵌引擎优先" : "模拟路由 · Winlator 容器");
                 routeHint.setText(nativeRoute
