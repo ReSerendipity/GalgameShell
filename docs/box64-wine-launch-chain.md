@@ -255,3 +255,71 @@ MPEG-1 链路同样全黑，说明真因在渲染面/窗口面，不在视频解
 本线终止，登记为 TD-09（不计划偿还）。
 
 > 边界提醒：Ren'Py 的 `.ogv` / `.webm` 走内嵌原生引擎，不经 Wine，不在本普查范围内。
+
+### 7.2 黑屏真因：`put_WindowStyle` 的跨线程 `SetWindowPos` 死锁（2026-10-24）
+
+§7.1 把问题定位到"渲染面/窗口面"之后，本轮在真机上把卡点坐实到一条具体的窗口消息。
+
+**环境**：容器 xuser-10 / `yuris_lufia`，`quartz=builtin`，`WINEDEBUG=quartz,msg`，
+媒体为 MPEG-1 1920x1080（`ffprobe` 定名）。
+
+**图建得成、解码也在配**：
+
+- `FilterGraph2_RenderFile Returning 0`，链路完整：
+  Reader → MPEG-I Stream Splitter → {MPEG Video Decoder → Video Renderer,
+  MPEG Audio Decoder → Wave Audio Renderer}
+- `wg_transform_create … video/mpeg width=1920 height=1080 mpegversion=1 → NV12`
+- `wg_transform_create … audio/mpeg rate=44100 channels=1 → S16LE`
+- `vmr7_create`、`filter_config_SetRenderingMode mode 1`、
+  `surface_allocator_AllocateSurface`、`windowless_control_SetVideoClippingWindow(0x10050)`
+
+**卡点**：视频窗口 `0x10050` 属于 Wine 线程 0114（1280x720 那次）/ 0128（1920x1080 那次），
+而 DirectShow 调用方是 00bc / 00c0 —— 每一次窗口操作都是跨线程同步 `SendMessage`。
+
+```
+put_Owner  → WM_STYLECHANGING  → retrieve_reply 0     ✓
+           → WM_STYLECHANGED   → retrieve_reply 0     ✓
+           → WM_WINE_SETPARENT → retrieve_reply 10020 ✓
+put_WindowStyle(0x56000000)
+           → WM_STYLECHANGING  → retrieve_reply 0     ✓
+           → WM_STYLECHANGED   → retrieve_reply 0     ✓
+           → SetWindowPos
+           → WM_WINE_SETWINDOWPOS → peek_message 收到  ✗ 再无 retrieve_reply
+```
+
+对照：**视频窗口建立之前**同一 hwnd 上的一次 `SetWindowPos` 正常回了 `reply 1`，
+说明消息通道本身是通的；卡死只发生在视频窗口自己的那次。
+
+**后果**：DirectShow 线程永久阻塞在同步 `SendMessage`，`IMediaControl::Run` 从未被调用。
+7 份日志（含本轮 2 份）里 `Run` 命中数 **0**；而 `diagA` 里 `MediaControl_Stop` 命中 4 次，
+证明该方法族有 trace、不是"没开通道"。所以片头不是"播了看不见"，是**从来没开始播**。
+
+**排除项（逐条实测）**：
+
+| 假设 | 判据 |
+|---|---|
+| 解码链不通 | 排除：transform 已按 MPEG-1 → NV12 / S16LE 建好 |
+| 片头是 MPEG-2 被拒 | 排除：§7.1 全库 0 个 MPEG-2 |
+| 视频被游戏画面遮挡 | 排除：视频子窗口从未进入运行态 |
+| 容器尺寸不匹配（1280x720 vs 1920x1080 片头） | 排除：把 `screenSize` 改成 1920x1080，死锁位置**完全一致** |
+| 应用侧 X server 卡在写 socket | 排除：卡死期间应用线程全在 `do_epoll_wait` / `futex_wait_queue`，无 socket 写 |
+
+**一条独立的代码级缺陷（不构成本次已证因果）**：
+`app/src/main/cpp/winlator/src/xoutput_stream.c` 的 `XOutputStream_send` 是裸阻塞
+`write()`，无非阻塞/EAGAIN 处理，且把部分写当成功（`bytesSent >= 0`）——部分写会截断
+X11 协议流。既然 X server 在卡死期间是空闲的，这条不是本次元凶，但值得单独立项修。
+
+**取证过程中的两次自我更正**（留痕，避免后人重蹈）：
+
+1. 最初只看日志尾部，把"最后一条"当成"卡住的那条"，且误以为 X server 的
+   `killAllConnections → … → XOutputStream.close` 是无限递归——实际是每个子窗口各打一个栈，
+   不是递归。
+2. 随后又误把两次运行里不同的 owner 句柄（`0x20036` / `0x40024`）读成"同一次运行调了两次
+   `put_Owner`"。按行号对齐后确认：每次运行各只有一次 `put_Owner` + 一次 `put_WindowStyle`，
+   卡点就是 `put_WindowStyle` 里的 `SetWindowPos`。
+
+**未完成**：`debuggerd -b` 需要 root（真机未 root），原生栈拿不到；`winedbg` 路线未试。
+因此"Wine 线程 0114 究竟阻塞在哪把锁/哪个 wndproc"仍未坐实，只坐实到消息级别。
+
+**可修性**：Wine 侧，应用层不可改。要落地修复需改 rootfs 里的 Wine（上游预编译产物），
+或由上游 Wine 修 `quartz` 的窗口路径。TD-09 已按此更新偿还条件。
