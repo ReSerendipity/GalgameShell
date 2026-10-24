@@ -140,6 +140,14 @@
     <string name="galgame_route_hint">原生 = 内嵌引擎直启；模拟 = Winlator 承载。</string>
     <string name="galgame_env_title">所用运行环境</string>
     <string name="galgame_env_meta">自动创建与维护</string>
+    <string name="galgame_force_container_title">改用 Wine 容器运行</string>
+    <string name="galgame_force_container_meta">内置引擎跑不起来时（如脚本报错），改用游戏自带的 Windows 引擎</string>
+    <string name="galgame_force_container_action">转换  ›</string>
+    <string name="galgame_force_container_confirm">将把「%1$s」复制到一个独立容器，并用 Wine 运行游戏自带的 Windows 引擎。\n\n适用于内置 Kirikiroid2 报脚本错误（Member … does not exist）的情况。首次会占用与游戏等量的存储空间，完成后可用上面的「运行路由」切回。</string>
+    <string name="galgame_force_container_working">正在创建运行环境…</string>
+    <string name="galgame_force_container_done">已切换为 Wine 容器</string>
+    <string name="galgame_force_container_failed">转换失败</string>
+    <string name="galgame_force_container_no_source">找不到游戏源目录，无法转换</string>
     <string name="galgame_env_embedded">内嵌引擎</string>
     <string name="galgame_reinject">重新注入运行环境</string>
     <string name="galgame_reinject_meta">修复日文 / 视频 / 存档注入</string>

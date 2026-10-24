@@ -50,6 +50,19 @@ public final class ImportFlow {
      * @return 导入结果；A 路由含 {@link #containerData}，由 UI 交给 ContainerManager
      */
     public static ImportResult run(File sourceFolder, String gameId, Context context) {
+        return run(sourceFolder, gameId, context, false);
+    }
+
+    /**
+     * 同上，但可强制按 A 路由（容器）处理。
+     *
+     * <p>用于「改用 Wine 容器运行」：内置 Kirikiroid2 跑不起来的游戏（脚本报
+     * {@code Member … does not exist}）改由游戏自带的 Windows 原版引擎跑。这类游戏检测结果
+     * 仍是 {@link EngineDetector.Route#B}，强制容器时把 route 改写成 A，并照常构造
+     * {@code containerData} 与 S: 盘目录。
+     */
+    public static ImportResult run(File sourceFolder, String gameId, Context context,
+                                   boolean forceContainer) {
         if (sourceFolder == null || !sourceFolder.isDirectory()) {
             throw new IllegalArgumentException("sourceFolder 必须是一个存在的目录");
         }
@@ -73,7 +86,7 @@ public final class ImportFlow {
         r.encryptionMarkers = markers.isEmpty() ? Collections.<String>emptyList()
                                                  : new ArrayList<>(markers);
 
-        if (route == EngineDetector.Route.B) {
+        if (route == EngineDetector.Route.B && !forceContainer) {
             // B 路由：原生播放器唤起（A4 Tier-2 闭源聚合器，仅按需唤起，风险自负）
             r.nativePlayer = engine.nativePlayer;
             r.preset = null;
@@ -81,6 +94,7 @@ public final class ImportFlow {
             r.saveDir = null;
             return r;
         }
+        if (forceContainer) r.route = EngineDetector.Route.A;
 
         // ---- A 路由：Winlator 模拟兜底 ----
         EnginePreset preset = loadPreset(context, engine);

@@ -1,12 +1,14 @@
 package com.winlator;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -25,6 +27,7 @@ import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
+import com.winlator.galgame.ImportFlow;
 import com.winlator.galgame.GameLauncher;
 import com.winlator.galgame.ui.GalgameLibraryAdapter;
 
@@ -148,6 +151,85 @@ public class GalgameDetailActivity extends AppCompatActivity {
         TextView diagTag = findViewById(R.id.TVDiagTag);
         diagTag.setText(container != null ? "可检查" : "不可用");
         ((TextView) findViewById(R.id.TVSavesMeta)).setText("S: 盘 · 已重定向");
+        bindForceContainer();
+    }
+
+    /**
+     * 「改用 Wine 容器运行」：只对**原生引擎且尚无容器**的条目显示。
+     *
+     * <p>动机：部分 Kirikiri 游戏在内置 Kirikiroid2 下报脚本错误
+     * （{@code Member … does not exist}），但它们自带 Windows 原版引擎，改由 Wine 容器跑就能玩。
+     * 真机已验证（docs/real-device-verification.md §8.2）。
+     */
+    private void bindForceContainer() {
+        View row = findViewById(R.id.BTForceContainer);
+        if (row == null) return;
+
+        boolean nativeEngine = item != null
+                && (EngineDetector.Engine.KIRIKIRI.name().equals(item.engineName)
+                 || EngineDetector.Engine.RENPY.name().equals(item.engineName));
+        boolean canConvert = container == null && nativeEngine
+                && item.gameDir != null && item.gameDir.isDirectory();
+
+        row.setVisibility(canConvert ? View.VISIBLE : View.GONE);
+        if (canConvert) row.setOnClickListener(v -> confirmForceContainer());
+    }
+
+    private void confirmForceContainer() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_force_container_title)
+                .setMessage(getString(R.string.galgame_force_container_confirm, item.label))
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .setPositiveButton("开始", (d, w) -> startForceContainer())
+                .show();
+    }
+
+    private void startForceContainer() {
+        final File src = item.gameDir;
+        Log.i("GalgameDetail", "forceContainer: src=" + src + " isDir=" + (src != null && src.isDirectory()));
+        if (src == null || !src.isDirectory()) {
+            toast(getString(R.string.galgame_force_container_no_source));
+            return;
+        }
+        final Context appCtx = getApplicationContext();
+        toast(getString(R.string.galgame_force_container_working));
+
+        executor.execute(() -> {
+            try {
+                ImportFlow.ImportResult result = ImportFlow.run(src, item.gameId, appCtx, true);
+                if (result == null || result.containerData == null) {
+                    runOnUiThread(() -> toast(getString(R.string.galgame_force_container_failed)));
+                    return;
+                }
+                // 与 GalgameImportActivity 同口径：createContainerAsync 在主线程发起
+                runOnUiThread(() -> new ContainerManager(this).createContainerAsync(result.containerData, created -> {
+                    if (created == null) {
+                        toast(getString(R.string.galgame_force_container_failed));
+                        return;
+                    }
+                    executor.execute(() -> {
+                        try {
+                            ImportFlow.stageGameFiles(created, result, src, appCtx);
+                            // 让路由直接落到容器引擎：resolveOverride 会把它的 id 还原成
+                            // UNKNOWN → GameEngineRegistry.resolve → WinlatorContainerEngine
+                            GalgameLibraryIndex.setPreferredEngine(this, item.gameId, "winlator-container");
+                            runOnUiThread(() -> {
+                                toast(getString(R.string.galgame_force_container_done));
+                                recreate();
+                            });
+                        }
+                        catch (Exception e) {
+                            Log.e("GalgameDetail", "forceContainer stage failed", e);
+                            runOnUiThread(() -> toast(getString(R.string.galgame_force_container_failed)));
+                        }
+                    });
+                }));
+            }
+            catch (Exception e) {
+                Log.e("GalgameDetail", "forceContainer failed", e);
+                runOnUiThread(() -> toast(getString(R.string.galgame_force_container_failed)));
+            }
+        });
     }
 
     private void toggleAdvanced() {

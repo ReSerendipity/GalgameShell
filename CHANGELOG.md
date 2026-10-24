@@ -12,6 +12,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- 「改用 Wine 容器运行」：原生 Kirikiri / Ren'Py 游戏在详情页「高级设置」里可一键转成
+  独立容器，改由游戏自带的 Windows 原版引擎跑。用于内置 Kirikiroid2 报脚本错误
+  （`Member … does not exist`）的游戏——真机验证同一游戏在 KR2 下报错、在 Wine 容器下
+  正常进标题页。
+
 ## [11.3] - 2026-10-24
 
 ### Added
