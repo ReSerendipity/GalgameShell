@@ -93,6 +93,14 @@ public final class GameLauncher {
         GameEngine engine = GameEngineRegistry.resolve(chosen);
         boolean hasContainer = container != null;
 
+        // 用户显式选了「Wine 容器」时必须在这里接管：resolveOverride 会把容器引擎归一成
+        // UNKNOWN，而 UNKNOWN 同时是"无覆盖"的取值，所以它会被上层判成 null 丢掉。
+        // 「改用 Wine 容器运行」正是靠这条生效（Kirikiri 游戏改由自带的 Windows 引擎跑）。
+        if (hasContainer && isContainerOverride(preferredEngine)) {
+            engine = GameEngineRegistry.containerEngine();
+            chosen = EngineDetector.Engine.UNKNOWN;
+        }
+
         // 外部播放器路线（TYRANO/ONSCRIPTER/…）没有对应的一等引擎：有容器退回容器，
         // 否则明确告知 UI 需要走外部播放器，而不是假装原生能跑。
         if (engine == null) {
@@ -168,6 +176,12 @@ public final class GameLauncher {
     }
 
     /** 反查某个引擎实现代表的是哪个检测类别（用于构造请求时的标注）。 */
+    private static boolean isContainerOverride(String preferredEngine) {
+        if (preferredEngine == null) return false;
+        String raw = preferredEngine.trim();
+        return !raw.isEmpty() && GameEngineRegistry.containerEngine().id().equalsIgnoreCase(raw);
+    }
+
     private static EngineDetector.Engine kindOf(GameEngine engine) {
         if (engine instanceof com.winlator.galgame.engine.KrkrEngine) return EngineDetector.Engine.KIRIKIRI;
         if (engine instanceof com.winlator.galgame.engine.RenPyEngine) return EngineDetector.Engine.RENPY;
