@@ -12,12 +12,39 @@
 
 ## [Unreleased]
 
+## [11.3] - 2026-10-24
+
+### Added
+
+- Swiss 单首页 IA 与全站视觉重构：内页与游戏内 UI 收进同一套视觉语言；「设置 → 输入控制」
+  新增宿主 `GalgameInputControlsActivity`，从死路接成真入口（`7a1312f`、`be13b21`、`a9302cf`）。
+- 明暗双档走同一套主题 token，`values-night` 反相，状态栏图标随档位切换（`e01cb50`、`4739d2f`）。
+- 运行环境可管理：详情、重新注入语言字体、删除（`e01cb50`）。
+- 引擎指纹扩展到 19 个：Siglus / YU-RIS / Artemis / CatSystem2 / AdvHD / SystemNNN / BGI /
+  CMVS / Unity 等；新增 `detectDeep()` 有限下钻（深度 ≤3、预算 4000 项），修子目录 `.xp3`
+  被判 UNKNOWN 后无法升级路由（`c46485e`、`a678ad6`）。
+- box64 自建变成可复现资产：私有补丁导出 + 双向校验、构建脚本、打包器入库且版本不再
+  写死（缺省从 `DefaultVersion.BOX64` 读）（`1ecda1e`、`cd1798d`、`cdea13d`、`e33fae0`）。
+- `ci/hotspot-entries.txt` 纳入 `GalgameSettingsActivity` / `GalgameImportActivity` /
+  `GalgameDetailActivity`（3 → 6 条）；`com.winlator.R` 桩 100 → 183 符号（`c880186`）。
+
 ### Changed
 
 - 依赖升级（Dependabot）：`androidx.appcompat:appcompat` 1.4.0 → 1.8.0（#2）；`com.google.android.material:material`（#3）；`org.apache.commons:commons-compress`（#6）；`org.tukaani:xz` 1.7 → 1.12（#9）；`com.github.luben:zstd-jni` 1.5.2-3 → 1.5.7-23（#8）。
 - CI 依赖升级（Dependabot）：`actions/setup-java` 4 → 6（#4）；`actions/checkout` 4 → 7（#5）；`actions/upload-artifact` 4 → 7（#7）。
 - 新增 `.mailmap`，统一贡献者邮箱显示（`5adcca4`）。
 - 新增 `docs/release-governance.md`（§10 发布治理本地化），并在 Release 附 `SHA256SUMS.txt`（#10）。
+- 导入/启动链路：选中真正的主程序、修复非 ASCII exe 启动（`f338e06`）；完成态标记与容器
+  列表缓存（`b0e3a52`）。
+- 高级设置结构重排；导入时外部播放器回退；库内移除（`ebc9239`）。
+- 运行时资源 SHA-256 清单不再漏掉 `assets` 子目录（`d69eb3f`）。
+- README 补 Gradle wrapper 拉不下来时的离线构建路线（PKIX 报错 / 半截缓存）（`661b91e`）。
+
+### Fixed
+
+- X server 输出流：`XOutputStream_send` 由裸阻塞 `write()` 改为 `send(MSG_NOSIGNAL)` 循环
+  写满，EINTR 重试、EAGAIN 时 `poll` 上限 2 秒——消除协议流静默截断与 SIGPIPE（`7c08fc2`）。
+- 日志滚动条在深色主题下不可见（`72e5d23`）。
 
 ## [11.2] - 2026-10-17
 
@@ -25,5 +52,6 @@
 - 本版 Release 说明由 GitHub `--generate-notes` 自动生成，未包含人工维护条目；完整提交对比见
   [v11.2 对比 main](https://github.com/ReSerendipity/GalgameShell/compare/v11.2...main)。
 
-[Unreleased]: https://github.com/ReSerendipity/GalgameShell/compare/v11.2...HEAD
+[Unreleased]: https://github.com/ReSerendipity/GalgameShell/compare/v11.3...HEAD
+[11.3]: https://github.com/ReSerendipity/GalgameShell/releases/tag/v11.3
 [11.2]: https://github.com/ReSerendipity/GalgameShell/releases/tag/v11.2
