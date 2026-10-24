@@ -144,11 +144,11 @@ public class LogView extends View {
         float scrollThumbWidth = getScrollThumbWidth();
         float scrollThumbHeight = getScrollThumbHeight();
 
-        paint.setColor(0x33000000);
-        float radius = minScrollThumbSize * 0.5f;
+        int thumbColor = AppUtils.getThemeColor(getContext(), R.attr.colorSecondaryText) & 0x00FFFFFF | 0x99000000;
+        paint.setColor(thumbColor);
 
-        canvas.drawRoundRect(scrollThumbX, getHeight() - minScrollThumbSize, scrollThumbX + scrollThumbWidth, getHeight(), radius, radius, paint);
-        canvas.drawRoundRect(getWidth() - minScrollThumbSize, scrollThumbY, getWidth(), scrollThumbY + scrollThumbHeight, radius, radius, paint);
+        canvas.drawRect(scrollThumbX, getHeight() - minScrollThumbSize, scrollThumbX + scrollThumbWidth, getHeight(), paint);
+        canvas.drawRect(getWidth() - minScrollThumbSize, scrollThumbY, getWidth(), scrollThumbY + scrollThumbHeight, paint);
     }
 
     public float getScrollMaxLeft() {

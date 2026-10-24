@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 状态栏/导航栏图标是否用深色（亮档 true / 暗档 false） -->
+<resources>
+    <bool name="swiss_light_bars">true</bool>
+</resources>

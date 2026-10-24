@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss：下拉框方框（1dp 黑线，零圆角） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/swiss_paper" />
+    <stroke android:width="1dp" android:color="@color/swiss_ink" />
+    <corners android:radius="0dp" />
+</shape>

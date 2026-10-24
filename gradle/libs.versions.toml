@@ -5,7 +5,9 @@
 appcompat = "1.8.0"
 preference = "1.2.1"
 material = "1.14.0"
-zstdJni = "1.5.7-23"
+# 1.5.6/1.5.7 的 Android AAR loader 会把库名拼成 liblibzstd-jni-*.so（1.5.7-13+ 还要求 compileSdk 37）；
+# 1.5.2-3 是旧 APK 真机验证可用的最后版本，A 路线 rootfs/容器解压仍走它。
+zstdJni = "1.5.2-3"
 xz = "1.12"
 # v2.9 评估整改（供应链报告 P1-4）：1.20 -> 1.26.0，脱离 CVE-2021-36090（修复于 1.21）
 # 与 CVE-2024-25710/CVE-2024-26308（修复于 1.26）影响区间；使用方仅 core/ZipUtils 与
@@ -17,7 +19,7 @@ lifecycleProcess = "2.5.1"
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
-zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni", artifactType = "aar" }
+zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commonsCompress" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }

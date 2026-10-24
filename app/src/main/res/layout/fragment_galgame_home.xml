@@ -1,154 +1,253 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  游戏库首页 Fragment 布局（R2）：结构同 activity_galgame_library，但 FAB / 空态按钮
-  backgroundTint 改为 ?attr/colorAccent、根背景改为 ?android:attr/colorBackground，
-  消除 P11「硬编码品牌紫」例外，使库随 app_theme（亮/深）自适应。
--->
+<!-- Swiss 游戏库（竖屏）：报头 + 继续游玩横滑 + 全部游戏索引网格 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="@color/swiss_paper">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- 顶栏（品牌头部，首页 Tab 隐藏壳的 AppBar 故此处自承标题） -->
+        <!-- 报头 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="6dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    style="@style/SwissLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/galgame_brand_meta" />
+
+                <ImageButton
+                    android:id="@+id/BTSettings"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_galgame_settings"
+                    android:tint="@color/swiss_ink"
+                    android:contentDescription="@string/settings" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="bottom">
+
+                <TextView
+                    android:id="@+id/TVLibraryTitle"
+                    style="@style/SwissTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/galgame_library_title" />
+
+                <TextView
+                    android:id="@+id/TVCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="40sp"
+                    android:textColor="@color/swiss_count"
+                    android:letterSpacing="-0.04"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                style="@style/SwissMeta"
+                android:text="@string/galgame_library_meta" />
+
+            <!-- 检索行：发丝底线 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/swiss_row_line"
+                android:paddingBottom="6dp">
+
+                <EditText
+                    android:id="@+id/ETSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:hint="@string/galgame_search_hint"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textSize="12.5sp"
+                    android:textColor="@color/swiss_ink"
+                    android:textColorHint="@color/swiss_faint" />
+
+                <TextView
+                    style="@style/SwissMeta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/galgame_search_label" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 继续游玩 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/galgame_header_bg"
-            android:elevation="6dp"
-            android:paddingStart="18dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="18dp"
-            android:paddingBottom="18dp">
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="4dp">
 
-            <ImageView
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:layout_marginEnd="12dp"
-                android:src="@drawable/galgame_placeholder"
-                android:tint="?attr/colorOnAccent"
-                android:contentDescription="@string/galgame_app_name" />
-
-            <LinearLayout
+            <TextView
+                style="@style/SwissLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:text="@string/galgame_recent_title" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/galgame_library_title"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnAccent" />
-
-                <TextView
-                    android:id="@+id/TVSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textSize="12sp"
-                    android:textColor="?attr/colorOnAccentSubtle" />
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/BTAbout"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_info_details"
-                android:tint="?attr/colorOnAccent"
-                android:contentDescription="@string/galgame_about" />
+            <TextView
+                style="@style/SwissMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/galgame_recent_label" />
         </LinearLayout>
 
-        <!-- 网格封面墙 -->
-        <GridView
-            android:id="@+id/GVGalgames"
+        <HorizontalScrollView
+            android:id="@+id/HSVRecent"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:numColumns="auto_fit"
-            android:columnWidth="150dp"
-            android:horizontalSpacing="12dp"
-            android:verticalSpacing="12dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="92dp"
-            android:clipToPadding="false"
+            android:layout_height="wrap_content"
             android:scrollbars="none"
-            android:stretchMode="columnWidth"
-            android:layoutAnimation="@anim/grid_layout_animation" />
+            android:clipToPadding="false"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
 
-        <!-- 空态：图标 + 友好文案 + 行动按钮 -->
+            <LinearLayout
+                android:id="@+id/LLRecent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <!-- 全部游戏 -->
         <LinearLayout
-            android:id="@+id/LEmpty"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="32dp"
-            android:visibility="gone">
-
-            <ImageView
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:src="@drawable/galgame_placeholder"
-                android:contentDescription="@string/galgame_library_title" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/swiss_row_line"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="5dp">
 
             <TextView
-                android:layout_width="wrap_content"
+                style="@style/SwissLabel"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="@string/galgame_empty_title"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:layout_weight="1"
+                android:text="@string/galgame_all_title" />
 
             <TextView
+                android:id="@+id/TVAllCount"
+                style="@style/SwissMeta"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="@string/galgame_empty_hint"
-                android:textSize="13sp"
-                android:lineSpacingExtra="3dp"
-                android:textColor="?android:attr/textColorSecondary" />
-
-            <Button
-                android:id="@+id/BTImportEmpty"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:paddingStart="22dp"
-                android:paddingEnd="22dp"
-                android:text="@string/galgame_import_title"
-                android:textColor="?attr/colorOnAccent"
-                android:backgroundTint="?attr/colorAccent" />
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <GridView
+                android:id="@+id/GVGalgames"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:numColumns="auto_fit"
+                android:columnWidth="148dp"
+                android:horizontalSpacing="14dp"
+                android:verticalSpacing="16dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="14dp"
+                android:paddingBottom="96dp"
+                android:clipToPadding="false"
+                android:scrollbars="none"
+                android:stretchMode="columnWidth"
+                android:layoutAnimation="@anim/grid_layout_animation" />
+
+            <LinearLayout
+                android:id="@+id/LEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/galgame_placeholder"
+                    android:contentDescription="@string/galgame_library_title" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/galgame_empty_title"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/swiss_ink" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="@string/galgame_empty_hint"
+                    android:textSize="12sp"
+                    android:textColor="@color/swiss_muted" />
+
+                <Button
+                    android:id="@+id/BTImportEmpty"
+                    style="@style/SwissButtonOutline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="18dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="@string/galgame_import_title" />
+            </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
 
-    <!-- 导入 FAB -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <ImageButton
         android:id="@+id/FABImport"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
+        android:background="@drawable/swiss_fab_red"
         android:src="@android:drawable/ic_input_add"
-        app:tint="?attr/colorOnAccent"
-        app:backgroundTint="?attr/colorAccent"
-        app:rippleColor="?attr/colorOnAccent"
+        android:tint="@color/swiss_paper"
         android:contentDescription="@string/galgame_import_title" />
 
 </FrameLayout>

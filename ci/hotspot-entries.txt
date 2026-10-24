@@ -7,3 +7,6 @@
 app/src/main/java/com/winlator/ContainersFragment.java
 app/src/main/java/com/winlator/GalgameHost.java
 app/src/main/java/com/winlator/GalgameHomeFragment.java
+app/src/main/java/com/winlator/GalgameSettingsActivity.java
+app/src/main/java/com/winlator/GalgameImportActivity.java
+app/src/main/java/com/winlator/GalgameDetailActivity.java

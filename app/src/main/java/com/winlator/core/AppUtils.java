@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.tabs.TabLayout;
@@ -377,18 +378,26 @@ public abstract class AppUtils {
         return typedValue.data;
     }
 
+    private static int sAppliedNightMode = -1;
+
     public static void setActivityTheme(Activity activity) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
         // GalgameShell：外壳默认亮色（品牌紫主题）；游戏运行屏/控件编辑器维持上游默认深色
-        int appTheme = preferences.getInt("app_theme", isGameScreen(activity)
-            ? SettingsFragment.APP_THEME_DARK : SettingsFragment.APP_THEME_LIGHT);
-        // GalgameShell：外壳界面主题品牌化——亮→GalgameMainTheme（紫）、深→GalgameMainThemeDark（紫黑）；
-        // 游戏运行屏（XServerDisplay）/控件编辑器（ControlsEditor）保持上游原主题不变
-        if (appTheme == SettingsFragment.APP_THEME_LIGHT) {
-            activity.setTheme(isGameScreen(activity) ? R.style.AppThemeLight : R.style.GalgameMainTheme);
+        int rawTheme = preferences.getInt("app_theme", SettingsFragment.APP_THEME_LIGHT);
+        // 夜间资源按用户偏好切换（values-night 生效）；只在变化时调用，避免每次 onCreate 触发重建
+        int nightMode = rawTheme == SettingsFragment.APP_THEME_DARK
+            ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
+        if (sAppliedNightMode != nightMode) {
+            sAppliedNightMode = nightMode;
+            AppCompatDelegate.setDefaultNightMode(nightMode);
         }
-        else if (appTheme == SettingsFragment.APP_THEME_DARK) {
-            activity.setTheme(isGameScreen(activity) ? R.style.AppThemeDark : R.style.GalgameMainThemeDark);
+        int appTheme = isGameScreen(activity)
+            ? preferences.getInt("app_theme", SettingsFragment.APP_THEME_DARK)
+            : rawTheme;
+        // GalgameShell：外壳与游戏运行屏统一走 Swiss 主题，明暗由 values-night 反相同一批颜色
+        if (appTheme == SettingsFragment.APP_THEME_LIGHT || appTheme == SettingsFragment.APP_THEME_DARK) {
+            activity.setTheme(isGameScreen(activity)
+                ? R.style.GalgameSwissThemeFullscreen : R.style.GalgameSwissTheme);
         }
     }
 

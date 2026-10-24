@@ -46,6 +46,11 @@ public final class GameEngineRegistry {
             case YURIS:
             case ARTEMIS:
             case CATSYSTEM2:
+            case ADVHD:
+            case SYSTEMNNN:
+            case BGI:
+            case CMVS:
+            case UNITY:
             case UNKNOWN:     return WinlatorContainerEngine.INSTANCE;
             default:          return null;   // 外部播放器路线，见类注释
         }

@@ -16,17 +16,20 @@ mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
 javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
-  app/src/main/java/com/winlator/ContainersFragment.java \
-  app/src/main/java/com/winlator/GalgameHost.java \
-  app/src/main/java/com/winlator/GalgameHomeFragment.java
+  $(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt)
 ```
 
 ## 热点入口清单（子树外的显式文件列表）
 
-`com.winlator` 顶层最热改动的入口类（当前：`ContainersFragment.java`、`GalgameHost.java`、
-`GalgameHomeFragment.java`）不在 galgame 子树内，靠**显式文件列表**纳入门禁：列表同时硬编码在
-`.github/workflows/ci.yml`、`ci/pre-push` 与 `scripts/gen_galgame_stubs.py`（`HOT`，供 R 桩扫描），
-三处必须同步修改。覆盖边界的完整声明见 `AGENTS.md`「类型门禁的覆盖边界」一节。
+`com.winlator` 顶层最热改动的入口类不在 galgame 子树内，靠**显式清单**纳入门禁。
+清单的唯一来源是 [`ci/hotspot-entries.txt`](hotspot-entries.txt)，消费者
+（`.github/workflows/ci.yml`、`ci/pre-push`、`scripts/gen_galgame_stubs.py` 的 R 桩扫描、
+`AGENTS.md` / `README.md` / 本文件的本地等价命令）一律从该文件读取，**不得再抄一份文件名列表**；
+是否有第二份拷贝由 `bash ci/check-hotspot-sync.sh` 巡检。覆盖边界的完整声明见
+`AGENTS.md`「类型门禁的覆盖边界」一节。
+
+> ⚠️ 不要把清单条目硬编码进示例命令：那会让本地只编译清单的一个子集却报「通过」，
+> 与 CI 结果不一致（假通过）。上面的示例用 `grep -vE '^[[:space:]]*(#|$)'` 从清单读取。
 
 改桩时的两条红线：
 
@@ -43,11 +46,9 @@ $out = Join-Path $env:TEMP 'galgame-prepush'
 New-Item -ItemType Directory -Force "$out\stubs", "$out\check", "$out\hot" | Out-Null
 javac -d "$out\stubs" (Get-ChildItem -Recurse -Filter *.java ci\stubs).FullName
 javac -Xlint:all -cp "$out\stubs" -d "$out\check" (Get-ChildItem -Recurse -Filter *.java app\src\main\java\com\winlator\galgame).FullName
-# 热点入口清单（与 ci.yml / ci/pre-push 同列表）
-javac -Xlint:all -cp "$out\stubs;$out\check" -d "$out\hot" `
-  app\src\main\java\com\winlator\ContainersFragment.java `
-  app\src\main\java\com\winlator\GalgameHost.java `
-  app\src\main\java\com\winlator\GalgameHomeFragment.java
+# 热点入口清单唯一来源：ci\hotspot-entries.txt（勿在此抄文件名列表）
+$hot = Get-Content ci\hotspot-entries.txt | Where-Object { $_ -and $_ -notmatch '^\s*#' }
+javac -Xlint:all -cp "$out\stubs;$out\check" -d "$out\hot" $hot
 ```
 
 ## 本地门禁：`ci/pre-push`（推送前类型门禁）

@@ -3,4 +3,15 @@
 <resources>
     <color name="galgame_splash_background">#FF6A5AE0</color>
     <color name="galgame_splash_background_dark">#FF32305A</color>
+
+    <!-- Swiss grid（04 视觉语言）：黑白纸面 + 单点红，无卡片无阴影 -->
+    <color name="swiss_paper">#FFFFFFFF</color>
+    <color name="swiss_ink">#FF111111</color>
+    <color name="swiss_red">#FFE4002B</color>
+    <color name="swiss_line">#FF111111</color>
+    <color name="swiss_hairline">#1F000000</color>
+    <color name="swiss_muted">#FF6E6E6E</color>
+    <color name="swiss_faint">#FF9A9A9A</color>
+    <color name="swiss_pressed">#FFF2F2F2</color>
+    <color name="swiss_count">#33000000</color>
 </resources>

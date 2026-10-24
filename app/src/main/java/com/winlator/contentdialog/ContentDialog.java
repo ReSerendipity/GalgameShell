@@ -28,21 +28,14 @@ public class ContentDialog extends Dialog {
     private Runnable onCancelCallback;
     private final View contentView;
 
-    // GalgameShell：与 AppUtils.setActivityTheme 同源判断（app_theme 偏好，外壳默认亮色）。
-    // 不用 attr 探测：attachBaseContext 的 createConfigurationContext 包裹会让 getTheme() 不可靠。
-    private static boolean isDarkTheme(Context context) {
-        int appTheme = PreferenceManager.getDefaultSharedPreferences(context)
-            .getInt("app_theme", SettingsFragment.APP_THEME_LIGHT);
-        return appTheme == SettingsFragment.APP_THEME_DARK;
-    }
-
     public ContentDialog(@NonNull Context context) {
         this(context, 0);
     }
 
     public ContentDialog(@NonNull Context context, int layoutResId) {
-        // GalgameShell：对话框主题独立于 Activity，按当前界面实际明暗选择亮/深两套品牌主题
-        super(context, isDarkTheme(context) ? R.style.ContentDialogDark : R.style.ContentDialog);
+        // GalgameShell R4：Swiss 深色档靠 values-night 反相同一批颜色，
+        // 不再另走一套紫色对话框主题（否则暗档又退回圆角紫）。
+        super(context, R.style.ContentDialog);
         contentView = LayoutInflater.from(context).inflate(R.layout.content_dialog, null);
 
         if (layoutResId > 0) {

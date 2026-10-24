@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 深色档：纯中性黑白（去掉早期残留的紫蓝底），与亮档同一套语言反相 -->
+<resources>
+    <color name="swiss_paper">#FF0E0E0E</color>
+    <color name="swiss_ink">#FFF2F2F2</color>
+    <color name="swiss_red">#FFFF5C70</color>
+    <color name="swiss_line">#FFF2F2F2</color>
+    <color name="swiss_hairline">#33FFFFFF</color>
+    <color name="swiss_muted">#FF9E9E9E</color>
+    <color name="swiss_faint">#FF6E6E6E</color>
+    <color name="swiss_pressed">#FF1C1C1C</color>
+    <color name="swiss_count">#40FFFFFF</color>
+</resources>

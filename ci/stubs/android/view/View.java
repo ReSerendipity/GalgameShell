@@ -21,6 +21,7 @@ public class View {
     public void setScaleX(float scaleX) {}
     public void setScaleY(float scaleY) {}
     public void setVisibility(int visibility) {}
+    public void setBackgroundColor(int color) {}
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {}
     public boolean onTouchEvent(MotionEvent event) { return false; }
     public void postDelayed(Runnable action, long delayMillis) {}

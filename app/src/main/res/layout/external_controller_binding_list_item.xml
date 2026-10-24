@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 外接控制器绑定行（Swiss） -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clickable="true"
     android:focusable="true"
     android:orientation="horizontal"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:background="@drawable/swiss_row_line"
     android:gravity="center_vertical">
 
     <LinearLayout
@@ -16,10 +18,11 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:layout_marginRight="8dp">
+        android:layout_marginEnd="12dp">
 
         <TextView
             android:id="@+id/TVTitle"
+            style="@style/SwissRowTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
@@ -29,24 +32,29 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
 
             <Spinner
-                style="@style/ComboBox"
+                style="@style/SwissSpinner"
                 android:id="@+id/SBindingType"
-                android:layout_width="140dp"
+                android:layout_width="130dp"
+                android:layout_height="40dp"
                 android:entries="@array/binding_type_entries" />
 
             <Spinner
-                style="@style/ComboBox"
+                style="@style/SwissSpinner"
                 android:id="@+id/SBinding"
                 android:layout_width="0dp"
-                android:layout_weight="1" />
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp" />
         </LinearLayout>
     </LinearLayout>
 
     <ImageButton
-        style="@style/ListMenuButton"
+        style="@style/SwissIconButton"
         android:id="@+id/BTRemove"
         android:src="@drawable/icon_remove" />
 </LinearLayout>

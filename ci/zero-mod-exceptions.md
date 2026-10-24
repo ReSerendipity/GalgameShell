@@ -17,6 +17,7 @@
 | `app/src/main/java/com/winlator/container/Container.java` | 与 upstream 一致 | 无例外，任何改动都应拦下 |
 | `app/src/main/java/com/winlator/core/LocaleHelper.java` | `supportedLocales` 追加 `"zh_CN"`（+1 −1） | **已登记例外**：简体中文界面所需，`AGENTS.md` 称 A7，源自 b2b9e3e（2026-09-24）；rebase 时该差异会重新出现在推送范围里，属预期 |
 | `app/src/main/res/values/strings.xml` | ① `app_name` Winlator → GalgameShell 并加一行注释；② 删除条目 `native_resolution` | ① **已登记例外**：品牌化所需，源自 1bf0011（2026-09-27），仅动 `app_name` 一行；② **rebase 阻断项，见下节** |
+| `app/src/main/java/com/winlator/core/DefaultVersion.java` | `BOX64` 常量 `"0.4.4"` → `"0.4.5"`（+1 −1） | **已登记例外**：本 fork 自建 box64 的版本号，源自 ca5d411（0.4.5 build + mpshim heal shim）。上游文件，rebase 必冲突，属预期。它同时是 `tools/prepare_box64_lib.sh` 缺省打包哪份 tzst 的**唯一真源**——改这个值等于改构建默认，需与 `assets/box64/` 下实际存在的 tzst 对齐 |
 
 ## ② `native_resolution` 的删除：现在安全，rebase 后会破
 

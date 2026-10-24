@@ -1,2 +1,2 @@
 package android.text;
-public interface Editable { String toString(); }
+public interface Editable extends CharSequence { String toString(); }

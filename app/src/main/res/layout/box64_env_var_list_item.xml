@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Box64 预设环境变量行（Swiss） -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="44dp"
     android:gravity="center_vertical">
 
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginRight="4dp">
+        android:layout_marginEnd="8dp">
 
         <TextView
             android:id="@+id/TextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/swiss_ink"
             android:ellipsize="start"
             android:paddingRight="22dp"
             android:maxLines="1" />
@@ -27,20 +31,21 @@
 
     <LinearLayout
         android:layout_width="100dp"
-        android:layout_height="42dp"
+        android:layout_height="36dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <Spinner
-            style="@style/ComboBox"
+            style="@style/SwissSpinner"
             android:layout_width="match_parent"
+            android:layout_height="36dp"
             android:id="@+id/Spinner"
             android:visibility="gone" />
 
         <ToggleButton
             android:id="@+id/ToggleButton"
             android:layout_width="64dp"
-            android:layout_height="32dp"
+            android:layout_height="28dp"
             android:background="@drawable/toggle_button_selector"
             android:visibility="gone"
             android:textOn=""

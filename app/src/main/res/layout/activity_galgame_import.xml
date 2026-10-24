@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 导入向导：01 目录 → 02 检测 → 03 确认 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/swiss_paper">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="6dp">
+
+            <TextView
+                android:id="@+id/BTBack"
+                style="@style/SwissLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="center_vertical"
+                android:paddingEnd="12dp"
+                android:text="←  返回" />
+
+            <TextView
+                android:id="@+id/TVMetaTop"
+                style="@style/SwissMeta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/SwissTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="8dp"
+            android:text="@string/galgame_import_title" />
+
+        <!-- 步骤条 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/swiss_ink"
+            android:padding="1dp">
+
+            <TextView
+                android:id="@+id/TVStep1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/swiss_ink"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="01  目录"
+                android:textColor="@color/swiss_paper"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12" />
+
+            <TextView
+                android:id="@+id/TVStep2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="1dp"
+                android:background="@color/swiss_paper"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="02  检测"
+                android:textColor="@color/swiss_ink"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12" />
+
+            <TextView
+                android:id="@+id/TVStep3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="1dp"
+                android:background="@color/swiss_paper"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="03  确认"
+                android:textColor="@color/swiss_ink"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp">
+
+                <!-- Step 1 目录 -->
+                <LinearLayout
+                    android:id="@+id/LLStepSource"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/SwissLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="来源目录 / SOURCE" />
+
+                    <EditText
+                        android:id="@+id/ETImportPath"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/swiss_button_outline"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:text="/sdcard/Download"
+                        android:textSize="12sp"
+                        android:textColor="@color/swiss_ink" />
+
+                    <TextView
+                        style="@style/SwissMeta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/galgame_import_source_hint" />
+
+                    <TextView
+                        style="@style/SwissLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="@string/galgame_import_quick_paths" />
+
+                    <Button
+                        android:id="@+id/BTQuick1"
+                        style="@style/SwissButtonOutline"
+                        android:textAllCaps="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="8dp"
+                        android:text="/sdcard/Download" />
+
+                    <Button
+                        android:id="@+id/BTQuick2"
+                        style="@style/SwissButtonOutline"
+                        android:textAllCaps="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="6dp"
+                        android:text="/sdcard/Games" />
+
+                    <Button
+                        android:id="@+id/BTQuick3"
+                        style="@style/SwissButtonOutline"
+                        android:textAllCaps="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="6dp"
+                        android:text="/sdcard/Documents" />
+                </LinearLayout>
+
+                <!-- Step 2 检测 -->
+                <LinearLayout
+                    android:id="@+id/LLStepDetect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/LLScanning"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingTop="40dp"
+                        android:paddingBottom="40dp">
+
+                        <TextView
+                            style="@style/SwissLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/swiss_red"
+                            android:text="@string/galgame_import_scanning_en" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/galgame_import_scanning"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/swiss_ink" />
+
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="文件指纹 · REN'PY / KIRIKIROID2 / WINLATOR" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/LLDetected"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/galgame_import_detected" />
+
+                        <TextView
+                            android:id="@+id/TVEngine"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="38sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="-0.03"
+                            android:textColor="@color/swiss_ink" />
+
+                        <TextView
+                            android:id="@+id/TVRoute"
+                            style="@style/SwissMeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@color/swiss_ink" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingTop="12dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+                                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/galgame_import_files" />
+                                <TextView android:id="@+id/TVFiles" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="14sp" android:textStyle="bold" android:textColor="@color/swiss_ink" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+                                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/galgame_import_encrypted" />
+                                <TextView android:id="@+id/TVEncrypted" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="14sp" android:textStyle="bold" android:textColor="@color/swiss_ink" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/galgame_import_route" />
+
+                        <TextView
+                            android:id="@+id/TVRouteHint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="11sp"
+                            android:textColor="@color/swiss_muted" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Step 3 确认 -->
+                <LinearLayout
+                    android:id="@+id/LLStepConfirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/SwissLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="游戏名称 / NAME" />
+
+                    <EditText
+                        android:id="@+id/ETName"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/swiss_button_outline"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textSize="12sp"
+                        android:textColor="@color/swiss_ink" />
+
+                    <TextView
+                        style="@style/SwissLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="导入摘要 / SUMMARY" />
+
+                    <LinearLayout style="@style/SwissRow">
+                        <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="来源目录" />
+                        <TextView android:id="@+id/TVSummaryPath" style="@style/SwissMeta" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end" android:singleLine="true" android:ellipsize="start" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/SwissRow">
+                        <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="引擎" />
+                        <TextView android:id="@+id/TVSummaryEngine" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/SwissRow">
+                        <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="运行方式" />
+                        <TextView android:id="@+id/TVSummaryRoute" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="导入将复制游戏文件、注入日文区域与字体、重定向存档到 S: 盘。"
+                        android:textSize="10sp"
+                        android:textColor="@color/swiss_muted" />
+                </LinearLayout>
+
+                <!-- Done -->
+                <LinearLayout
+                    android:id="@+id/LLDone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:paddingTop="30dp">
+
+                    <TextView
+                        style="@style/SwissLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/swiss_red"
+                        android:text="@string/galgame_import_done_meta" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/galgame_import_done_title"
+                        android:textSize="40sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="-0.04"
+                        android:textColor="@color/swiss_ink" />
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="6dp" android:background="@color/swiss_ink" />
+
+                    <TextView
+                        android:id="@+id/TVDoneName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textSize="13sp"
+                        android:textColor="@color/swiss_ink" />
+                </LinearLayout>
+            </FrameLayout>
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="12dp"
+            android:background="@drawable/swiss_row_line">
+
+            <Button
+                android:id="@+id/BTPrev"
+                style="@style/SwissButtonOutline"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="@string/galgame_import_prev" />
+
+            <Button
+                android:id="@+id/BTNext"
+                style="@style/SwissButtonSolid"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1.6"
+                android:text="@string/galgame_import_next" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

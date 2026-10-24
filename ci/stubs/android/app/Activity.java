@@ -11,6 +11,7 @@ public class Activity extends Context {
     protected void onResume() {}
     protected void onPause() {}
     protected void onDestroy() {}
+    protected void onSaveInstanceState(Bundle outState) {}
     public void setContentView(int layoutResID) {}
     public <T extends View> T findViewById(int id) { return null; }
     public void startActivity(Intent intent) {}

@@ -19,23 +19,99 @@ Windows 程序要在这台设备上跑起来，需要同时满足六件事（缺
 
 ## 2. 构建 box64（可复现配方）
 
-```bash
-cmake -G Ninja \
-  -DCMAKE_TOOLCHAIN_FILE=$ANDROID_HOME/ndk/27.0.12077973/build/cmake/android.toolchain.cmake \
-  -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-34 \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DARM_DYNAREC=ON -DBOX32=ON -DWINLATOR_GLIBC=ON \
-  <box64src>
-# 关键：BOX32=ON（galgame exe 绝大多数是 32 位）
-# ninja 的默认链接命令会缺 crt/libgcc，需自行链接（绕过 ninja 的 link 步骤）
+入口脚本：`tools/box64/build_box64_android.sh`（生成工具链文件 → configure → 链接 → strip → 打 tzst）。
+它不覆盖既有产物，新版本另出一个 `box64-<ver>.tzst`，应用里可按容器回退。
+
+关键参数（**注意：不是 NDK 的 `android.toolchain.cmake`**，rootfs 是 glibc 的，产物必须是
+`aarch64-linux-gnu` 的 glibc ELF，用 bionic 目标编出来的跑不起来）：
+
+```cmake
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(CMAKE_C_COMPILER <NDK>/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe)
+set(CMAKE_C_COMPILER_TARGET aarch64-linux-gnu)   # ASM 同理
+set(CMAKE_SYSROOT <Debian arm64 glibc sysroot>)  # lib/{libc.so.6,ld-linux-aarch64.so.1,libm.so.6…} + usr/lib/{crt1.o,libc.so}
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 ```
 
-产物经 `llvm-strip --strip-all` 后打成 `app/src/main/assets/box64/box64-<ver>.tzst`
-（内部结构对齐官方：`./usr/local/bin/box64`，zstd -19）。
+```bash
+cmake -G Ninja -DARM_DYNAREC=ON -DBOX32=ON -DWINLATOR_GLIBC=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo …
+# 关键：BOX32=ON（galgame exe 绝大多数是 32 位，走 WOW64）
+```
 
-> **可复现约定（2026-10-11，评估整改 P2-8）**：每次自建 box64 必须在此记录上游 commit hash，使重建可复现。
-> 0.4.5 构建时未记录（提交 `e80db63` 仅记「上游 main 自建」），现无法从仓内恢复精确 hash——如需精确重建，
-> 需人工提供当时 upstream commit；缺失期间以「配方 + 日期」近似复现（见 tech-debt-register.md TD-05）。
+sysroot 的来源：Debian/Ubuntu arm64 的 `libc6` + `libc6-dev` 解包（`dpkg-deb -x`）后拼成
+`lib/` + `usr/{include,lib}`。此来源为事后追记，未逐字复现过，重建时以能链通为准。
+
+**链接期三处必坑（2026-10-23 实测，脚本已内置）**：
+
+1. sysroot 不带 gcc 的 `crtbegin.o`/`crtend.o`/`libgcc.a`。clang 对 `aarch64-linux-gnu`
+   是把 crt 对象按**裸文件名**交给 lld 的，`-L` 不生效 —— 必须把它们放进链接的工作目录。
+   `libgcc.a` 用 NDK 的 `libclang_rt.builtins.a` 顶替，`libgcc_s.a` 建空归档即可。
+2. **rootfs 的 glibc 不导出 `atexit` / `pthread_atfork`**（3070 个动态符号里只有
+   `__cxa_atexit` / `__register_atfork`），而 box64 main 自 2026-09 起在
+   `core.c` / `custommem.c` / `signals.c` 里直接引用前者。用
+   `tools/box64/linkshim_glibc_atexit.c` 转发到 glibc 自己的内部入口补上，语义不变。
+3. **`PT_INTERP` 必须是 rootfs 内的绝对路径**
+   `/data/data/com.winlator/files/rootfs/lib/ld-linux-aarch64.so.1`。
+   用默认 `-lc` 链出来的会是 `/lib/ld-linux-aarch64.so.1`（27B vs 63B），Android linker
+   解析不了，症状就是本文档开头那句——**永远停在「正在启动…」且 wine_exec.log 一行都不出**。
+   用 `-Wl,--dynamic-linker=…` 指定，链接后用 `readelf -l | grep INTERP` 自检。
+
+前两条是历史上「手工补链接」的全部内容；第三条是 2026-10-23 重建时新踩出来的，
+只比对 ELF 段布局看不出来（EXEC/AArch64/base 0x34800000 全一致），必须读 INTERP 字符串。
+
+### 基线与私有改动（2026-10-23 追记，补 TD-05）
+
+| 项 | 值 |
+|---|---|
+| 在用的 `box64-0.4.5.tzst` 上游基线 | `2a0623116931c391819277f462dfb5b47a18fcb9`（2026-09-30，main） |
+| 依据 | 源码 checkout 的 HEAD；私有改动 mtime 均为 09-30，早于出厂 tzst 的 10-01 19:10 |
+| 私有改动 | `tools/box64/box64-galgameshell.patch`（3 文件 28 行，已双向校验：能在干净基线上重放，也能反向还原当前工作树） |
+
+补丁内容对应本文档 §1 表的第 1、2 层，**丢了就会在这台设备上死循环或 SIGSEGV**：
+
+- `src/elfs/elfhacks.c` / `src/elfs/elfloader.c`：动态段扫描加 `DT_NULL` 之外的迭代上界
+  （39-bit VA 主机 + lld 链接的 box64 会退化成用户态死循环）
+- `src/libtools/libdl.c`：新增 `find_real_in_libc()`，把 `dlopen/dlclose/dlsym` 的 real 解析
+  限定在 `libc.so.6`，避开 box64 自身导出的 `dl*` 形成 interpose 环（见 §3）
+
+> 生成物 `src/wrapped/generated/functions_list.txt` 当时也带一行本地差异（`wrappedandroidshmem:`，
+> 对应源文件已不存在），属陈旧生成残留，**不随补丁携带**，需要时由 `rebuild_wrappers.py` 重生成。
+
+> **可复现约定（2026-10-11，评估整改 P2-8）**：每次自建 box64 必须在此记录上游 commit hash。
+> 0.4.5 当时未记录（提交 `e80db63` 仅记「上游 main 自建」），上表的 hash 是 2026-10-23 从残留
+> 源码树里恢复的；此后每次构建由脚本末尾提示回填。TD-05 的「hash 丢失」部分已关闭。
+
+## 2b. 三方产物状态（2026-10-23 收口，读这里别看别处猜）
+
+实际进 APK 并执行的 box64 是 `jniLibs/arm64-v8a/libbox64.so`（W^X 决定的，见 §6 与
+`GuestProgramLauncherComponent` 的 nativeLibraryDir 分支），**不是** assets 里的 tzst。
+tzst 只是它的来源包。三件东西必须分清：
+
+| 物件 | git 状态 | 内容 | 作用 |
+|---|---|---|---|
+| `assets/box64/box64-0.4.5.tzst` | 已跟踪（force-add 8f86684） | 上游 main `2a062311`，无 gstfix | **构建默认**（`DefaultVersion.BOX64 = "0.4.5"`） |
+| `assets/box64/box64-0.4.5-gstfix.tzst` | 已跟踪（force-add，本轮） | `abfb8c3`（#4528）+ 私有补丁 + 链接三步；5,045,155B；内层二进制 sha 前缀 `3e000661` | 实验产物，真机验证过锚点无回归 |
+| `jniLibs/arm64-v8a/libbox64.so` | **未跟踪**（`.gitignore:30`） | 当前 = gstfix 那份，21,420,104B，sha 前缀 `3e000661` | 下一次构建真正进包的那份 |
+
+**当前不一致这个事实本身**：构建默认声明的是 0.4.5，而工作区 `libbox64.so` 放的是
+0.4.5-gstfix。也就是说此刻直接 `assembleRelease`，产物里跑的是 gstfix，而 `DefaultVersion`
+仍写着 0.4.5。这是**故意的**——gstfix 的用户可见收益目前为 0（SystemNNN 仍黑屏），
+不设为默认；但留在工作区继续测。任何要出正式包的人，先跑一遍
+`tools/prepare_box64_lib.sh`（无参数 = 按 `DefaultVersion.BOX64` 取，即回到 0.4.5）再打。
+
+回滚 / 切换（两条都是实测过的）：
+
+```bash
+bash tools/prepare_box64_lib.sh               # → 0.4.5（sha 9391c9c4，21,412,896B）
+bash tools/prepare_box64_lib.sh 0.4.5-gstfix  # → gstfix（sha 3e000661，21,420,104B）
+bash tools/prepare_box64_lib.sh --list        # 看有哪些版本
+```
+
+`tools/prepare_box64_lib.sh` 的缺省版本从 `DefaultVersion.java` 读，不再写死，
+所以「构建默认」只有一处定义。它同时受 `tools/make_runtime_checksums.sh` 覆盖——
+该脚本原先 `find assets -maxdepth 1`，`assets/box64/` 整批漏出 SHA-256 清单
+（修复前 34 个文件、box64 条目 0 条；修复后 57 个、3 条）。
 
 ## 3. 垫片 libmpshim.so
 
@@ -86,3 +162,96 @@ adb shell run-as com.winlator sh files/galgame-fix-prefix.sh \
   无需额外处理。
 - **手工脚本**：必须先 `unset LD_LIBRARY_PATH` 再 `env LD_LIBRARY_PATH=...`，
   否则 bionic 的 `timeout` 会去加载 rootfs 里那个 glibc 文本 `libc.so` 而失败。
+
+## 7. DirectShow 视频链：已证到 Wine 能力边界，止损（2026-10-23）
+
+> **先读 §7.1**：本节把黑屏归因于"MPEG-2 被拒"，同日追加的普查与反证已推翻该因果归属
+> （全库 0 个 MPEG-2；一条零报错的 MPEG-1 链路同样全黑）。本节对 ①② 的排除仍有效，
+> 对"黑屏原因"的结论以 §7.1 为准。
+
+**结论：分支 ③ —— 滤镜已加载、已实例化，但 Wine 内建 quartz 的 MPEG-I splitter 不接
+MPEG-2 子类型，Intelligent Connect 建图即拆、拆完重试。越过它要改 Wine 源码，而 rootfs
+是上游预编译产物，不在本 fork 可改范围内。此线到此为止，不再试参数。**
+
+### 取证：A/B 差分（同一容器 xuser-15 / sysnnn_sainogami，只动 quartz 覆盖，
+### 通道 `quartz,ole,module`，box64 均为含 #4528 的 gstfix 构建）
+
+| | A：`quartz=builtin` | B：`quartz=native,builtin`（出厂态） |
+|---|---|---|
+| `[BOX64]` GStreamer 桥报错 | **0 条**（#4528 生效） | 0 条 |
+| `winegstreamer.dll` 加载 | 是（syswow64 映射进 0x7a970000） | 是 |
+| `wg_parser_create` 实例化 | **18 次** | 6 次 |
+| 走到 `mpeg_splitter` | 是，拒绝 MPEG-2 **4 次** | **0 次**（更早就失败） |
+| 首个失败点 | `mpeg_splitter_sink_query_accept` 拒 `{e436eb85-…}`(MPEG2_VIDEO) / `{e436eb86-…}`(MPEG2_PROGRAM) | `com_get_class_object class {7d8aa343-6e63-4663-be90-6b80f66540a3} not registered`（CLSID_DirectSound8） |
+| 建图结果 | 两张图各自建完即拆（`GraphConfig_RemoveFilterEx … stub!`） | 未进入建图 |
+| 画面 | 客户区全黑 | 客户区全黑 |
+
+三条判据的落点：**① 排除**（有 load 行）、**② 排除**（`wg_parser_create` 18 次说明
+滤镜真的被创建）、**③ 成立**。B 列同时说明出厂态比 builtin 更差——失败点更靠前。
+
+### 关键反证（别被"没有解码器"误导）
+
+rootfs 的 GStreamer 插件里 **`mpeg2dec` 与 `libav`（3.9MB 静态 ffmpeg）都在**，
+MPEG-2 软解码能力不缺。缺的是 Wine 侧把流交给它的通路：内建
+`dlls/quartz/mpeg_splitter.c` 的 sink pin 只认 MPEG-1 系（`MEDIASUBTYPE_MPEG1VideoCD`
+等在 `enum_media_types_Next` 里能过），MPEG-2 两个子类型直接 `Unsupported subtype`。
+所以这不是配置问题、不是环境变量问题，是 Wine 的实现边界。
+
+### 任何后续配置改动落地前必须过的三格
+
+1. **SystemNNN 出帧**（当前：否）
+2. **Unity 不崩** —— 全局把 dsound/quartz 改 builtin 会让 test_unity
+   `err:seh:NtRaiseException c0000005`（已实测，原生态同局不崩）
+3. **锚点《花瓣！》HANA9 不退化**（六层启动链的回归锚）
+
+第 2 格决定了最终形态大概率是**按引擎分流**而非一个全局开关。
+
+### 本轮未测到的格子
+
+- YU-RIS / AdvHD / BGI / CMVS 在 gstfix box64 下的状态（只测了 SystemNNN 与两个锚点）
+- 非 MPEG-2 编码的片头（如纯 WMV/AVI）能否经 winegstreamer 出帧——若某引擎用 MPEG-1
+  或 GStreamer 直连路径，可能已经能用，这是唯一还没探的方向
+- 分支 ③ 之下的 `+strmbase` 级 trace（用于确认 Intelligent Connect 的候选枚举顺序）
+
+### 7.1 普查与反证：§7 的因果归属不成立（2026-10-23 同日追加）
+
+**普查**（静态，按实际编码不按扩展名）：14 个源目录 + `/sdcard/Games`，86 个候选文件，
+取每个文件头 64B 判 magic，`.mpg` 另取 512KB 扫 MPEG 起始码并用 ffprobe 9.0.1 定名。
+
+| 实际编码 | 数 | 归类 |
+|---|---|---|
+| ASF / WMV（magic `30 26 B2 75 8E 66 CF 11`） | 69 | (a) 内建 quartz 可试 |
+| MPEG-1（ffprobe `mpeg1video` + `mp2`；有 `00 00 01 B3`，**无** `B5`/`BC`） | 5 | (a) |
+| 非视频（`unins000.dat`、`yscfg.dat`、`Gameexe.dat`、984B 的 `scene.dat` 等） | 12 | 排除 |
+| **MPEG-2** | **0** | (b) 空集 |
+| Bink / CRIWARE | 0 | (c) 空集 |
+
+全库没有 MPEG-2 片头。SystemNNN 的 OP 是 `movie/sainogami_op.wmv`（179,983,768B，ASF），
+AdvHD 全部 `.dat` 实为 ASF，YU-RIS 的 `.mpg` 是 MPEG-1。
+
+**反证实验**（一局，条件 = gstfix box64 + `quartz=builtin` + 通道 `quartz,ole,module`，
+容器 xuser-10 / yuris_lufia，媒体属 (a) 中"内建 splitter 明确接受"的那一族）：
+
+- `[BOX64]` 报错 **0 条**（#4528 生效）
+- `wg_parser_create` 3 次（winegstreamer 滤镜被实例化）
+- **`fixme:quartz` / `err:quartz` / `err:ole` 全为零** —— DirectShow 层没有任何失败
+- `MEDIASUBTYPE_MPEG1System` / `MPEG1Payload` / `MPEG1AudioPayload` 正常枚举
+- `quartz:VideoWindow_put_WindowStyle` + `BaseControlWindowImpl_put_Owner window … owner 0x20036`
+  → 视频渲染窗口已创建并挂上父窗口
+- `ddraw` / `wined3d` 相关行 175 条 → 引擎确实进了渲染路径
+- **画面：全黑**
+
+**因此 §7 正文那条"卡在 MPEG-2 被拒"的因果归属作废**：那些
+`mpeg_splitter_sink_query_accept Unsupported subtype {e436eb85}/{e436eb86}` 是
+Intelligent Connect 枚举候选滤镜时的正常探测噪声，不是阻塞点。一条零报错的
+MPEG-1 链路同样全黑，说明真因在渲染面/窗口面，不在视频解码链。
+①②的排除仍然成立（winegstreamer 确实加载、滤镜确实注册），错的只是我把
+"分支 ③"当成了"黑屏的原因"。
+
+**收益判定**：gstfix 修的是一个真实缺陷（GStreamer 桥加载失败），但用户可见收益 = 0。
+按约定**不设为构建默认**；工作区 `libbox64.so` 已用 `tools/prepare_box64_lib.sh`（无参数）
+退回 0.4.5，§2b 记录的"构建默认与工作区不一致"状态已消除。gstfix 产物留在仓内作可复现资产。
+
+本线终止，登记为 TD-09（不计划偿还）。
+
+> 边界提醒：Ren'Py 的 `.ogv` / `.webm` 走内嵌原生引擎，不经 Wine，不在本普查范围内。

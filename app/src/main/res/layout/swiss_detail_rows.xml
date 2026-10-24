@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 详情页维护区行（Swiss 发丝行） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout android:id="@+id/BTDiagnose" style="@style/SwissRow">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                style="@style/SwissRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/galgame_action_diagnose" />
+            <TextView
+                android:id="@+id/TVDiagMeta"
+                style="@style/SwissRowMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <TextView
+            android:id="@+id/TVDiagTag"
+            style="@style/SwissTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/BTSaves" style="@style/SwissRow">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                style="@style/SwissRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="存档" />
+            <TextView
+                android:id="@+id/TVSavesMeta"
+                style="@style/SwissRowMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/BTExport" style="@style/SwissRow">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                style="@style/SwissRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/galgame_save_export" />
+            <TextView
+                style="@style/SwissRowMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="备份为压缩包" />
+        </LinearLayout>
+        <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/BTImportSave" style="@style/SwissRow">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                style="@style/SwissRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/galgame_action_import_save" />
+            <TextView
+                style="@style/SwissRowMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="从备份恢复" />
+        </LinearLayout>
+        <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/BTLogs" style="@style/SwissRow">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                style="@style/SwissRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/galgame_action_logs" />
+            <TextView
+                style="@style/SwissRowMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="LOGS.TXT / STDERR / DXVK" />
+        </LinearLayout>
+        <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/BTRemove" style="@style/SwissRow">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                style="@style/SwissRowTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="从库中移除" />
+            <TextView
+                style="@style/SwissRowMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="仅移除库记录，不删除游戏文件" />
+        </LinearLayout>
+        <TextView
+            style="@style/SwissTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/swiss_red"
+            android:text="移除" />
+    </LinearLayout>
+
+</LinearLayout>

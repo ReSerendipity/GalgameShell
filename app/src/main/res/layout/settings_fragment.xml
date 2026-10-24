@@ -1,535 +1,337 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 完整设置（Swiss 行结构）：鼠标 / 手柄 / 声音 / 系统 / Wine·Box64 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@color/swiss_paper">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingBottom="56dp"
+        android:clipToPadding="false"
+        android:scrollbars="none">
 
-        <!-- GalgameShell: 分组卡片间距（透明 12dp 占位，showDividers=middle） -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:divider="@drawable/galgame_section_gap"
-            android:showDividers="middle">
+            android:orientation="vertical">
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+            <!-- 鼠标 -->
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/mouse" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="POINTER" />
+            </LinearLayout>
 
-                <LinearLayout style="@style/FieldSet">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/cursor_speed"/>
+            <LinearLayout style="@style/SwissRow" android:orientation="vertical" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/cursor_speed" />
+                <com.winlator.widget.SeekBar
+                    android:id="@+id/SBCursorSpeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:suffix="%"
+                    app:minValue="10"
+                    app:maxValue="200" />
+            </LinearLayout>
 
-                    <com.winlator.widget.SeekBar
-                        android:id="@+id/SBCursorSpeed"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:suffix="%"
-                        app:minValue="10"
-                        app:maxValue="200" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/cursor_size"/>
-
-                            <com.winlator.widget.SeekBar
-                                android:id="@+id/SBCursorSize"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:suffix="%"
-                                app:step="5"
-                                app:minValue="100"
-                                app:maxValue="200" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginLeft="8dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/color" />
-
-                            <com.winlator.widget.ColorPickerView
-                                android:id="@+id/CPVCursorColor"
-                                android:layout_width="84dp"
-                                android:layout_height="wrap_content" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View style="@style/FieldSeparator" />
-
-                    <CheckBox
-                        android:id="@+id/CBMoveCursorToTouchpoint"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/move_cursor_to_touchpoint" />
-
-                    <CheckBox
-                        android:id="@+id/CBCapturePointerOnExternalMouse"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/capture_pointer_on_external_mouse"
-                        android:layout_marginTop="8dp" />
+            <LinearLayout style="@style/SwissRow" android:orientation="vertical" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/cursor_size" />
+                <com.winlator.widget.SeekBar
+                    android:id="@+id/SBCursorSize"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:suffix="%"
+                    app:step="5"
+                    app:minValue="100"
+                    app:maxValue="200" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+                    <TextView style="@style/SwissRowMeta" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/color" />
+                    <com.winlator.widget.ColorPickerView
+                        android:id="@+id/CPVCursorColor"
+                        android:layout_width="84dp"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
+            </LinearLayout>
 
-                <TextView
-                    style="@style/FieldSetLabel"
-                    android:text="@string/mouse" />
-            </FrameLayout>
+            <CheckBox
+                android:id="@+id/CBMoveCursorToTouchpoint"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/move_cursor_to_touchpoint" />
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+            <CheckBox
+                android:id="@+id/CBCapturePointerOnExternalMouse"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/capture_pointer_on_external_mouse" />
 
-                <LinearLayout style="@style/FieldSet">
-                    <TextView
+            <!-- 游戏控制器 -->
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/game_controllers" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GAMEPAD" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/gamepad_model" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SGamepadModel"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/player" />
+                <LinearLayout style="@style/SwissToolbox">
+                    <LinearLayout
+                        android:id="@+id/LLGamepadPlayer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/gamepad_model" />
+                        android:orientation="horizontal">
+                        <ImageView style="@style/SwissIconButton" android:src="@drawable/gamepad_player_1" />
+                        <ImageView style="@style/SwissIconButton" android:src="@drawable/gamepad_player_2" />
+                        <ImageView style="@style/SwissIconButton" android:src="@drawable/gamepad_player_3" />
+                        <ImageView style="@style/SwissIconButton" android:src="@drawable/gamepad_player_4" />
+                    </LinearLayout>
+                    <View android:layout_width="1dp" android:layout_height="match_parent" android:background="@color/swiss_ink" />
+                    <ImageView
+                        android:id="@+id/BTResetGamepadPlayerConfigs"
+                        style="@style/SwissIconButton"
+                        android:src="@drawable/icon_reset" />
+                </LinearLayout>
+            </LinearLayout>
 
+            <!-- 声音 -->
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sound" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MIDI &amp; SOUND" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/midi_input_device" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SMIDIInputDevice"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/midi_soundfont" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SSoundFont"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp" />
+                <LinearLayout
+                    style="@style/SwissToolbox"
+                    android:id="@+id/SoundFontToolbox"
+                    android:layout_marginStart="8dp">
+                    <ImageButton android:id="@+id/BTSoundFontTest" style="@style/SwissIconButton" android:src="@drawable/icon_piano" />
+                    <ImageButton style="@style/SwissIconButton" android:src="@drawable/icon_install" android:tag="install" />
+                    <ImageButton style="@style/SwissIconButton" android:src="@drawable/icon_remove" android:tag="remove" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 系统 -->
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/system" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SYSTEM" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/language" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SLanguage"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:entries="@array/language_entries" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/theme" />
+                <RadioGroup
+                    android:id="@+id/RGAppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+                    <RadioButton android:id="@+id/RBLight" style="@style/SwissRadio" android:text="@string/light" />
+                    <RadioButton android:id="@+id/RBDark" style="@style/SwissRadio" android:text="@string/dark" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/CBOpenAndroidBrowserFromWine"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/open_android_browser_from_wine" />
+
+            <CheckBox
+                android:id="@+id/CBUseAndroidClipboardOnWine"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/use_android_clipboard_on_Wine" />
+
+            <CheckBox
+                android:id="@+id/CBEnableBackgroundProtection"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/enable_background_protection"
+                android:tooltipText="@string/enable_background_protection_tooltip" />
+
+            <CheckBox
+                android:id="@+id/CBEnableBackgroundWakelock"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:visibility="gone"
+                android:text="@string/enable_background_wakelock"
+                android:tooltipText="@string/enable_background_wakelock_tooltip" />
+
+            <CheckBox
+                android:id="@+id/CBSaveMemOnRunFromSteam"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/save_mem_on_run_from_steam" />
+
+            <!-- Wine / Box64 -->
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/advanced" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="WINE &amp; BOX64" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/box64_version" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SBox64Version"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp" />
+                <LinearLayout style="@style/SwissToolbox" android:id="@+id/Box64Toolbox" android:layout_marginStart="8dp">
+                    <ImageButton style="@style/SwissIconButton" android:src="@drawable/icon_install" android:tag="install" />
+                    <ImageButton style="@style/SwissIconButton" android:src="@drawable/icon_remove" android:tag="remove" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/box64_preset" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SBox64Preset"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp" />
+                <LinearLayout style="@style/SwissToolbox" android:layout_marginStart="8dp">
+                    <ImageButton style="@style/SwissIconButton" android:id="@+id/BTAddBox64Preset" android:src="@drawable/icon_add" />
+                    <ImageButton style="@style/SwissIconButton" android:id="@+id/BTEditBox64Preset" android:src="@drawable/icon_edit" />
+                    <ImageButton style="@style/SwissIconButton" android:id="@+id/BTDuplicateBox64Preset" android:src="@drawable/icon_duplicate" />
+                    <ImageButton style="@style/SwissIconButton" android:id="@+id/BTRemoveBox64Preset" android:src="@drawable/icon_remove" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/CBEnableWineDebug"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/enable_wine_debug" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:background="@drawable/swiss_row_line">
+
+                <LinearLayout
+                    android:id="@+id/LLWineDebugChannels"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="8dp" />
+            </HorizontalScrollView>
+
+            <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/box64_logs" />
+                <Spinner
+                    style="@style/SwissSpinner"
+                    android:id="@+id/SBox64Logs"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:entries="@array/box64_logs" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/CBSaveLogsToFile"
+                style="@style/SwissCheck"
+                android:background="@drawable/swiss_row_line"
+                android:text="@string/save_logs_to_file" />
+
+            <EditText
+                android:id="@+id/ETLogFile"
+                style="@style/SwissEdit"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/LLWineInstallation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/wine_version" />
                     <Spinner
-                        style="@style/ComboBox"
-                        android:id="@+id/SGamepadModel"
-                        android:layout_width="match_parent" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/player"
-                            android:layout_marginRight="8dp" />
-
-                        <LinearLayout
-                            style="@style/Toolbox">
-
-                            <LinearLayout
-                                android:id="@+id/LLGamepadPlayer"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <ImageView
-                                    style="@style/ListMenuButton"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:src="@drawable/gamepad_player_1" />
-
-                                <ImageView
-                                    style="@style/ListMenuButton"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:src="@drawable/gamepad_player_2" />
-
-                                <ImageView
-                                    style="@style/ListMenuButton"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:src="@drawable/gamepad_player_3" />
-
-                                <ImageView
-                                    style="@style/ListMenuButton"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:src="@drawable/gamepad_player_4" />
-                            </LinearLayout>
-
-                            <View style="@style/VerticalLine" />
-
-                            <ImageView
-                                android:id="@+id/BTResetGamepadPlayerConfigs"
-                                style="@style/ListMenuButton"
-                                android:layout_width="40dp"
-                                android:layout_height="40dp"
-                                android:src="@drawable/icon_reset" />
-                        </LinearLayout>
+                        style="@style/SwissSpinner"
+                        android:id="@+id/SWineVersion"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp" />
+                    <LinearLayout style="@style/SwissToolbox" android:layout_marginStart="8dp">
+                        <ImageButton style="@style/SwissIconButton" android:id="@+id/BTInstallWine" android:src="@drawable/icon_install" />
+                        <ImageButton style="@style/SwissIconButton" android:id="@+id/BTRemoveWine" android:src="@drawable/icon_remove" />
                     </LinearLayout>
                 </LinearLayout>
-
-                <TextView
-                    style="@style/FieldSetLabel"
-                    android:text="@string/game_controllers" />
-            </FrameLayout>
+            </LinearLayout>
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="24dp">
 
-                <LinearLayout style="@style/FieldSet">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/midi_input_device" />
-
-                    <Spinner
-                        style="@style/ComboBox"
-                        android:id="@+id/SMIDIInputDevice"
-                        android:layout_width="match_parent" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/midi_soundfont" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <Spinner
-                            style="@style/ComboBox"
-                            android:id="@+id/SSoundFont"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <LinearLayout
-                            style="@style/Toolbox"
-                            android:id="@+id/SoundFontToolbox">
-
-                            <ImageButton
-                                android:id="@+id/BTSoundFontTest"
-                                style="@style/ListMenuButton"
-                                android:src="@drawable/icon_piano" />
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:src="@drawable/icon_install"
-                                android:tag="install" />
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:layout_marginRight="0dp"
-                                android:src="@drawable/icon_remove"
-                                android:tag="remove" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    style="@style/FieldSetLabel"
-                    android:text="@string/sound" />
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout style="@style/FieldSet">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/language" />
-
-                    <Spinner
-                        style="@style/ComboBox"
-                        android:id="@+id/SLanguage"
-                        android:layout_width="match_parent"
-                        android:entries="@array/language_entries" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/theme" />
-
-                    <RadioGroup
-                        android:id="@+id/RGAppTheme"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <RadioButton
-                            android:id="@+id/RBLight"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/light" />
-
-                        <RadioButton
-                            android:id="@+id/RBDark"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/dark" />
-                    </RadioGroup>
-
-                    <CheckBox
-                        android:id="@+id/CBOpenAndroidBrowserFromWine"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/open_android_browser_from_wine"
-                        android:layout_marginTop="8dp" />
-
-                    <CheckBox
-                        android:id="@+id/CBUseAndroidClipboardOnWine"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/use_android_clipboard_on_Wine"
-                        android:layout_marginTop="8dp" />
-
-                    <CheckBox
-                        android:id="@+id/CBEnableBackgroundProtection"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/enable_background_protection"
-                        android:tooltipText="@string/enable_background_protection_tooltip" />
-
-                    <CheckBox
-                        android:id="@+id/CBEnableBackgroundWakelock"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:layout_marginStart="24dp"
-                        android:visibility="gone"
-                        android:text="@string/enable_background_wakelock"
-                        android:tooltipText="@string/enable_background_wakelock_tooltip" />
-
-                    <CheckBox
-                        android:id="@+id/CBSaveMemOnRunFromSteam"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/save_mem_on_run_from_steam"
-                        android:layout_marginTop="8dp" />
-                </LinearLayout>
-
-                <TextView
-                    style="@style/FieldSetLabel"
-                    android:text="@string/system" />
-            </FrameLayout>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout style="@style/FieldSet">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/box64_version" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <Spinner
-                            style="@style/ComboBox"
-                            android:id="@+id/SBox64Version"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <LinearLayout
-                            style="@style/Toolbox"
-                            android:id="@+id/Box64Toolbox">
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:src="@drawable/icon_install"
-                                android:tag="install" />
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:layout_marginRight="0dp"
-                                android:src="@drawable/icon_remove"
-                                android:tag="remove" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/box64_preset" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <Spinner
-                            style="@style/ComboBox"
-                            android:id="@+id/SBox64Preset"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <LinearLayout style="@style/Toolbox">
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:id="@+id/BTAddBox64Preset"
-                                android:src="@drawable/icon_add" />
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:id="@+id/BTEditBox64Preset"
-                                android:src="@drawable/icon_edit" />
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:id="@+id/BTDuplicateBox64Preset"
-                                android:src="@drawable/icon_duplicate" />
-
-                            <ImageButton
-                                style="@style/ListMenuButton"
-                                android:id="@+id/BTRemoveBox64Preset"
-                                android:layout_marginRight="0dp"
-                                android:src="@drawable/icon_remove" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View style="@style/FieldSeparator" />
-
-                    <CheckBox
-                        android:id="@+id/CBEnableWineDebug"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/enable_wine_debug" />
-
-                    <HorizontalScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <LinearLayout
-                            android:id="@+id/LLWineDebugChannels"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:padding="4dp" />
-                    </HorizontalScrollView>
-
-                    <View style="@style/FieldSeparator" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/box64_logs" />
-
-                    <Spinner
-                        style="@style/ComboBox"
-                        android:id="@+id/SBox64Logs"
-                        android:layout_width="match_parent"
-                        android:entries="@array/box64_logs" />
-
-                    <CheckBox
-                        android:id="@+id/CBSaveLogsToFile"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:text="@string/save_logs_to_file"
-                        android:layout_marginTop="8dp" />
-
-                    <EditText
-                        android:id="@+id/ETLogFile"
-                        style="@style/EditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:visibility="gone" />
-
-                    <LinearLayout
-                        android:id="@+id/LLWineInstallation"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:visibility="gone">
-
-                        <View style="@style/FieldSeparator" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/wine_version" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <Spinner
-                                style="@style/ComboBox"
-                                android:id="@+id/SWineVersion"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1" />
-
-                            <LinearLayout style="@style/Toolbox">
-                                <ImageButton
-                                    style="@style/ListMenuButton"
-                                    android:id="@+id/BTInstallWine"
-                                    android:src="@drawable/icon_install" />
-
-                                <ImageButton
-                                    style="@style/ListMenuButton"
-                                    android:id="@+id/BTRemoveWine"
-                                    android:layout_marginRight="0dp"
-                                    android:src="@drawable/icon_remove" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View style="@style/FieldSeparator" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_horizontal">
-
-                        <Button
-                            style="@style/ButtonNeutral"
-                            android:id="@+id/BTReinstallSystemFiles"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:text="@string/reinstall_system_files" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    style="@style/FieldSetLabel"
-                    android:text="@string/advanced" />
+                <Button
+                    style="@style/SwissButtonOutline"
+                    android:id="@+id/BTReinstallSystemFiles"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:text="@string/reinstall_system_files" />
             </FrameLayout>
         </LinearLayout>
     </ScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <TextView
         android:id="@+id/BTConfirm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|bottom"
-        android:tint="#ffffff"
-        android:src="@drawable/icon_confirm"
-        android:layout_margin="16dp"
-        app:backgroundTint="?attr/colorAccent"
-        app:rippleColor="#FFFFFFFF" />
+        style="@style/SwissConfirmBar"
+        android:layout_gravity="bottom"
+        android:text="完成" />
 </FrameLayout>

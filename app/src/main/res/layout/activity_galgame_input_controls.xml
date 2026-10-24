@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 输入控制（Swiss 宿主）：承载 InputControlsFragment -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/swiss_paper">
+
+    <!-- Fragment 会调用 getSupportActionBar().setTitle()，宿主需提供 ActionBar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/inputControlsToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:visibility="invisible" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="6dp">
+
+        <TextView
+            android:id="@+id/BTBack"
+            style="@style/SwissLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:paddingEnd="12dp"
+            android:text="←  返回" />
+
+        <TextView
+            style="@style/SwissMeta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="INPUT CONTROLS" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/SwissTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="6dp"
+        android:text="@string/input_controls" />
+
+    <FrameLayout
+        android:id="@+id/inputControlsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

@@ -531,8 +531,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             // to work. Keep the game's own folder as cwd so data/DLL lookups succeed.
             String guestExecutable;
             if (shortcut == null && getIntent().hasExtra("exec_path")) {
-                guestExecutable = "wine "+getIntent().getStringExtra("exec_path");
-                File exeFile = new File(getIntent().getStringExtra("exec_path"));
+                String execPath = getIntent().getStringExtra("exec_path");
+                String winePath = getIntent().getStringExtra(
+                        com.winlator.galgame.GalgameLaunchHelper.EXTRA_EXEC_PATH_WINE);
+                String target = (winePath != null && !winePath.isEmpty()) ? winePath : execPath;
+                boolean useDesktop = container != null
+                        && "desktop".equals(container.getExtra("galgame_launch_mode"));
+                guestExecutable = useDesktop
+                        ? "wine explorer /desktop=nogui," + xServer.screenInfo + " " + target
+                        : "wine " + target;
+                File exeFile = new File(execPath);
                 guestProgramLauncherComponent.setWorkingDirOverride(exeFile.getParentFile());
             } else {
                 guestExecutable = "wine explorer /desktop="+desktopName+","+xServer.screenInfo+" "+getWineStartCommand();

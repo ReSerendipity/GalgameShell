@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 高级设置：语言与主题 / 运行环境 / Wine·Box64 / 兼容入口 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/swiss_paper">
+
+    <!-- 旧设置 Fragment 会调用 getSupportActionBar().setTitle()，宿主需提供 ActionBar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/advancedToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:visibility="invisible" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="6dp">
+
+        <TextView
+            android:id="@+id/BTBack"
+            style="@style/SwissLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:paddingEnd="12dp"
+            android:text="←  返回" />
+
+        <TextView
+            style="@style/SwissMeta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="ADVANCED" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/SwissTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="6dp"
+        android:text="高级设置" />
+
+    <ScrollView
+        android:id="@+id/advancedScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="语言与主题" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="LANGUAGE &amp; THEME" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowLanguage" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="语言" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="切换后重启应用生效" />
+                </LinearLayout>
+                <TextView android:id="@+id/TVLanguage" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowTheme" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="主题" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="浅色 / 深色（重启应用生效）" />
+                </LinearLayout>
+                <TextView android:id="@+id/TVTheme" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="运行环境" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AUTO-MANAGED" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/LLEnvironments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <LinearLayout android:id="@+id/rowReinstall" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="重装系统文件" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="修复损坏的 Wine 前置组件" />
+                </LinearLayout>
+                <TextView style="@style/SwissTag" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="修复" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Wine / Box64" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ADVANCED" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowBox64Version" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Box64 版本" />
+                <TextView android:id="@+id/TVBox64Version" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowBox64Preset" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Box64 预设" />
+                <TextView android:id="@+id/TVBox64Preset" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="启用 Wine 调试" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="输出 warn / err 通道" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWWineDebug"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="将日志保存到文件" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="便于启动失败后排查" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWSaveLogs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="更多" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MORE" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowLegacy" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="更多设置" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="手柄 / 音色库 / MIDI / 调试通道" />
+                </LinearLayout>
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="24dp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/advancedContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone" />
+</LinearLayout>

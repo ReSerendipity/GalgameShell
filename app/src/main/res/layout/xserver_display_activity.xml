@@ -17,8 +17,8 @@
         android:layout_gravity="start"
         android:id="@+id/NavigationView"
         app:headerLayout="@layout/main_menu_header"
-        app:itemIconTint="?attr/colorAccent"
-        app:itemTextColor="?attr/colorPrimaryText"
-        android:background="?attr/colorSecondarySurface"
+        app:itemIconTint="@color/swiss_ink"
+        app:itemTextColor="@color/swiss_ink"
+        android:background="@color/swiss_paper"
         app:menu="@menu/xserver_menu"/>
 </androidx.drawerlayout.widget.DrawerLayout>

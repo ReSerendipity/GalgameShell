@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 设置：常用项 + 开发者门禁 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/swiss_paper">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="6dp">
+
+        <TextView
+            android:id="@+id/BTBack"
+            style="@style/SwissLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:paddingEnd="12dp"
+            android:text="←  返回" />
+
+        <TextView
+            style="@style/SwissMeta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="end"
+            android:text="@string/galgame_settings_meta" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/SwissTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="8dp"
+        android:text="@string/settings" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/galgame_settings_general" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/galgame_settings_general_en" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowTheme" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/galgame_settings_theme" />
+                <TextView android:id="@+id/TVTheme" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowLanguage" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/galgame_settings_language" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="在「高级设置」中切换" />
+                </LinearLayout>
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="指针速度" />
+                    <SeekBar
+                        android:id="@+id/SBCursorSpeed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="200"
+                        android:progressTint="@color/swiss_ink"
+                        android:thumbTint="@color/swiss_ink"
+                        android:progressBackgroundTint="#22000000" />
+                </LinearLayout>
+                <TextView android:id="@+id/TVSpeed" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="指针大小" />
+                    <SeekBar
+                        android:id="@+id/SBCursorSize"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:max="200"
+                        android:progressTint="@color/swiss_ink"
+                        android:thumbTint="@color/swiss_ink"
+                        android:progressBackgroundTint="#22000000" />
+                </LinearLayout>
+                <TextView android:id="@+id/TVSize" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="指针跟随触点" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="触摸时吸附到手指位置" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWFollowTouch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="外接鼠标时捕获指针" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="蓝牙 / USB 鼠标独占" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWCapture"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/galgame_settings_input" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/galgame_settings_input_en" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowInputControls" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="输入控制" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowController" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="外接控制器" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowShortcuts" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="桌面快捷方式" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/galgame_settings_about" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/galgame_settings_about_en" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/rowAbout" style="@style/SwissRow">
+                <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="关于 GalgameShell" />
+                <TextView android:id="@+id/TVVersion" style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="11.2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/galgame_settings_dev" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/galgame_settings_dev_en" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/galgame_settings_dev_mode" />
+                    <TextView android:id="@+id/TVDevMeta" style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWDevMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowAdvanced"
+                style="@style/SwissRow"
+                android:visibility="gone">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/galgame_settings_advanced_entry" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="WINE · BOX64 · 运行环境 · 语言" />
+                </LinearLayout>
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="24dp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

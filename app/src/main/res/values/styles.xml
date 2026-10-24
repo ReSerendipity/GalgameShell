@@ -120,7 +120,10 @@
              这里用具体 drawable 覆盖：冷启动即显示品牌字形（窗口 + 酒杯），不再是一块空白/黑屏 -->
         <item name="android:windowBackground">@drawable/galgame_splash</item>
         <item name="android:colorBackground">#FFF7F8FC</item>
-        <item name="android:statusBarColor">#FF4B3DBF</item>
+        <item name="android:statusBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <!-- GalgameShell R1 语义 token（亮档） -->
         <item name="colorSurfaceVariant">#FFF2F4FA</item>
         <item name="colorHairline">#FFEAEAF2</item>
@@ -142,6 +145,46 @@
     </style>
 
     <!-- GalgameShell 外壳深色主题：紫黑品牌色（设置里选「深色」时使用） -->
+    <!-- Swiss（04）：高级设置宿主的黑白主题；保留原布局结构，仅替换语义 token -->
+    <style name="GalgameSwissTheme" parent="@style/GalgameMainTheme">
+        <item name="colorPrimary">@color/swiss_ink</item>
+        <item name="colorPrimaryDark">@color/swiss_ink</item>
+        <item name="colorAccent">@color/swiss_ink</item>
+        <item name="colorPrimaryVariant">@color/swiss_ink</item>
+        <item name="colorPrimaryText">@color/swiss_ink</item>
+        <item name="colorSecondaryText">@color/swiss_muted</item>
+        <item name="colorPrimarySurface">@color/swiss_paper</item>
+        <item name="colorSecondarySurface">@color/swiss_paper</item>
+        <item name="colorSurfaceVariant">@color/swiss_pressed</item>
+        <item name="colorSecondaryVariant">@color/swiss_hairline</item>
+        <item name="colorHairline">@color/swiss_hairline</item>
+        <item name="colorControlNormal">@color/swiss_ink</item>
+        <item name="colorOnAccent">@color/swiss_paper</item>
+        <item name="colorOnAccentSubtle">@color/swiss_muted</item>
+        <item name="galgameChipBackground">@color/swiss_pressed</item>
+        <item name="galgameChipText">@color/swiss_ink</item>
+        <item name="galgameBrandStart">@color/swiss_ink</item>
+        <item name="galgameBrandEnd">@color/swiss_ink</item>
+        <item name="toolboxBackground">@drawable/swiss_toolbox_bg</item>
+        <item name="alertDialogTheme">@style/SwissAlertDialog</item>
+        <item name="android:alertDialogTheme">@style/SwissFrameworkAlertDialog</item>
+        <item name="android:colorBackground">@color/swiss_paper</item>
+        <item name="android:windowBackground">@color/swiss_paper</item>
+        <item name="android:statusBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightStatusBar">@bool/swiss_light_bars</item>
+        <item name="android:navigationBarColor">@color/swiss_paper</item>
+        <item name="android:windowLightNavigationBar">@bool/swiss_light_bars</item>
+    </style>
+
+    <style name="SwissFieldSet" parent="@style/FieldSet">
+        <item name="android:background">@drawable/swiss_fieldset</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:layout_marginTop">14dp</item>
+    </style>
+
     <style name="GalgameMainThemeDark" parent="@style/AppThemeBase">
         <item name="colorAccent">#FF8B7BF0</item>
         <item name="colorPrimary">#FF32305A</item>
@@ -162,6 +205,9 @@
         <item name="android:windowBackground">@drawable/galgame_splash_dark</item>
         <item name="android:colorBackground">#FF17161F</item>
         <item name="android:statusBarColor">#FF23203F</item>
+        <!-- 深色档状态栏/导航栏用浅色图标，避免继承亮色主题的深色图标 -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <!-- GalgameShell R1 语义 token（深档） -->
         <item name="colorSurfaceVariant">#FF2A2938</item>
         <item name="colorHairline">#FF33324A</item>
@@ -186,6 +232,13 @@
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
     <style name="AppThemeFullscreenDark" parent="@style/AppThemeDark">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
+    <!-- 游戏运行屏：沿用 Swiss 纸面语言（抽屉 / 对话框 / 预加载都跟外壳一致） -->
+    <style name="GalgameSwissThemeFullscreen" parent="@style/GalgameSwissTheme">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
@@ -253,12 +306,12 @@
         <item name="android:windowFullscreen">true</item>
         <!-- GalgameShell：上游 ?attr/popupMenuBackground 在本主题无解析来源（背景从未生效）。
              对话框主题独立于 Activity，这里显式补齐品牌属性并按亮/深由代码选择 -->
-        <item name="android:windowBackground">@drawable/galgame_dialog_bg</item>
-        <item name="colorAccent">#FF6A5AE0</item>
-        <item name="colorPrimaryVariant">#FF6A5AE0</item>
-        <item name="colorSecondaryVariant">#FFE6E9F0</item>
-        <item name="colorPrimaryText">#FF1F2430</item>
-        <item name="colorSecondaryText">#FF6B7280</item>
+        <item name="android:windowBackground">@drawable/swiss_dialog_bg</item>
+        <item name="colorAccent">@color/swiss_ink</item>
+        <item name="colorPrimaryVariant">@color/swiss_ink</item>
+        <item name="colorSecondaryVariant">@color/swiss_hairline</item>
+        <item name="colorPrimaryText">@color/swiss_ink</item>
+        <item name="colorSecondaryText">@color/swiss_muted</item>
     </style>
     <!-- GalgameShell：ContentDialog 深色档（ContentDialog 构造按 Activity 主题亮度选择） -->
     <style name="ContentDialogDark" parent="@android:style/Theme.Dialog">
@@ -306,7 +359,7 @@
     </style>
     <style name="Toolbar" parent="@android:style/Widget.Toolbar">
         <item name="android:background">?attr/colorPrimary</item>
-        <item name="titleTextColor">#ffffff</item>
+        <item name="titleTextColor">@color/swiss_paper</item>
         <item name="titleTextAppearance">@style/TitleTextAppearance</item>
     </style>
     <style name="BaseButton">
@@ -327,7 +380,7 @@
     </style>
     <style name="ButtonPositive" parent="BaseButton">
         <item name="android:background">@drawable/button_positive</item>
-        <item name="android:textColor">#ffffff</item>
+        <item name="android:textColor">@color/swiss_paper</item>
     </style>
     <style name="BaseImageButton">
         <item name="android:layout_width">42dp</item>
@@ -399,19 +452,19 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">28dp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">#ffffff</item>
+        <item name="android:textColor">?attr/colorOnAccent</item>
         <item name="android:paddingLeft">4dp</item>
         <item name="android:gravity">center_vertical</item>
     </style>
     <style name="TableHeadRightLine">
         <item name="android:layout_width">1dp</item>
         <item name="android:layout_height">match_parent</item>
-        <item name="android:background">#0278b8</item>
+        <item name="android:background">?attr/colorOnAccent</item>
     </style>
     <style name="TableHeadBottomLine">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>
-        <item name="android:background">#0278b8</item>
+        <item name="android:background">?attr/colorOnAccent</item>
     </style>
     <style name="TableBodyRightLine">
         <item name="android:layout_width">1dp</item>

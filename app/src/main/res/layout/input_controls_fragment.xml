@@ -1,136 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 输入控制（Swiss 行结构）：配置档 / 指针 / 外部控制器 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@color/swiss_paper"
+    android:scrollbars="none">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/profile" />
+        <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+            <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/profile" />
+            <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PROFILE" />
+        </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
+        <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
             <Spinner
-                style="@style/ComboBox"
+                style="@style/SwissSpinner"
                 android:id="@+id/SProfile"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:layout_weight="1" />
-
-            <LinearLayout style="@style/Toolbox">
-                <ImageButton
-                    style="@style/ListMenuButton"
-                    android:id="@+id/BTAddProfile"
-                    android:src="@drawable/icon_add" />
-
-                <ImageButton
-                    style="@style/ListMenuButton"
-                    android:id="@+id/BTEditProfile"
-                    android:src="@drawable/icon_edit" />
-
-                <ImageButton
-                    style="@style/ListMenuButton"
-                    android:id="@+id/BTDuplicateProfile"
-                    android:src="@drawable/icon_duplicate" />
-
-                <ImageButton
-                    style="@style/ListMenuButton"
-                    android:id="@+id/BTRemoveProfile"
-                    android:layout_marginRight="0dp"
-                    android:src="@drawable/icon_remove" />
+            <LinearLayout style="@style/SwissToolbox" android:layout_marginStart="8dp">
+                <ImageButton style="@style/SwissIconButton" android:id="@+id/BTAddProfile" android:src="@drawable/icon_add" />
+                <ImageButton style="@style/SwissIconButton" android:id="@+id/BTEditProfile" android:src="@drawable/icon_edit" />
+                <ImageButton style="@style/SwissIconButton" android:id="@+id/BTDuplicateProfile" android:src="@drawable/icon_duplicate" />
+                <ImageButton style="@style/SwissIconButton" android:id="@+id/BTRemoveProfile" android:src="@drawable/icon_remove" />
             </LinearLayout>
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cursor_speed"/>
+        <LinearLayout style="@style/SwissRow" android:orientation="vertical" android:clickable="false" android:focusable="false">
+            <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/cursor_speed" />
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBCursorSpeed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="%"
+                app:minValue="10"
+                app:maxValue="250" />
+        </LinearLayout>
 
-        <com.winlator.widget.SeekBar
-            android:id="@+id/SBCursorSpeed"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:suffix="%"
-            app:minValue="10"
-            app:maxValue="250" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/overlay_opacity"/>
-
-        <com.winlator.widget.SeekBar
-            android:id="@+id/SBOverlayOpacity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:suffix="%"
-            app:step="5"
-            app:minValue="10"
-            app:maxValue="100" />
+        <LinearLayout style="@style/SwissRow" android:orientation="vertical" android:clickable="false" android:focusable="false">
+            <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/overlay_opacity" />
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBOverlayOpacity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:suffix="%"
+                app:step="5"
+                app:minValue="10"
+                app:maxValue="100" />
+        </LinearLayout>
 
         <CheckBox
             android:id="@+id/CBDisableMouseInput"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/disable_mouse_input"
-            android:layout_marginTop="8dp" />
+            style="@style/SwissCheck"
+            android:background="@drawable/swiss_row_line"
+            android:text="@string/disable_mouse_input" />
 
-        <View
-            style="@style/HorizontalLine"
-            android:layout_marginTop="16dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+        <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false">
             <Button
-                style="@style/ButtonNeutral"
+                style="@style/SwissButtonOutline"
                 android:id="@+id/BTImportProfile"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="44dp"
                 android:layout_weight="1"
+                android:layout_marginEnd="8dp"
                 android:text="@string/import_profile" />
-
             <Button
-                style="@style/ButtonNeutral"
+                style="@style/SwissButtonOutline"
                 android:id="@+id/BTExportProfile"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="44dp"
                 android:layout_weight="1"
                 android:text="@string/export_profile" />
         </LinearLayout>
 
-        <View style="@style/HorizontalLine" />
-
-        <Button
-            style="@style/ButtonPositive"
-            android:id="@+id/BTControlsEditor"
-            android:layout_width="240dp"
+        <FrameLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="@string/controls_editor" />
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="20dp"
+            android:background="@drawable/swiss_row_line">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="@string/external_controllers"
-            android:textColor="?attr/colorPrimaryVariant"
-            android:layout_marginTop="8dp" />
+            <Button
+                style="@style/SwissButtonSolid"
+                android:id="@+id/BTControlsEditor"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="@string/controls_editor" />
+        </FrameLayout>
 
-        <View style="@style/HorizontalLine" />
+        <LinearLayout style="@style/SwissRow" android:clickable="false" android:focusable="false" android:paddingTop="18dp" android:paddingBottom="6dp">
+            <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/external_controllers" />
+            <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CONTROLLERS" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/LLExternalControllers"
@@ -140,9 +109,13 @@
 
         <TextView
             android:id="@+id/TVEmptyText"
+            style="@style/SwissRowMeta"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="24dp"
             android:text="@string/no_items_to_display"
             android:visibility="gone" />
     </LinearLayout>
