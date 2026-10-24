@@ -123,6 +123,46 @@ Git-Bash / WSL 下则直接执行钩子本体（`sh ci/pre-push`），它与已�
    bash tools/make_runtime_checksums.sh   # 输出 RELEASE-RUNTIME-CHECKSUMS.txt（勿提交，随包分发）
    ```
 
+### Gradle wrapper 拉不下来时（PKIX 报错 / 半截缓存）
+
+`./gradlew` 按 `gradle/wrapper/gradle-wrapper.properties` 去下载 `gradle-8.14.5-bin.zip`。
+在有 TLS 拦截的代理 / VPN 环境下这一步会失败：
+
+```
+Caused by: sun.security.validator.ValidatorException: PKIX path building failed:
+  sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid
+  certification path to requested target
+```
+
+失败还会在 `~/.gradle/wrapper/dists/gradle-8.14.5-bin/` 留下**半截缓存**（只有
+`gradle-8.14.5-bin.zip.part` 与 `.lck`，没有解包目录、没有 `.ok`）。此后每次 `./gradlew`
+都会重试下载并同样失败，表现为"构建卡住"。
+
+> 这是本机缓存与网络环境的状态，不是仓库缺陷；网络正常的机器上不会遇到。
+
+先看缓存里有没有**已完整**的其它版本（有解包目录 + `.ok` 才算完整）：
+
+```bash
+for d in ~/.gradle/wrapper/dists/*/*/; do
+  [ -d "$d" ] || continue
+  ok=$(find "$d" -maxdepth 1 -name "*.ok" 2>/dev/null | wc -l)
+  printf "%-60s %s\n" "$(basename "$(dirname "$d")")/$(basename "$d")" \
+    "$([ "$ok" -gt 0 ] && echo 完整 || echo 不完整)"
+done
+```
+
+若某个版本完整（例如 `gradle-8.14.3`），直接调用它的二进制并加 `--offline`，完全绕开网络：
+
+```bash
+G=$(ls -d ~/.gradle/wrapper/dists/gradle-8.14.3-bin/*/gradle-8.14.3/bin/gradle | head -1)
+"$G" --version                      # 先确认能跑
+"$G" :app:assembleDebug --offline --console=plain > build.log 2>&1
+echo "exit=$?"                      # 0 才算成功，日志里应有 BUILD SUCCESSFUL
+```
+
+> ⚠️ 不要用 `./gradlew … | tail` 的管道退出码判断构建成败：那是 `tail` 的退出码，
+> 构建失败也会显示 0。要么直接看 `$?`，要么 grep 日志里的 `BUILD SUCCESSFUL` / `FAILURE`。
+
 ## 参与方式
 
 - 欢迎提交 Issue 与 Pull Request。本仓采用 DCO：所有提交须带 `Signed-off-by` 签署（`git commit -s` 自动追加），CI 会在 PR 上逐提交校验；本地门禁、提交约定与许可证要求见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)。
