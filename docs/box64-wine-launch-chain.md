@@ -304,10 +304,13 @@ put_WindowStyle(0x56000000)
 | 容器尺寸不匹配（1280x720 vs 1920x1080 片头） | 排除：把 `screenSize` 改成 1920x1080，死锁位置**完全一致** |
 | 应用侧 X server 卡在写 socket | 排除：卡死期间应用线程全在 `do_epoll_wait` / `futex_wait_queue`，无 socket 写 |
 
-**一条独立的代码级缺陷（不构成本次已证因果）**：
-`app/src/main/cpp/winlator/src/xoutput_stream.c` 的 `XOutputStream_send` 是裸阻塞
+**一条独立的代码级缺陷（不构成本次已证因果，已修）**：
+`app/src/main/cpp/winlator/src/xoutput_stream.c` 的 `XOutputStream_send` 原本是裸阻塞
 `write()`，无非阻塞/EAGAIN 处理，且把部分写当成功（`bytesSent >= 0`）——部分写会截断
-X11 协议流。既然 X server 在卡死期间是空闲的，这条不是本次元凶，但值得单独立项修。
+X11 协议流，`write()` 还会触发 SIGPIPE。既然 X server 在卡死期间是空闲的，这条不是本次
+元凶，但已按缺陷单修：改为 `send(MSG_NOSIGNAL)` 循环写满，EINTR 重试，EAGAIN 时
+`poll(POLLOUT)` 最多等 2 秒（把"无限期卡住并占着流锁"变成有界失败）。失败传播的缺口
+（`sendEvent` 的 catch 只 `printStackTrace`、不终止连接）另记 TD-10。
 
 **取证过程中的两次自我更正**（留痕，避免后人重蹈）：
 

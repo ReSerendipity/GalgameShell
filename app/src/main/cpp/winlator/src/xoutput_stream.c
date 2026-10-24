@@ -2,6 +2,9 @@
 #include <string.h>
 #include <jni.h>
 #include <unistd.h>
+#include <errno.h>
+#include <poll.h>
+#include <sys/socket.h>
 
 #include "winlator.h"
 #include "socket_utils.h"
@@ -42,20 +45,58 @@ static void XOutputStream_destroy(XOutputStream* outputStream) {
     MEMFREE(outputStream);
 }
 
+/* A blocking write to a client that has stopped reading would wedge this thread while it
+ * holds the stream lock, stalling the whole X server. Bound the wait and treat a timeout as
+ * a dead connection instead. */
+#define XOUTPUT_WRITE_TIMEOUT_MS 2000
+
+static jboolean XOutputStream_writeAll(XOutputStream* outputStream, int length) {
+    char* data = (char*)outputStream->buffer.data;
+    int total = 0;
+
+    while (total < length) {
+        int bytesSent = send(outputStream->fd, data + total, length - total, MSG_NOSIGNAL);
+
+        if (bytesSent > 0) {
+            total += bytesSent;
+            continue;
+        }
+        if (bytesSent < 0 && errno == EINTR) continue;
+        if (bytesSent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            struct pollfd pfd = { .fd = outputStream->fd, .events = POLLOUT, .revents = 0 };
+            int ready;
+            do {
+                ready = poll(&pfd, 1, XOUTPUT_WRITE_TIMEOUT_MS);
+            }
+            while (ready < 0 && errno == EINTR);
+            if (ready > 0) continue;
+        }
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
 static jboolean XOutputStream_send(XOutputStream* outputStream) {
     if (outputStream->buffer.position == 0) return JNI_TRUE;
-    outputStream->buffer.limit = outputStream->buffer.position;
+
+    int length = outputStream->buffer.position;
+    outputStream->buffer.limit = length;
     outputStream->buffer.position = 0;
 
-    int bytesSent;
+    jboolean success;
     if (outputStream->ancillaryFd > 0) {
-        bytesSent = send_fds(outputStream->fd, &outputStream->ancillaryFd, 1, outputStream->buffer.data, outputStream->buffer.limit);
+        /* The file descriptor rides along with this message, so a short send cannot be
+         * retried without duplicating it: treat anything but a full send as fatal. */
+        int bytesSent = send_fds(outputStream->fd, &outputStream->ancillaryFd, 1, outputStream->buffer.data, length);
         outputStream->ancillaryFd = 0;
+        success = bytesSent == length ? JNI_TRUE : JNI_FALSE;
     }
-    else bytesSent = write(outputStream->fd, outputStream->buffer.data, outputStream->buffer.limit);
+    else success = XOutputStream_writeAll(outputStream, length);
 
     outputStream->buffer.limit = outputStream->buffer.capacity;
-    return bytesSent >= 0 ? JNI_TRUE : JNI_FALSE;
+    outputStream->buffer.position = 0;
+    return success;
 }
 
 JNIEXPORT jlong JNICALL
