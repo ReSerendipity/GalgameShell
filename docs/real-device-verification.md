@@ -203,3 +203,51 @@ YU-RIS / SystemNNN / ADVHD / BGI 无一通过。
 截图：`_test/playtest/<label>_t0|t30|t60.png`（17 组，仓外）。
 量化表：同目录 `results.txt` + 本地 `analyze_playtest.py` 输出。
 
+---
+
+## 8. 两项绕过实验（2026-10-24）
+
+本节验证 §7 里两类失败是否有可行绕过。
+
+### 8.1 YU-RIS 片头：禁用 quartz → 致命错误，无法跳过 ❌
+
+思路：让 DirectShow 直接失败（`quartz=disabled`），很多引擎会静默跳过 OP 继续进正片。
+
+实测（容器 xuser-10 / `yuris_lufia`，仅改注册表覆盖，其余不变）：
+
+| 配置 | 结果 |
+|---|---|
+| `quartz=native,builtin`（原状） | 全黑挂死（TD-09） |
+| `quartz=disabled` | 不再挂死，弹出 YU-RIS 错误框：`data\script\eris\es_movieplay.yst` 第 85 行「ムービー再生に失敗しました。」，按钮是 **終了(X)** |
+
+**结论**：引擎把"影片播放失败"当**致命错误**并退出，不会跳过片头。所以
+"关掉视频子系统绕过"这条路对 YU-RIS 不成立。
+
+副作用值得记：`quartz=disabled` 把"永远黑屏"变成"一条明确报错"，**排障可读性更好**，
+但不是可玩方案。
+
+### 8.2 KiriKiri：改走 Wine 容器 → 成功 ✅
+
+思路：§7 里 `krkr_tobenai` 在 KR2 下报 `Member 'wf' does not exist`。它自带了 Windows 版
+`game.exe`，用原版引擎跑就没有"模拟器缺成员"的问题。
+
+验证手法（不改代码）：把 `/sdcard/Games/krkr_tobenai` 下所有 `.xp3` 临时改名，使引擎检测
+落到 UNKNOWN → 导入走容器路线 → 建出 `xuser-16` → 在容器内还原 `.xp3` 文件名 → 直启
+`game.exe`。
+
+| 路径 | 结果 |
+|---|---|
+| KR2（内置引擎） | ❌ `Member 'wf' does not exist @line(7202)` |
+| Wine 容器（原版 `game.exe`） | ✅ 分辨率选择框（含标题美术）→ Clover splash → **标题页（CONTINUE / START / LOAD）** |
+
+**结论**：KiriKiri 走容器是可行解。四个样本都带 Windows exe
+（`joui2.exe` / `bosei2.exe` / `とける風花とシロうさぎ.exe` / `game.exe`），前提成立。
+
+### 8.3 落地缺口
+
+§8.2 证明路线可行，但**应用当前不会这么走**：`GameEngineRegistry.resolve()` 按引擎枚举
+映射（`KIRIKIRI → KrkrEngine`），即使游戏已经有容器，仍然进内置 KR2。
+
+要落地需要：库索引加"强制容器"标记 → `resolve()` 前置判断 → 详情页开关 + 按需建容器。
+（`xuser-16` 是本轮为验证而建的容器，可删。）
+
