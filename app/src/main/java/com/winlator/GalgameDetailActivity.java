@@ -71,12 +71,17 @@ public class GalgameDetailActivity extends AppCompatActivity {
         String preferred = getIntent().getStringExtra(EXTRA_PREFERRED);
         if (gameId == null) gameId = "";
 
+        // 转换后本页 intent 里既没有容器名也没有运行方式；两者都按库索引兜底，
+        // 否则转换完仍会按旧状态显示并继续走内置引擎。
+        GalgameLibraryIndex.Entry indexEntry = GalgameLibraryIndex.find(this, gameId);
+        if (preferred == null && indexEntry != null) preferred = indexEntry.preferredEngine;
+
         container = findContainer(containerName);
+        if (container == null) container = findContainerByGameId(gameId);
         if (container != null) {
             item = GalgameLibraryAdapter.fromContainer(container, preferred);
         } else {
-            GalgameLibraryIndex.Entry e = GalgameLibraryIndex.find(this, gameId);
-            if (e != null) item = GalgameLibraryAdapter.fromIndexEntry(e);
+            if (indexEntry != null) item = GalgameLibraryAdapter.fromIndexEntry(indexEntry);
             else item = new GalgameLibraryAdapter.Item(null, gameId, label != null ? label : gameId,
                     engine != null ? engine : "?", null, null, engine, preferred);
         }
@@ -95,6 +100,12 @@ public class GalgameDetailActivity extends AppCompatActivity {
         if (containers == null) return null;
         for (Container c : containers) if (name.equals(c.getName())) return c;
         return null;
+    }
+
+    /** 「改用 Wine 容器运行」转换完成后，本页的 intent 里没有容器名；按命名约定兜底找回。 */
+    private Container findContainerByGameId(String gameId) {
+        if (gameId == null || gameId.isEmpty()) return null;
+        return findContainer("galgame-" + gameId);
     }
 
     private void bindHeader() {
