@@ -326,3 +326,28 @@ X11 协议流，`write()` 还会触发 SIGPIPE。既然 X server 在卡死期间
 
 **可修性**：Wine 侧，应用层不可改。要落地修复需改 rootfs 里的 Wine（上游预编译产物），
 或由上游 Wine 修 `quartz` 的窗口路径。TD-09 已按此更新偿还条件。
+
+### 7.3 虚拟桌面绕过路线：当前不可用（2026-10-24）
+
+TD-09 的一个候选绕过是"把游戏跑在虚拟桌面里"——游戏窗口会变成 `explorer` 桌面的子窗口，
+窗口归属线程改变，跨线程 `SendMessage` 的前提可能消失。应用本来就有这个开关：容器 extra
+里 `galgame_launch_mode=desktop` 时，`XServerDisplayActivity` 会执行
+`wine explorer /desktop=nogui,<res> <target>`。
+
+实测：
+
+| 场景 | 结果 |
+|---|---|
+| 不带 `exec_path` 启动容器（`explorer /desktop=<name>,<res>`，无程序参数） | ✅ 正常出桌面（Wine 桌面 + 文件管理器 + 任务栏） |
+| `galgame_launch_mode=desktop` + 指定程序 | ❌ 全黑；`explorer.exe` 变僵尸，游戏进程从未启动 |
+
+代码侧定位到一处真实缺陷并已修：桌面分支把 `target` 原样交给 explorer，而只传 `exec_path`
+时 `target` 是**宿主 unix 路径**，explorer 不认。现已用
+`GalgameLaunchHelper.toWindowsPath()` 补成 `C:\` 路径。
+
+**修好路径后仍然失败**：`wineserver` 与 `winedevice.exe` 在跑，`explorer` 与游戏进程都不在。
+即 `explorer /desktop=… <program>` 这个形态在当前 Wine 10.10 + box64 组合下起不了程序
+（不带程序参数则正常）。
+
+**结论**：虚拟桌面作为 TD-09 的绕过路线**当前不可用**，瓶颈在 Wine/box64 侧。
+剩余候选只有"绕过片头"与"上游 Wine 修复"。

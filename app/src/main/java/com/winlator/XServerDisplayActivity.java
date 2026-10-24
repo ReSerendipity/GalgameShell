@@ -537,6 +537,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 String target = (winePath != null && !winePath.isEmpty()) ? winePath : execPath;
                 boolean useDesktop = container != null
                         && "desktop".equals(container.getExtra("galgame_launch_mode"));
+                if (useDesktop && (winePath == null || winePath.isEmpty())) {
+                    // explorer 只认 DOS 路径；这里给的是宿主 unix 路径时它会立刻退出，
+                    // 表现为「桌面模式全黑 + explorer.exe 变僵尸」。
+                    String derived = com.winlator.galgame.GalgameLaunchHelper.toWindowsPath(container, execPath);
+                    if (derived != null && !derived.isEmpty()) target = derived;
+                }
                 guestExecutable = useDesktop
                         ? "wine explorer /desktop=nogui," + xServer.screenInfo + " " + target
                         : "wine " + target;

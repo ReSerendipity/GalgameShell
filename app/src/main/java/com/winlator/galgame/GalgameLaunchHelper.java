@@ -45,7 +45,7 @@ public final class GalgameLaunchHelper {
     public static final String EXTRA_EXEC_PATH_WINE = "exec_path_wine";
 
     /** 容器内 drive_c 下的宿主路径转 Windows 路径；不在 drive_c 下返回 null。 */
-    static String toWindowsPath(Container container, String hostPath) {
+    public static String toWindowsPath(Container container, String hostPath) {
         try {
             String prefix = new File(container.getRootDir(), ".wine/drive_c").getAbsolutePath();
             if (hostPath.startsWith(prefix + "/")) {
