@@ -163,6 +163,56 @@ public class GalgameDetailActivity extends AppCompatActivity {
         diagTag.setText(container != null ? "可检查" : "不可用");
         ((TextView) findViewById(R.id.TVSavesMeta)).setText("S: 盘 · 已重定向");
         bindForceContainer();
+        bindResolution();
+    }
+
+    /** 可选虚拟屏尺寸：默认 720p 对多数 galgame 是"正好铺满"，越大越不容易裁切但小窗感越强。 */
+    private static final String[] RESOLUTIONS = {"1280x720", "1600x900", "1920x1080"};
+
+    /**
+     * 「运行环境分辨率」：改容器的虚拟屏尺寸，下次启动生效（无需重建容器）。
+     *
+     * <p>存在理由：X 虚拟屏先裁切、再等比缩放到设备视图（{@code ViewTransformation}）。
+     * 游戏内选的分辨率超过虚拟屏时，超出部分在缩放前就被裁掉，表现为"能渲染但点不动"。
+     */
+    private void bindResolution() {
+        View row = findViewById(R.id.BTResolution);
+        if (row == null) return;
+        if (container == null) {
+            row.setVisibility(View.GONE);
+            return;
+        }
+        row.setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.TVResolutionValue)).setText(
+                getString(R.string.galgame_resolution_value, container.getScreenSize()));
+        row.setOnClickListener(v -> showResolutionPicker());
+    }
+
+    private void showResolutionPicker() {
+        if (container == null) return;
+        int current = 0;
+        String cur = container.getScreenSize();
+        for (int i = 0; i < RESOLUTIONS.length; i++) if (RESOLUTIONS[i].equals(cur)) current = i;
+
+        // 用 setItems 而不是 setSingleChoiceItems：与 setMessage 同时用时列表会被挤掉，
+        // 本主题下实测只剩标题+提示+取消。当前值改为标在标签里。
+        String[] labels = new String[RESOLUTIONS.length];
+        for (int i = 0; i < RESOLUTIONS.length; i++) {
+            labels[i] = RESOLUTIONS[i] + (i == current ? "（当前）" : "");
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_resolution_title)
+                .setItems(labels, (dialog, which) -> {
+                    String picked = RESOLUTIONS[which];
+                    container.setScreenSize(picked);
+                    container.saveData();
+                    ((TextView) findViewById(R.id.TVResolutionValue)).setText(
+                            getString(R.string.galgame_resolution_value, picked));
+                    toast(getString(R.string.galgame_resolution_done, picked));
+                })
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
     }
 
     /**
