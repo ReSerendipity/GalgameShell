@@ -251,6 +251,33 @@
                             android:text="@string/galgame_force_container_action" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:id="@+id/BTResolution"
+                        style="@style/SwissRow"
+                        android:visibility="gone">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                style="@style/SwissRowTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/galgame_resolution_title" />
+                            <TextView
+                                android:id="@+id/TVResolutionValue"
+                                style="@style/SwissRowMeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/galgame_resolution_action" />
+                    </LinearLayout>
+
                     <LinearLayout style="@style/SwissRow">
                         <LinearLayout
                             android:layout_width="0dp"

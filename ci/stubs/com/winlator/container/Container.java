@@ -15,6 +15,7 @@ public class Container {
     public void saveData() {}
     public String getName() { return ""; }
     public String getScreenSize() { return ""; }
+    public void setScreenSize(String screenSize) {}
     public String getGraphicsDriver() { return ""; }
     public String getDXWrapper() { return ""; }
     public String getAudioDriver() { return ""; }

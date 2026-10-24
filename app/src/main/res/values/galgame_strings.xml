@@ -148,6 +148,11 @@
     <string name="galgame_force_container_done">已切换为 Wine 容器</string>
     <string name="galgame_force_container_failed">转换失败</string>
     <string name="galgame_force_container_no_source">找不到游戏源目录，无法转换</string>
+    <string name="galgame_resolution_title">运行环境分辨率</string>
+    <string name="galgame_resolution_action">调整  ›</string>
+    <string name="galgame_resolution_hint">游戏内选的分辨率不能超过它：超出时游戏窗口会比虚拟屏还大，画面被裁切、点击也会失准。改完下次启动生效。</string>
+    <string name="galgame_resolution_value">%1$s · 游戏内不要超过它</string>
+    <string name="galgame_resolution_done">已设为 %1$s，下次启动生效</string>
     <string name="galgame_env_embedded">内嵌引擎</string>
     <string name="galgame_reinject">重新注入运行环境</string>
     <string name="galgame_reinject_meta">修复日文 / 视频 / 存档注入</string>
