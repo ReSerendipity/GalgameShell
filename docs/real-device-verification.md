@@ -24,6 +24,10 @@
 
 ## 2. 结论速览
 
+> **本节是 2026-10-22～24 的首轮结论，只到"渲染级/启动级"。**
+> 2026-10-24 追加的**逐游戏实际游玩验证**（17 个样本、每款约 60 秒输入）见 **§7**——
+> 那里有 8 个可玩、4 类失败归因，口径比本节更严格。
+
 验证严格区分两个层级：**渲染级**（真的看到画面）与**启动级**（launcher 已派发到
 `XServerDisplayActivity`，渲染结果未评估）。批次脚本只记录了后者，不能混为一谈。
 
@@ -129,3 +133,73 @@ adb shell "run-as com.winlator cat files/wine_exec.log" > wine_exec.log
 | box64 重建/链接日志 | 同上 `logs/box64_build.log`、`box64_link2.log` |
 
 > 这些证据不入库（体积与机器路径），需要归档时应在仓内另建一份脱敏摘要。
+
+---
+
+## 7. 逐游戏「实际游玩」验证（2026-10-24）
+
+前几节只到"渲染"与"启动"两级。本节按**能否真的玩起来**做验证：启动后给予约 60 秒
+连续输入，再判定画面是否进入可交互状态。
+
+### 7.1 方法
+
+- **输入**：右侧菜单区垂直扫点（命中 Start/开始，不依赖具体菜单坐标）→ 中心点击 +
+  `KEYCODE_ENTER` + `KEYCODE_SPACE` 轮换，共约 60 秒
+- **取证**：启动后 12s / 中段 / 结束各截一帧
+- **判据**：截图亮度均值、非黑像素占比、帧间哈希差；再对每类抽查目视确认
+
+### 7.2 结果
+
+样本全部取自 `D:\need load`（79 个归档）中体积最小的代表，按引擎分组。
+
+| 类型 | 游戏 | 结果 | 依据 |
+|---|---|---|---|
+| KIRIKIRI | `krkr_caste`（カースト上位の牝たち…） | ✅ **可玩** | IPPA 警告页 → 标题页，菜单可点 |
+| KIRIKIRI | `krkr_munsei`（母性女友2） | ✅ **可玩** | 厂牌 splash → 游戏内「退出确认」对话框 |
+| KIRIKIRI | `krkr_tokekaze` / `krkr_tobenai` | ⚠️ **KiriKiri 脚本错误** | `Member 'win'/'wf' does not exist`（见 §7.4 归因存疑） |
+| SIGLUS | `hana9test`（花瓣！） | ✅ **可玩** | 标题页 → 菜单/Extra 可导航 |
+| SIGLUS | `test_siglus`（モザイクの天使） | ✅ **可玩** | 标题页 START/CONTINUE/… 菜单 |
+| SIGLUS | `siglus_sayaga`（サヤガタリ） | ✅ **可玩** | 标题页 はじめから/つづきから… |
+| UNITY | `test_unity`（KamikuraHina） | ✅ **可玩** | 进入游戏内 GALLERY 界面 |
+| UNITY | `unity_shiina`（椎名真穂） | ✅ **可玩** | 标题页 GAME START/… 菜单 |
+| UNITY | `unity_swan`（The Weeping Swan） | ✅ **可玩** | 标题页 スタート/ロード/… |
+| UNITY | `unity_nekoya` | ❌ 未进入游戏 | 启动后回到库页，原因未定 |
+| YU-RIS | `yuris_lufia`（REIJUNOACOLYTE） | ❌ 全黑 | 状态栏以下 0 个亮像素 |
+| YU-RIS | `yuris_nyonin`（にょにんじま2） | ❌ 全黑 | 仅左侧 6px 竖线，其余全黑 |
+| YU-RIS | `yuris_karakoi` | ❌ **DRM 拦截** | 弹出 **SdWrap / ソフト電池（SoftDenchi）** 对话框，要求安装软电池运行时 |
+| ADVHD | `test_advhd` / `advhd_toran` | ❌ 未进入游戏 | 启动后回到库页 |
+| BGI | `bgi_ryo` | ⚠️ 方法受限 | 日文 exe 名需 `exec_path_wine`，本轮参数转义失败（见 §7.4） |
+| SystemNNN | `sysnnn_sainogami` | ❌ 全黑 | 状态栏以下仅 4px 竖线 |
+
+**通过率**：17 个样本中 **8 个可玩**，全部集中在 KIRIKIRI / SIGLUS / UNITY 三类；
+YU-RIS / SystemNNN / ADVHD / BGI 无一通过。
+
+### 7.3 失败归类
+
+| 类别 | 游戏 | 性质 |
+|---|---|---|
+| **DRM 拦截** | `yuris_karakoi` | 非缺陷：SdWrap/SoftDenchi 商业加密，按 A5 决策只提示不破解 |
+| **黑屏（TD-09）** | `yuris_lufia` / `yuris_nyonin` / `sysnnn_sainogami` | Wine 内建 quartz 的 `put_WindowStyle` 跨线程死锁 |
+| **KiriKiri 脚本错误** | `krkr_tobenai`（及疑似 `krkr_tokekaze`） | `Member 'win'/'wf' does not exist` —— 游戏脚本用到 Kirikiroid2 当前版本没有的引擎成员 |
+| **未进入游戏** | `unity_nekoya` / `test_advhd` / `advhd_toran` | 启动后即回到库页，本轮未取到原因 |
+
+### 7.4 方法与局限（重要，避免误读）
+
+1. **两条启动路径不同**。容器类游戏（SIGLUS/UNITY/YU-RIS/ADVHD/BGI/SystemNNN）
+   走 `am start XServerDisplayActivity`；KIRIKIRI 走「详情页 → 启动」→ KR2。
+   前者跳过了 `GameLauncher` 的路由决策，**只验证引擎运行，不验证路由**。
+2. **非 ASCII exe 名必须同时传 `exec_path_wine`**（`C:\` 路径）。本轮 `bgi_ryo`
+   两次尝试都因 shell 反斜杠转义失败而报
+   `wine: failed to open "C:galgamebgi_ryo\..."`——**这是验收脚本的缺陷，不是应用缺陷**，
+   该游戏结论**未定**。
+3. **KR2 的「启动最近游戏」按的是引擎自己的持久列表索引**，不保证是刚写入的那一项。
+   因此 `krkr_tokekaze` 的报错标题显示的是「飛べない蝶のバレンタイン」（另一样本），
+   这两条的归属**存疑**；能确认的是 KR2 对它们报了 KiriKiri 脚本错误。
+4. **「可玩」的判据是"进入可交互画面并响应输入"**，不是"通关"或"玩了很久"。
+   多数样本停在标题页/画廊，未验证剧情推进、存档读写、长时间稳定性。
+
+### 7.5 证据
+
+截图：`_test/playtest/<label>_t0|t30|t60.png`（17 组，仓外）。
+量化表：同目录 `results.txt` + 本地 `analyze_playtest.py` 输出。
+
