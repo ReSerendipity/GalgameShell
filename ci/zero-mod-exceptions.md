@@ -37,6 +37,18 @@
 所以在此预先登记为依据；恢复后用下面第三行的引用检查复验。在此之前**不动** `strings.xml`——
 本 fork 现在没有引用，改动只会无谓触碰受守卫文件。
 
+## 受守卫路径之外的 upstream 文件改动（登记备查）
+
+零改守卫只拦上表三条路径，但 fork 对 upstream 的改动远不止这些（见 TD-08）。本节登记
+**不属于守卫范围**、但确实改过的 upstream 文件，便于 rebase 时评估冲突面。
+
+| 路径 | 改动内容 | 依据 | 为什么不放进 `com.winlator.galgame` |
+|---|---|---|---|
+| `app/src/main/cpp/winlator/src/xoutput_stream.c` | `XOutputStream_send` 由裸 `write()` 改为 `send(MSG_NOSIGNAL)` 循环写满；EINTR 重试；EAGAIN 时 `poll(POLLOUT)` 上限 2 秒；整体发送失败（含附带 fd 的短写）返回 false | 2026-10-24 `docs/box64-wine-launch-chain.md` §7.2 | X 协议写入是 JNI 原生实现，没有 Java 侧等价物，只能就地修 |
+
+> 这是本 fork **第一处**对 upstream 原生 C 的改动——此前对 upstream 的改动全部落在
+> Java / 资源层。rebase 时该文件若被上游改动，冲突需人工合并。
+
 ## 改动规则
 
 1. 触碰上表任一路径前，先在本文件核对是否已有登记；没有登记即视为不接受。
