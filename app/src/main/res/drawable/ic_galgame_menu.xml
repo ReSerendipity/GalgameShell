@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 游戏内右上角抽屉入口浮钮（☰）。返回键已改派 ESC（2026-10-25），
+  浮钮成为直接触控模式下的功能菜单入口；代码里固定 setAlpha(0.35) 半透明。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,6h18v2.4h-18z M3,10.8h18v2.4h-18z M3,15.6h18v2.4h-18z"/>
+</vector>

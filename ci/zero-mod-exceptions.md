@@ -49,6 +49,7 @@
 | 路径 | 改动内容 | 依据 | 为什么不放进 `com.winlator.galgame` |
 |---|---|---|---|
 | `app/src/main/java/com/winlator/services/ForegroundService.java`、`services/NotificationUtils.java` | 前台服务通知与默认通知的点击落地页由上游 `MainActivity` 改为 `GalgameMainActivity`（游戏库壳），并移除随之不再引用的 import | 2026-10-25 「退出后仍显示 WINLATOR 页」修复 | 通知构建在 services 层，galgame 包无等价注入点 |
+| `app/src/main/java/com/winlator/XServerDisplayActivity.java`、`res/menu/xserver_menu.xml`、`res/layout/main_menu_header.xml` | ① `onBackPressed` 由上游「返回键开抽屉」改为「关抽屉→否则向游戏注入 ESC」（galgame 通用取消键；用户反馈返回键像「弹出 Winlator 页面」），抽屉入口改右上角 `ic_galgame_menu` 浮钮（PiP 时隐藏）；② `frameRating` 改为无条件创建（上游仅 HUDMode≠DISABLED 才建），否则游戏中途开 HUD 接不上已映射窗口的帧计数；③ 抽屉新增「性能显示」三档开关（`showHudPicker`/`applyHudMode`，写回容器 `hudMode`；galgame 容器进不了上游容器编辑页）；④ 抽屉头部标语由共享的 `galgame_tagline` 改为独立的 `galgame_drawer_header`（「游戏菜单」），游戏中不再出现 "(Winlator-based)" 字样（About 页归属不变） | 2026-10-25 返回键 UX 修复 + HUD 开关 | 返回键/浮钮/HUD 开关都是 Activity 私有逻辑，galgame 包无等价注入点 |
 | `app/src/main/java/com/winlator/renderer/GLRenderer.java` | `collectRenderableWindows` 的 `inBounds` 上界由 `width < screen` 放宽为 `<=`：窗口恰好等于虚拟屏尺寸时也获得居中的 FullscreenTransformation。KiriKiri 把主窗口固定在 (152,152)，等尺寸窗口右/下边缘被裁（TD-14 残留①） | 2026-10-25 全屏修复（窗口铺满 P2） | 窗口入格判定是 renderer 私有循环条件，galgame 包无等价注入点 |
 | `app/src/main/cpp/winlator/src/xoutput_stream.c` | `XOutputStream_send` 由裸 `write()` 改为 `send(MSG_NOSIGNAL)` 循环写满；EINTR 重试；EAGAIN 时 `poll(POLLOUT)` 上限 2 秒；整体发送失败（含附带 fd 的短写）返回 false | 2026-10-24 `docs/box64-wine-launch-chain.md` §7.2 | X 协议写入是 JNI 原生实现，没有 Java 侧等价物，只能就地修 |
 

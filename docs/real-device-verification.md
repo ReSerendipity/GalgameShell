@@ -395,3 +395,52 @@ YU-RIS / SystemNNN / ADVHD / BGI 无一通过。
 ### 10.4 本轮回归
 
 `krkr_caste` 窗口铺满 78.8% 无变化；`bgi_ryo` 满幅 90.3%；别名/自愈幂等（二次启动无重复动作）。
+
+## 11. 返回键 UX 与性能显示开关（2026-10-25 第四轮，设备 dc57ebe3）
+
+### 11.1 现象取证（修复前，构建 6bd95bf）
+
+用户反馈「手机返回键还是会弹出一个 Winlator 的页面」。真机复现（`hana9test` Wine 路线，
+`input keyevent 4` 后截图 `back_after_key.png`）：上游 `XServerDisplayActivity.onBackPressed`
+的行为是**返回键=打开左侧抽屉**——抽屉头部大字标语为
+「GalGame Android Shell (**Winlator-based**)」，内容是 Winlator 功能集
+（触控模式/键盘/输入控制/切换全屏/任务管理器/活动窗口/放大镜/屏幕效果/画中画/退出），
+即用户感知的「Winlator 页面」。
+
+### 11.2 修复内容
+
+1. **返回键 = ESC**：`onBackPressed` 改为「抽屉开着→关抽屉；否则→`injectKeyPress(KEY_ESC,
+   0xff1b)` + 40ms 后 release」。ESC 是 galgame 通用取消/呼出菜单键（与 PC 一致）。
+2. **抽屉入口改浮钮**：右上角 38dp 半透明 ☰（`ic_galgame_menu`，放右上避让左上角 FrameRating
+   HUD；PiP 时自动隐藏）；触摸板模式原有的四指点按呼出保留。
+3. **抽屉头部标语**换为独立的 `galgame_drawer_header`（「游戏菜单」），游戏中不再出现
+   "(Winlator-based)" 字样；About 页归属声明不变。
+4. **性能显示开关**：抽屉新增「性能显示」（关闭/简单(FPS)/完整(FPS·CPU·内存·GPU)），
+   立即生效并写回容器 `hudMode`。上游 FrameRating 本有此能力但只能在上游容器编辑页里开，
+   galgame 容器进不去该页。为此 `frameRating` 改为**无条件创建**（上游仅
+   HUDMode≠DISABLED 才创建，中途开启会因 `frameRatingWindowId` 未解析而接不上帧计数）。
+
+### 11.3 复测证据（构建 11.3 / versionCode 34 + 本轮工作区）
+
+| 用例 | 操作 | 结果 |
+|---|---|---|
+| 返回键不再弹抽屉 | 游戏内 `keyevent 4` | ✅ 截图与基线逐字节同尺寸（无抽屉），对比修复前 `back_after_key.png` |
+| ESC 真实送达 | 标题画面 `keyevent 4` 一次 | ✅ 花弔！标题收到 ESC 触发自身 exit 流程，游戏结束后 `topResumedActivity=GalgameMainActivity`（落回游戏库，非 Winlator 页面/桌面） |
+| 浮钮开抽屉 | tap (2678,101)（横屏 2780x1264，density 560，uiautomator 实测 bounds [2612,35]-[2745,168]） | ✅ 抽屉打开，头部「GALGAMESHELL / 游戏菜单」，无 "(Winlator-based)"；菜单含新项「性能显示」 |
+| 返回键关抽屉 | 抽屉开着 `keyevent 4` | ✅ 截图回到纯游戏画面 |
+| 性能显示中途生效 | 抽屉→性能显示→完整 | ✅ 四行浮窗立即出现：**FPS 59.8 / GPU Turnip Adreno 830 / RAM 8.7/15.5GB / CPU 3.19GHz \| Box64 v0.4.5**（`fix_hud_full2.png` + 左上角放大 `fix_hud_crop.png`） |
+| 退出落点回归 | 游戏内 ESC 触发游戏退出 | ✅ 落 `GalgameMainActivity`（§7 的 PR#37 语义未破坏） |
+
+注记：ESC 语义=PC 上的 ESC——标题画面按 ESC 可能直接触发游戏自身的退出确认/流程
+（花弔！即如此），属游戏自身行为；对白/一般场景通常呼出游戏菜单或无操作。
+
+### 11.4 性能监测能力盘点（本轮调研，方案备查）
+
+Winlator 自带（FrameRating 三档）：FPS；FULL 档=GPU 名称（`_NET_WM_GPU_INFO`，guest
+显卡驱动上报，如 Turnip Adreno 830）、系统内存 已用/总量、CPU 最高核主频 + Box64 版本。
+`core/CPUStatus` 另有 `getTemperature()`（thermal zone）但 FrameRating 未展示。
+**不自带**：CPU 使用率（/proc/stat 差分可加）、负载（/proc/loadavg 可加）、功耗
+（BatteryManager 电流×电压可得整机瞬时功耗，无按应用功耗的公开 API）、GPU 使用率
+（Android 无通用免 root 接口，高通 kgsl / Mali 节点因机型而异多数不可读）、按进程
+CPU/RSS（box64/wine 进程 /proc/<pid> 自家可读）。以上均可在我们自己的代码里扩展，
+不触碰上游文件，与组件升级解耦。

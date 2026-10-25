@@ -91,6 +91,7 @@ import com.winlator.xserver.Property;
 import com.winlator.xserver.ScreenInfo;
 import com.winlator.xserver.Window;
 import com.winlator.xserver.WindowManager;
+import com.winlator.xserver.XKeycode;
 import com.winlator.xserver.XServer;
 
 import org.json.JSONArray;
@@ -113,6 +114,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private InputControlsManager inputControlsManager;
     private RootFS rootFS;
     private FrameRating frameRating;
+    private android.widget.ImageView galgameMenuHandle;
     private Runnable editInputControlsCallback;
     private Shortcut shortcut;
     private String[] graphicsDriver = {GraphicsDrivers.DEFAULT_VULKAN_DRIVER, GraphicsDrivers.DEFAULT_OPENGL_DRIVER};
@@ -333,6 +335,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
         ForegroundService.setPipMode(isInPictureInPictureMode);
+        // GalgameShell：画中画小窗里浮钮比例失衡且无意义，随 PiP 隐藏/恢复
+        if (galgameMenuHandle != null) {
+            galgameMenuHandle.setVisibility(isInPictureInPictureMode ? View.GONE : View.VISIBLE);
+        }
     }
 
     @Override
@@ -346,10 +352,17 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     public void onBackPressed() {
         if (environment != null) {
-            if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                drawerLayout.openDrawer(GravityCompat.START);
+            // GalgameShell：返回键优先关抽屉；游戏内则派发 ESC（galgame 通用
+            // 「取消/呼出游戏菜单」）。上游原行为是返回键开抽屉（用户反馈
+            // 「返回键弹出 Winlator 页面」）；功能菜单入口改为右上角浮钮
+            // + 触摸板模式四指点按。
+            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                drawerLayout.closeDrawers();
             }
-            else drawerLayout.closeDrawers();
+            else if (xServer != null) {
+                xServer.injectKeyPress(XKeycode.KEY_ESC, 0xff1b);
+                drawerLayout.postDelayed(() -> xServer.injectKeyRelease(XKeycode.KEY_ESC), 40);
+            }
         }
     }
 
@@ -374,6 +387,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 android.widget.Toast.makeText(this, resId, android.widget.Toast.LENGTH_SHORT).show();
                 item.setChecked(mode != null && com.winlator.galgame.GalgameInputHelper.MODE_DIRECT.equals(mode));
                 drawerLayout.closeDrawers();
+                break;
+            }
+            case R.id.menu_item_galgame_hud: {
+                // GalgameShell：性能浮窗三档开关（上游 FrameRating：FPS / +CPU·内存·GPU）。
+                // 上游只能容器编辑页里改，galgame 容器进不了那页，所以在抽屉里给开关。
+                showHudPicker();
                 break;
             }
             case R.id.menu_item_toggle_fullscreen:
@@ -432,6 +451,35 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     public SharedPreferences getPreferences() {
         return preferences;
+    }
+
+    /** GalgameShell：性能浮窗选择器（关闭 / 简单 / 完整），立即生效并写回容器。 */
+    private void showHudPicker() {
+        if (container == null) return;
+        final FrameRating.Mode current = FrameRating.Mode.values()[Math.max(0, container.getHUDMode())];
+        final String[] labels = {
+                getString(R.string.galgame_hud_off),
+                getString(R.string.galgame_hud_simple),
+                getString(R.string.galgame_hud_full)};
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_hud_title)
+                .setSingleChoiceItems(labels, current.ordinal(), (dialog, which) -> {
+                    applyHudMode(FrameRating.Mode.values()[which]);
+                    dialog.dismiss();
+                    drawerLayout.closeDrawers();
+                })
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
+    }
+
+    private void applyHudMode(FrameRating.Mode mode) {
+        container.setHUDMode((byte) mode.ordinal());
+        container.saveData();
+        if (frameRating != null) {
+            frameRating.setMode(mode);
+            frameRating.setVisibility(mode == FrameRating.Mode.DISABLED ? View.GONE : View.VISIBLE);
+            frameRating.reset();
+        }
     }
 
     private void exit() {
@@ -653,7 +701,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         inputControlsView.setVisibility(View.GONE);
         rootView.addView(inputControlsView);
 
-        if (container != null && container.getHUDMode() != FrameRating.Mode.DISABLED.ordinal()) {
+        if (container != null) {
+            // GalgameShell：无条件创建（上游仅在 HUDMode!=DISABLED 时创建）。
+            // 若用户游戏中途在抽屉开启 HUD，frameRating 已存在才能立即接上
+            // 已映射窗口的帧计数（frameRatingWindowId 在 onMapWindow 才解析）。
             frameRating = new FrameRating(this);
             frameRating.setMode(FrameRating.Mode.values()[container.getHUDMode()]);
             frameRating.setVisibility(View.GONE);
@@ -677,6 +728,22 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         NavigationView navView = findViewById(R.id.NavigationView);
         android.view.MenuItem touchItem = navView.getMenu().findItem(R.id.menu_item_galgame_touch);
         if (touchItem != null) touchItem.setChecked(com.winlator.galgame.GalgameInputHelper.isDirect());
+
+        // GalgameShell：抽屉入口浮钮（返回键已改派 ESC）。放右上角避让左上角的
+        // FrameRating HUD；最后添加使其位于直接触控层之上。
+        float density = getResources().getDisplayMetrics().density;
+        galgameMenuHandle = new android.widget.ImageView(this);
+        galgameMenuHandle.setImageResource(R.drawable.ic_galgame_menu);
+        galgameMenuHandle.setAlpha(0.35f);
+        FrameLayout.LayoutParams menuLp = new FrameLayout.LayoutParams(
+                Math.round(38 * density), Math.round(38 * density), android.view.Gravity.TOP | android.view.Gravity.END);
+        menuLp.rightMargin = Math.round(10 * density);
+        menuLp.topMargin = Math.round(10 * density);
+        galgameMenuHandle.setLayoutParams(menuLp);
+        galgameMenuHandle.setOnClickListener(v -> {
+            if (!drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.openDrawer(GravityCompat.START);
+        });
+        rootView.addView(galgameMenuHandle);
     }
 
     private void showInputControlsDialog() {
