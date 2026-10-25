@@ -625,7 +625,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         renderer.setCursorVisible(false);
         renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
         renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
-        renderer.setForceWindowsFullscreen(shortcut != null && shortcut.getExtra("forceFullscreen", "0").equals("1"));
+        // GalgameShell：galgame 容器直启默认启用 forceWindowsFullscreen（游戏窗口等比
+        // 铺满虚拟屏；Wine 下 galgame 多为小于虚拟屏的窗口，不铺满时画面只占物理屏一角）。
+        // shortcut 路线沿用上游开关；用户可在详情页「高级设置 → 窗口画面铺满」按游戏关闭。
+        renderer.setForceWindowsFullscreen(
+                shortcut != null && shortcut.getExtra("forceFullscreen", "0").equals("1")
+                        || (shortcut == null && getIntent().hasExtra("exec_path")
+                                && com.winlator.galgame.GalgameLaunchHelper.shouldForceWindowFullscreen(container)));
 
         xServer.setRenderer(renderer);
         rootView.addView(xServerView);

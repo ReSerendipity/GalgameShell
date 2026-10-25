@@ -153,6 +153,12 @@
     <string name="galgame_resolution_hint">游戏内选的分辨率不能超过它：超出时游戏窗口会比虚拟屏还大，画面被裁切、点击也会失准。改完下次启动生效。</string>
     <string name="galgame_resolution_value">%1$s · 游戏内不要超过它</string>
     <string name="galgame_resolution_done">已设为 %1$s，下次启动生效</string>
+    <string name="galgame_window_fit_title">窗口画面铺满</string>
+    <string name="galgame_window_fit_action">切换  ›</string>
+    <string name="galgame_window_fit_on">铺满屏幕（默认）· 不拉伸变形</string>
+    <string name="galgame_window_fit_off">保持原始窗口尺寸</string>
+    <string name="galgame_window_fit_done_on">已设为铺满屏幕，下次启动生效</string>
+    <string name="galgame_window_fit_done_off">已设为原始窗口尺寸，下次启动生效</string>
     <string name="galgame_env_embedded">内嵌引擎</string>
     <string name="galgame_reinject">重新注入运行环境</string>
     <string name="galgame_reinject_meta">修复日文 / 视频 / 存档注入</string>
