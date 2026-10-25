@@ -14,6 +14,30 @@
 
 ### Fixed
 
+- **性能显示重复与关不掉（P0）**：用户反馈左上角一直有性能显示、关闭设置后仍在、再开
+  会叠出两个（外观不同）。根因：上游 FrameRating（彩色）与 GalgamePerfHud（单色）并存
+  ——容器残留 hudMode=FULL 让上游三档浮窗自行显示，且其 update() 每帧把自身拉回
+  VISIBLE。修复：galgame 直启路线不再创建上游 FrameRating（上游 shortcut 路线三档语义
+  保留），帧计数/GPU 读取与实例解耦。真机层级证据：未开启=无浮窗节点；勾选=单行
+  `FPS` 节点；取消=归零（real-device-verification.md §13.1）。
+- **设置页「外接控制器」闪退**：无参跳入上游 ExternalControllerBindingsActivity 导致
+  loadProfile(0)=null NPE；修复为取首个输入控制配置+default controller 进入，无配置时
+  Toast 引导先创建。
+
+### Added
+
+- **游戏内菜单显隐开关**：设置页新增「游戏内菜单」分区，8 个高级项（输入控制/切换全屏/
+  任务管理器/活动窗口/放大镜/屏幕效果/画中画/触摸板帮助）默认隐藏、按需开启；永显项=
+  触控模式/性能显示/键盘/退出。
+- **游戏库长按菜单**：长按卡片 → 启动 / 打开详情 / 添加到桌面快捷方式 / 彻底删除；
+  「彻底删除」一键清理游戏文件+S: 独立存档+整个运行环境容器（含「仅移除记录」逃生门）。
+- **桌面快捷方式直启**：pin shortcut（封面图标）→ 透明转发 Activity → 详情页自动启动，
+  点桌面图标即进游戏，不再走三级菜单。
+- **导入进度条**：复制进容器阶段显示红条 + `COPY xx% · 已拷/总量(MB/GB)`，字节级统计、
+  200ms 节流。
+
+### Fixed
+
 - **随机启动游戏闪退（P0 回归修复）**：第四轮「FrameRating 无条件创建」把上游潜伏 bug
   暴露成 wine 路线游戏启动必崩——`Box64Utils.extractBinVersion` 4096 分块读 box64 版本串
   时，上游 `ArrayUtils.indexOf` 内层匹配循环缺 `j < length` 边界，"Box64 arm64 v" 前缀

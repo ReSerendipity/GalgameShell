@@ -91,6 +91,16 @@ public final class R {
         public static final int TVRecentMeta = 72;
         public static final int TVRecentTitle = 73;
         public static final int TVResolutionValue = 74;
+        public static final int SWMenuInputControls = 185;
+        public static final int SWMenuFullscreen = 186;
+        public static final int SWMenuTaskManager = 187;
+        public static final int SWMenuActiveWindows = 188;
+        public static final int SWMenuMagnifier = 189;
+        public static final int SWMenuScreenEffect = 190;
+        public static final int SWMenuPip = 191;
+        public static final int SWMenuTouchpadHelp = 192;
+        public static final int LLImportProgress = 193;
+        public static final int TVImportProgress = 195;
         public static final int TVWindowFitValue = 184;
         public static final int TVRoute = 75;
         public static final int TVRouteHint = 76;
@@ -233,5 +243,8 @@ public final class R {
         public static final int galgame_perf_proc_cpu = 92;
         public static final int galgame_perf_net = 93;
         public static final int removing_container = 73;
+    }
+    public static class mipmap {
+        public static final int ic_launcher = 1;
     }
 }
