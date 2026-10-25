@@ -13,8 +13,9 @@
 | A3 | 导入默认复制（可写），非引用挂载（规避符号链接死结 RK-06） | `local/README.internal.md` §6 | 仓内完整 |
 | A4 | B 路由默认唤起不内嵌；Tier-1 开源默认 / Tier-2 闭源显式开启 + 免责 | `local/README.internal.md` §6 / `NOTICE` §5 | 仓内完整 |
 | A5 | 加密仅检测 + 提示，不破解 | `local/README.internal.md` §6 | 仓内完整 |
-| A6 | LGPL-2.1 fork 公开 + `LICENSE`/`NOTICE` + 应用内源码获取 | `local/README.internal.md` §6 / `NOTICE` §1 | 仓内完整 |
+| A6 | LGPL-2.1 公开源码 + `LICENSE`/`NOTICE` + 应用内源码获取（原表述为「fork 公开」，身份定位已由 A8 更新） | `local/README.internal.md` §6 / `NOTICE` §1 | 仓内完整 |
 | A7 | `LocaleHelper.supportedLocales` 增 `zh_CN` 为既有例外（提交 `bb810ca`）；上游原生支持后回退 | `local/README.internal.md` §6（2026-10-11 登记） | 仓内完整 |
+| A8 | **项目身份：独立项目 + 内嵌 winlator-app 为源码组件**（声明方式同内嵌 Kirikiroid2 / Ren'Py，见 `NOTICE` §1）。GitHub 侧本就不是 fork（`is_fork=false`，独立建仓）；「rebase 同步上游」工作流终结，上游更新改为**按需移植**；整仓保持单许可证 LGPL-2.1（组件部分继承不可更授，增量层自主选择保持一致） | `NOTICE` §1 / `ci/zero-mod-exceptions.md` 头注 / `README` 许可证节（2026-10-25 登记） | 仓内完整 |
 | AC-18 | LGPL §6 提供对应源码义务（应用内列出源码地址） | `NOTICE` §1 | 仓内完整 |
 | AC-19 | galgame 文案一律走 `galgame_strings.xml` / 新增资源文件，不改默认 `strings.xml` | `app/.../galgame/package-info.java` | 仓内完整 |
 | RK-01 | 框架不分发字体二进制（用户自备，仅本地注入不重分发） | `NOTICE` §4 | 仓内完整 |
