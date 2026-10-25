@@ -203,6 +203,10 @@ public final class ImportFlow {
                 if (preset.dxwrapper != null) data.put("dxwrapper", preset.dxwrapper);
                 if (preset.box64Preset != null) data.put("box64Preset", preset.box64Preset);
                 data.put("startupSelection", preset.startupSelection);
+                // TD-14：部分引擎（KiriKiri）把主窗口固定在虚拟屏 (152,152)，窗口尺寸等于容器分辨率时
+                // 画布右下会被裁掉，靠右/靠下的 UI 看不见也点不到。预设里给一档更大的虚拟屏，
+                // 让游戏自选的窗口尺寸（≤1440x810）都能完整落在屏内。
+                if (preset.screenSize != null) data.put("screenSize", preset.screenSize);
                 // graphicsDriver: "default"/null 时按设备 GPU 自动选（M2：Mali→Vortek），
                 // 显式指定则沿用预设（不覆盖用户/预设选择）
                 String resolvedDriver = GalgameGpuProfiler.resolveGraphicsDriver(
@@ -258,6 +262,7 @@ public final class ImportFlow {
             case BGI:       return "bgi";
             case CMVS:      return "cmvs";
             case UNITY:     return "unity";
+            case KIRIKIRI:  return "kirikiri";
             default:        return "unknown";
         }
     }
