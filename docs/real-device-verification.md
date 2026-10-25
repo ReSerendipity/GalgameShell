@@ -359,3 +359,39 @@ YU-RIS / SystemNNN / ADVHD / BGI 无一通过。
 **覆盖结论**：所有能渲染出画面的引擎类型（KIRIKIRI / SIGLUS / UNITY / KR2 / Ren'Py）均验证
 铺满生效或无回归；渲染不出来的是另行登记的启动级 / 上游问题（TD-09、AdvHD/BGI 启动链），
 行为与修复前文档记录一致，无一例由本修复引入。
+
+---
+
+## 10. 启动链排查与修复——AdvHD / BGI / 自动应答（2026-10-25 第三轮）
+
+### 10.1 取证方法
+
+`XServerDisplayActivity.onMapWindow` 临时窗口普查日志（GalgameWin，已随提交移除）+
+`WINEDEBUG=err,warn,fixme,loaddll,process` / `module,file,nls` 双组通道 + PE 导入表
+解析（本地 Python struct 解析，含加壳 exe 的导入目录）。全部结论有日志/截图证据。
+
+### 10.2 根因与修复对照
+
+| 游戏 | 修复前 | 根因（证据） | 修复 | 修复后 |
+|---|---|---|---|---|
+| `test_advhd`（リビドー・アバンちゅ～る） | 启动即退回库页 | exe 静态导入 icu.dll（仅用 uloc_getDefault），加载器 c0000135；补桩后可见 **Enigma Protector+PlayDRM** 双重商业保护，解壳后自主退出 | icu 桩注入（加载通过） | **仍不可玩**：DRM 行为，按 A5 不破解，登记为不可玩 |
+| `advhd_toran` | 启动即退回库页 | 同上 icu.dll 缺失；过加载关后再崩于 d2d1/DirectWrite（TD-17，上游 Wine 能力缺口） | 同上 | 引擎可加载、1280x720 窗口可建，渲染链崩（TD-17） |
+| `bgi_ryo`（両腕が折れたので…） | 启动即退回库页（§7.4「未定」） | 非 ASCII 主程序路径在 wine 启动器**早期**（prefix 加载前、ACP 未初始化）被按 ANSI 解析为乱码宽字符 → 文件打不开（`+file,+nls` 取证：get_load_order 收到乱码名）。**双层真相**：当年验收脚本的转义确实也坏，两层都真 | `gs_launch.exe` ASCII 硬链接别名 + 启动改走别名 | **完整可玩**：进入游戏、满幅渲染 90.3%（含窗口铺满变换） |
+| `krkr_tobenai` | 流程挂起 | 480x280 主窗口映射后画面静止、点击全无响应；Decorated A/B 排除上轮修复副作用 | — | 登记 TD-16 独立排查（当年 §8.4 在 1920 容器通过） |
+
+### 10.3 启动对话框自动应答（教学-回放）
+
+- 机制：`GalgameDialogAutoClick`——启动 45s 内的顶层小窗口（320–720 × 160–480、居中、
+  类名非空，KiriKiri 尺寸确认实测 480x280 class=game.exe）为候选；首次手动点击记录
+  相对坐标（容器 extra `galgame_dialog_click`="w,h,rx,ry"，按尺寸区分）；之后同尺寸
+  （±24px）窗口映射 600ms 后自动重放（`xServer.injectPointer*`，按下保持 60ms）。
+  **无教学点绝不点击**（零盲点设计）。
+- 真机验证：教学记录 ✓（tobenai 点击被记录 480x280 rel=(403,262)，logcat
+  `taught dialog click`）；回放触发 ✓（二次启动 `replay dialog click at virtual
+  (803,491)`）。端到端「自动点掉对话框进主画面」因 TD-16（tobenai 挂起）未闭环，
+  待首个可复现对话框样本。
+- 附带修复：S: 重定向目标目录自愈（appdata/roaming、local），icu 桩资产声明入 NOTICE。
+
+### 10.4 本轮回归
+
+`krkr_caste` 窗口铺满 78.8% 无变化；`bgi_ryo` 满幅 90.3%；别名/自愈幂等（二次启动无重复动作）。

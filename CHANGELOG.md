@@ -14,6 +14,24 @@
 
 ### Added
 
+- 启动前运行环境自愈 `GalgameLaunchHelper.ensureEngineRuntime`（引擎启动链自动执行，幂等）：
+  ① AdvHD 引擎游戏目录注入 3KB 自制 x64 `icu.dll` 最小桩（assets 内置，仅导出引擎实际
+  静态导入的 `uloc_getDefault`）——修复 AdvHD 系游戏「启动即退：加载器缺 icu.dll
+  c0000135」（真机 toran 由秒退变为引擎可加载、窗口可建）；② 主程序文件名非 ASCII 时
+  自动建同目录硬链接 `gs_launch.exe` 并改走别名——修复 wine 启动器早期按 ANSI 码页
+  解析主程序路径导致 BGI（両腕…exe）打不开（真机由秒退变为完整进入游戏、满幅渲染
+  90.3%）；③ 存档重定向 S: 盘目标 appdata/roaming、appdata/local 目录自愈（PlayDRM
+  等写 S: 的组件不再 PATH_NOT_FOUND）。
+- 启动对话框自动应答（教学-回放）`GalgameDialogAutoClick`：首次启动手动点击启动期
+  小窗口（分辨率确认/免责声明等）时记录相对坐标（容器 extra，按窗口尺寸区分），之后
+  每次启动检测到同尺寸窗口自动重放点击。零盲点：没有教学点绝不自动点。教学记录/回放
+  触发/坐标注入三环节真机验证通过；端到端（自动点掉对话框进主画面）待首个可复现样本
+  闭环（krkr_tobenai 该容器启动流程挂起，已另登记排查）。
+- 源码排查澄清：BGI「§7.4 结论未定」确认为**双层真相**——当年验收脚本转义确实坏，
+  且应用层非 ASCII 主程序路径在 wine 启动器早期确实打不开（本轮以 `+file,+nls` 通道
+  取证到乱码宽字符名）；test_advhd 为 Enigma Protector+PlayDRM 双重商业保护，解壳后
+  自主退出，按 A5 决策不破解、登记为不可玩。
+
 - 项目身份重构（决策 A8）：GalgameShell 定位为**独立项目**，内嵌 winlator-app
   （LGPL-2.1）为**源码组件**——声明方式同内嵌的 Kirikiroid2 / Ren'Py（`NOTICE` §1）。
   GitHub 侧本就不是 fork（独立建仓）；「rebase 同步上游」工作流终结，上游更新改为

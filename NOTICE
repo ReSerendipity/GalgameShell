@@ -31,6 +31,13 @@ GalgameShell — NOTICE
   最小、便于按需移植官方修复：
   Container.java / LocaleHelper.java / res/values/strings.xml 现有条目。
 
+3. 内置运行时小件（本仓库自制）
+-----------------------------
+- `assets/galgame/icu.dll`（x86-64，3KB）：为满足 AdvHD 引擎对 icu.dll 的静态导入而
+  自制编译的最小桩，仅导出 `uloc_getDefault`（返回容器注入的 ja_JP locale），不含
+  ICU 项目任何实现代码；函数名/语义接口属 ICU 项目（ICU License），实现为本仓独立
+  编写并以 LGPL-2.1 随仓发布。编译：NDK clang --target=x86_64-pc-windows-gnu。
+
 3. 上游随附的第三方组件（未在本仓库内修改）
 -------------------------------------------
 运行期依赖（由上游 winlator-app 分发，本项目不改其源码）：

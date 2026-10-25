@@ -1,6 +1,7 @@
 package com.winlator.galgame;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 
 import com.winlator.container.Container;
@@ -34,6 +35,8 @@ public final class GalgameLaunchHelper {
     public static void injectExecPath(Container container, Intent intent) {
         String exe = readOverlayExe(container);
         if (exe != null) {
+            // 非 ASCII exe 名的启动一律走 ASCII 别名（ensureEngineRuntime 已建好硬链接）
+            exe = resolveLaunchExe(container, exe);
             intent.putExtra("exec_path", exe);
             // 日文 exe 名直接作为宿主路径交给 wine 会打不开（loader 按 ANSI 打开宿主路径），
             // 另带一份 C:\ 路径供启动命令使用；宿主路径仍用于工作目录。
@@ -139,5 +142,89 @@ public final class GalgameLaunchHelper {
         return container != null
                 && isGalgameContainer(container)
                 && !"0".equals(container.getExtra(EXTRA_WINDOW_FIT));
+    }
+
+    /** 非 ASCII 主程序别名（同目录硬链接）：绕过 wine 启动器早期按 ANSI 码页解析主程序
+     *  路径导致的非 ASCII 文件名打不开（真机 BGI 实测，见 docs/fullscreen-fix-retrospective.md）。 */
+    private static final String LAUNCH_ALIAS_NAME = "gs_launch.exe";
+
+    /**
+     * 启动前运行环境自愈（幂等，WinlatorContainerEngine.launch 调用，毫秒级）：
+     * <ol>
+     *   <li>AdvHD 引擎：游戏目录注入 assets 内的 {@code icu.dll} 最小桩——该引擎 exe
+     *       静态导入 icu.dll（实际只用到 uloc_getDefault），缺它则加载器 c0000135
+     *       直接退出（真机实测两个样本同病）。</li>
+     *   <li>主程序文件名非 ASCII：建同目录硬链接 {@link #LAUNCH_ALIAS_NAME}，启动一律
+     *       走别名（见 {@link #resolveLaunchExe}）。</li>
+     *   <li>存档重定向 S: 盘目标目录自愈（appdata/roaming、appdata/local）——目录缺失
+     *       时 PlayDRM 等写 S: 的组件直接 PATH_NOT_FOUND。</li>
+     * </ol>
+     */
+    public static void ensureEngineRuntime(Context context, Container container) {
+        if (!isGalgameContainer(container)) return;
+        try {
+            String exe = readOverlayExe(container);
+            if (exe == null) return;
+            File exeFile = new File(exe);
+            File dir = exeFile.getParentFile();
+            if (dir == null || !dir.isDirectory()) return;
+
+            String engine = readOverlayField(container, "engine");
+            if ("ADVHD".equals(engine)) {
+                File icu = new File(dir, "icu.dll");
+                if (!icu.isFile()) FileUtils.copy(context, "galgame/icu.dll", icu);
+            }
+
+            File alias = new File(dir, LAUNCH_ALIAS_NAME);
+            if (!isAscii(exeFile.getName()) && exeFile.isFile() && !alias.isFile()) {
+                try {
+                    java.nio.file.Files.createLink(alias.toPath(), exeFile.toPath());
+                }
+                catch (Exception linkFailed) {
+                    try {
+                        java.nio.file.Files.copy(exeFile.toPath(), alias.toPath());
+                    }
+                    catch (Exception copyFailed) { /* 下次启动再试 */ }
+                }
+            }
+
+            File sDrive = new File(container.getRootDir(), ".wine/dosdevices/s:");
+            if (sDrive.exists()) {
+                File target = sDrive.getCanonicalFile();
+                new File(target, "appdata/roaming").mkdirs();
+                new File(target, "appdata/local").mkdirs();
+            }
+        }
+        catch (Exception ignored) {
+            // 自愈失败不阻断启动，按现状继续
+        }
+    }
+
+    /** 主程序解析：存在 ASCII 别名（且原文件名非 ASCII）时优先别名。 */
+    private static String resolveLaunchExe(Container container, String exe) {
+        File exeFile = new File(exe);
+        if (isAscii(exeFile.getName())) return exe;
+        File alias = new File(exeFile.getParentFile(), LAUNCH_ALIAS_NAME);
+        return alias.isFile() ? alias.getPath() : exe;
+    }
+
+    private static boolean isAscii(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 0x7f) return false;
+        }
+        return true;
+    }
+
+    /** 读取容器 overlay 的任意字符串字段（engine 等）；overlay 缺失返回空串。 */
+    private static String readOverlayField(Container container, String field) {
+        try {
+            File f = new File(container.getRootDir(), "galgame_overlay.json");
+            if (!f.exists()) return "";
+            JSONObject o = new JSONObject(FileUtils.readString(f));
+            return o.optString(field, "");
+        }
+        catch (Exception ignored) {
+            return "";
+        }
     }
 }

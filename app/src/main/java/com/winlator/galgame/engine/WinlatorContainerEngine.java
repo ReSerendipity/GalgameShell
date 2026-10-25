@@ -72,6 +72,12 @@ public final class WinlatorContainerEngine implements GameEngine {
             return false;
         }
 
+        // 启动前运行环境自愈：AdvHD 注入 icu 桩、非 ASCII exe 建 ASCII 别名、S: 目录补建
+        // （幂等毫秒级；galgame 容器以外零动作，见 GalgameLaunchHelper.ensureEngineRuntime）
+        if (request.container != null) {
+            GalgameLaunchHelper.ensureEngineRuntime(context, request.container);
+        }
+
         // 与 UI 既有行为一致：galgame 容器的启动 exe 未落盘时直接拒绝，
         // 免得 wine 跑空路径后立刻退出、又静默弹回游戏库（「打开游戏进不去」的老病）。
         if (request.container != null && GalgameLaunchHelper.isExecMissing(request.container)) {

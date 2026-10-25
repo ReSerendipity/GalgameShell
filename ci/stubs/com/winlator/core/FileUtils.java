@@ -2,6 +2,7 @@ package com.winlator.core;
 import java.io.File;
 public class FileUtils {
     public static boolean copy(File srcFile, File dstFile) { return false; }
+    public static void copy(android.content.Context context, String assetFile, File dstFile) {}
     public static void chmod(File file, int mode) {}
     public static boolean isSymlink(File file) { return false; }
     public static void symlink(File linkTarget, File linkFile) {}

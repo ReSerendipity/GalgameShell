@@ -97,6 +97,9 @@ public final class GalgameDirectTouchView extends View {
                 primaryId = event.getPointerId(0);
                 int[] p = transform(event.getX(0), event.getY(0));
                 xServer.injectPointerMove(p[0], p[1]);
+                // 启动对话框自动应答：在启动期对话框内的首次点击会被记录为教学点
+                com.winlator.galgame.GalgameDialogAutoClick autoClick = com.winlator.galgame.GalgameInputHelper.autoClick();
+                if (autoClick != null) autoClick.onTouchDown(p[0], p[1]);
                 xServer.injectPointerButtonPress(Pointer.Button.BUTTON_LEFT);
                 leftDown = true;
                 return true;

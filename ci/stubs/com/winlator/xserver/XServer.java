@@ -7,6 +7,7 @@ public class XServer {
     }
     public final ScreenInfo screenInfo = new ScreenInfo();
     public GLRenderer getRenderer() { return new GLRenderer(); }
+    public final WindowManager windowManager = new WindowManager();
     public void injectPointerMove(int x, int y) {}
     public void injectPointerButtonPress(com.winlator.xserver.Pointer.Button button) {}
     public void injectPointerButtonRelease(com.winlator.xserver.Pointer.Button button) {}

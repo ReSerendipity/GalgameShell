@@ -32,6 +32,8 @@ public final class GalgameInputHelper {
     private static WeakReference<GalgameDirectTouchView> attachedRef = new WeakReference<>(null);
     @Nullable
     private static volatile Container currentContainer;
+    @Nullable
+    private static volatile GalgameDialogAutoClick autoClick;
 
     private GalgameInputHelper() {}
 
@@ -42,10 +44,18 @@ public final class GalgameInputHelper {
         currentContainer = container;
         attachedRef = new WeakReference<>(null);
         if (!GalgameLaunchHelper.isGalgameContainer(container)) return;
+        // 启动对话框自动应答（教学-回放）：与触控模式无关（回放走注入 API），一律挂载
+        autoClick = GalgameDialogAutoClick.attach(xServer, container);
         if (!MODE_DIRECT.equals(container.getExtra(EXTRA_TOUCH_MODE, MODE_DIRECT))) return;
         GalgameDirectTouchView view = new GalgameDirectTouchView(rootView.getContext(), xServer);
         rootView.addView(view);
         attachedRef = new WeakReference<>(view);
+    }
+
+    /** 当前会话的启动对话框自动应答器（非 galgame 容器为 null）。 */
+    @Nullable
+    public static GalgameDialogAutoClick autoClick() {
+        return autoClick;
     }
 
     /** 当前容器是否处于直接触控模式（非 galgame 容器返回 false）。 */
