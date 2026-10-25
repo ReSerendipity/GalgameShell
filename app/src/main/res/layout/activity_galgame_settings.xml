@@ -166,6 +166,115 @@
                 <TextView style="@style/SwissRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="桌面快捷方式" />
                 <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="›" />
             </LinearLayout>
+            <!-- GalgameShell 第六轮：游戏内菜单（右上角☰）项显隐——高级项默认隐藏 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/swiss_row_line"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="4dp">
+                <TextView style="@style/SwissLabel" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="游戏内菜单" />
+                <TextView style="@style/SwissMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ADVANCED MENU" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuInputControls" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="输入控制" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="虚拟按键/摇杆布局" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuInputControls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuFullscreen" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="切换全屏" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="窗口/全屏切换" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuFullscreen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuTaskManager" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="任务管理器" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="查看/结束容器进程" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuTaskManager"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuActiveWindows" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="活动窗口" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="切换容器内窗口" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuActiveWindows"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuMagnifier" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="放大镜" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="局部放大" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuMagnifier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuScreenEffect" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="屏幕效果" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="锐度/滤镜" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuScreenEffect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuPip" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="画中画" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="小窗继续运行" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuPip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/rowMenuTouchpadHelp" style="@style/SwissRow">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                    <TextView style="@style/SwissRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="触摸板帮助" />
+                    <TextView style="@style/SwissRowMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="手势说明" />
+                </LinearLayout>
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/SWMenuTouchpadHelp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/swiss_ink"
+                    app:trackTint="#66000000" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

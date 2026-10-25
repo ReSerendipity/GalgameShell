@@ -499,3 +499,41 @@ box64/wine RSS）/ 游戏进程 CPU / GPU 型号（_NET_WM_GPU_INFO）/ 负载�
 
 返回键（抽屉开→BACK→关）像素实证 61.9%→9.0% 白面板消失；`GalgamePerfHud` 帧回调与
 `FrameRating` 共存不冲突。
+
+## 13. 第六轮：HUD 重复修复 / 长按管理 / 桌面快捷方式 / 导入进度（2026-10-25，设备 dc57ebe3）
+
+### 13.1 性能显示重复与关不掉（P0）
+
+用户反馈：左上角一直有一个性能显示（关闭设置后仍在）；再开启会多出一个（两个浮窗，
+外观不同：旧的是彩色行、新的是单色行）。根因两层：
+① 上游 `FrameRating`（彩色）与 `GalgamePerfHud`（单色）并存——第五轮「无条件创建
+FrameRating」+ 容器残留 hudMode=FULL → 上游三档浮窗按容器设置自行显示；
+② 上游 `FrameRating.update()` 每帧把自身拉回 VISIBLE，即便我们 GONE 它也会复活。
+
+修复：**galgame 直启路线（exec_path）不再创建上游 FrameRating**（上游路线保留三档
+语义）；`changeFrameRatingVisibility`/帧回调/GPU 读取全部与实例解耦（PerfHud 独立
+接帧）。复测（uiautomator 层级证据）：未开启时层级无 TextView 节点（残留容器 FULL
+档不再生效）；勾 FPS→应用→出现 `text="FPS     0.0"` 单行；取消勾选→应用→TextView
+归零。开/关/单浮窗闭环全绿。
+
+### 13.2 其余五项
+
+- **游戏内菜单开关**：设置页新增「游戏内菜单」分区 8 个开关（输入控制/切换全屏/任务
+  管理器/活动窗口/放大镜/屏幕效果/画中画/触摸板帮助），默认隐藏；永显项=触控模式/
+  性能显示/键盘/退出。
+- **长按菜单**：库卡片长按 → 启动/打开详情/添加到桌面快捷方式/彻底删除（含容器）；
+  「彻底删除」=容器（游戏文件）+ S: 独立存档 + 库记录一并清理，另有「仅移除记录」
+  逃生门。
+- **桌面快捷方式**：长按菜单→添加到桌面（系统 pin shortcut，封面作图标）→
+  `GalgameShortcutActivity`（透明 exported 转发）→ 详情页 auto_launch 直启。
+- **导入进度条**：`ImportFlow.stageGameFiles` 进度重载（字节统计、200ms 节流），
+  导入页底部红条 + `COPY xx% · MB/GB` 文案。
+- **外接控制器闪退**（问题6）：设置页无参跳入上游 `ExternalControllerBindingsActivity`
+  → loadProfile(0) null → NPE。修复：取首个输入控制配置 + default controller 进入；
+  无配置时 Toast 引导。
+
+### 13.3 导入语义（用户问询的回答，代码依据）
+
+A 路由（Wine 容器）：`ImportFlow.stageGameFiles` **复制**源目录到容器
+`drive_c/galgame/<gameId>`（源保留原位，双份占用空间，删除游戏不影响源）。
+B 路由（原生 KR2/Ren'Py）：**引用**源目录（不复制，库记录 sourcePath）。

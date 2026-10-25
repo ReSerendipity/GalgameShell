@@ -82,6 +82,13 @@
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
 
+        <!-- GalgameShell 第六轮：桌面快捷方式直启转发（透明，见类注释） -->
+        <activity android:name="com.winlator.GalgameShortcutActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <activity android:name="com.winlator.GalgameInputControlsActivity"
             android:theme="@style/GalgameSwissTheme"
             android:exported="false"

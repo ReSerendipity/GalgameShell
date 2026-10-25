@@ -76,7 +76,7 @@ public class GalgameHomeFragment extends Fragment {
             public void onGameClick(GalgameLibraryAdapter.Item item) { openDetail(item); }
 
             @Override
-            public void onGameLongClick(GalgameLibraryAdapter.Item item) { openDetail(item); }
+            public void onGameLongClick(GalgameLibraryAdapter.Item item) { showGameActions(item); }
         });
 
         grid = view.findViewById(R.id.GVGalgames);
@@ -119,6 +119,87 @@ public class GalgameHomeFragment extends Fragment {
         i.putExtra(GalgameDetailActivity.EXTRA_PREFERRED, item.preferredEngine);
         startActivity(i);
         requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
+    /** GalgameShell 第六轮：长按卡片操作菜单（启动/详情/桌面快捷方式/彻底删除）。 */
+    private void showGameActions(final GalgameLibraryAdapter.Item item) {
+        new android.app.AlertDialog.Builder(requireContext())
+                .setTitle(item.label)
+                .setItems(new String[]{"启动", "打开详情", "添加到桌面快捷方式",
+                        item.hasContainer() ? "彻底删除（含运行环境）" : "从库中移除"}, (d, which) -> {
+                    switch (which) {
+                        case 0: launchGame(item); break;
+                        case 1: openDetail(item); break;
+                        case 2: pinShortcut(item); break;
+                        default: confirmDelete(item); break;
+                    }
+                })
+                .setNegativeButton(com.winlator.R.string.galgame_cancel, null)
+                .show();
+    }
+
+    private void launchGame(final GalgameLibraryAdapter.Item item) {
+        com.winlator.galgame.GameLauncher.Result r = com.winlator.galgame.GameLauncher.launch(
+                requireContext(), item.gameDir, item.container, item.engineName, item.preferredEngine);
+        if (!r.launched && r.message != null) {
+            android.widget.Toast.makeText(requireContext(), r.message, android.widget.Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** 请求桌面固定快捷方式（系统确认弹窗），点击直启游戏。 */
+    private void pinShortcut(final GalgameLibraryAdapter.Item item) {
+        android.content.Context ctx = requireContext();
+        if (!androidx.core.content.pm.ShortcutManagerCompat.isRequestPinShortcutSupported(ctx)) {
+            android.widget.Toast.makeText(ctx, "当前桌面启动器不支持固定快捷方式", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        android.content.Intent target = new android.content.Intent(ctx, com.winlator.GalgameShortcutActivity.class)
+                .setAction(android.content.Intent.ACTION_VIEW)
+                .putExtra("game_id", item.gameId);
+        String label = item.label == null ? item.gameId : item.label;
+        androidx.core.content.pm.ShortcutInfoCompat.Builder b =
+                new androidx.core.content.pm.ShortcutInfoCompat.Builder(ctx, "galgame-" + item.gameId)
+                        .setShortLabel(label.length() > 12 ? label.substring(0, 12) : label)
+                        .setLongLabel(label)
+                        .setIntent(target);
+        if (item.coverBitmap != null) {
+            b.setIcon(androidx.core.graphics.drawable.IconCompat.createWithAdaptiveBitmap(item.coverBitmap));
+        }
+        else {
+            b.setIcon(androidx.core.graphics.drawable.IconCompat.createWithResource(ctx, com.winlator.R.mipmap.ic_launcher));
+        }
+        androidx.core.content.pm.ShortcutManagerCompat.requestPinShortcut(ctx, b.build(), null);
+    }
+
+    /** 彻底删除：A 路由=容器（含游戏文件）+ S: 独立存档 + 库记录；原生路由=仅库记录。 */
+    private void confirmDelete(final GalgameLibraryAdapter.Item item) {
+        final android.content.Context ctx = requireContext();
+        String msg = item.hasContainer()
+                ? "将删除「" + item.label + "」的游戏文件、独立存档与整个运行环境容器。\n导入源不受影响；此操作不可恢复。"
+                : "该游戏为原生目录引用，文件保留在你的原始位置，仅移除库记录。";
+        new android.app.AlertDialog.Builder(ctx)
+                .setTitle(item.hasContainer() ? "彻底删除" : "从库中移除")
+                .setMessage(msg)
+                .setNegativeButton(com.winlator.R.string.galgame_cancel, null)
+                .setNeutralButton("仅移除记录", (d, w) -> {
+                    GalgameLibraryIndex.remove(ctx, item.gameId);
+                    refresh();
+                })
+                .setPositiveButton("删除", (d, w) -> {
+                    if (item.hasContainer()) {
+                        new ContainerManager(ctx).removeContainerAsync(item.container, () -> {
+                            com.winlator.core.FileUtils.delete(
+                                    new File(new com.winlator.galgame.GalgameSaveManager(item.gameId).savePath()));
+                            GalgameLibraryIndex.remove(ctx, item.gameId);
+                            refresh();
+                        });
+                    }
+                    else {
+                        GalgameLibraryIndex.remove(ctx, item.gameId);
+                        refresh();
+                    }
+                })
+                .show();
     }
 
     private void refresh() {

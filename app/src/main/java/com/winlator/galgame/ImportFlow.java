@@ -131,6 +131,15 @@ public final class ImportFlow {
      */
     public static File stageGameFiles(Container container, ImportResult result, File sourceFolder,
                                       Context context) {
+        return stageGameFiles(container, result, sourceFolder, context, null);
+    }
+
+    /**
+     * 同上，附带复制阶段进度回调（按字节统计；UI 线程切换由调用方负责）。
+     * 进度回调实现应轻量——内部已节流至约每 200ms 一次。
+     */
+    public static File stageGameFiles(Container container, ImportResult result, File sourceFolder,
+                                      Context context, ProgressListener progress) {
         if (result.route != EngineDetector.Route.A || result.containerData == null) {
             throw new IllegalStateException("仅 A 路由需要 stage（B 路由由原生播放器处理）");
         }
@@ -140,7 +149,10 @@ public final class ImportFlow {
         // 规避「引用挂载符号链接」死结（RK-06），直接拷贝为可写副本。
         File gameDir = new File(root, ".wine/drive_c/galgame/" + result.gameId);
         try {
-            copyDirectory(sourceFolder, gameDir);
+            long totalBytes = countBytes(sourceFolder);
+            long[] state = {0, System.currentTimeMillis()}; // done, lastTick
+            copyDirectory(sourceFolder, gameDir, totalBytes, state, progress);
+            if (progress != null) progress.onProgress(totalBytes, totalBytes);
         } catch (IOException e) {
             throw new IllegalStateException("复制游戏文件失败: " + e.getMessage(), e);
         }
@@ -280,23 +292,60 @@ public final class ImportFlow {
 
     // ---- 文件操作 ----
 
+    /** 导入进度回调（复制阶段按字节统计，UI 线程由调用方自行切换）。 */
+    public interface ProgressListener {
+        void onProgress(long doneBytes, long totalBytes);
+    }
+
+    /** 递归统计目录字节总量（只读目录项与文件长度，不读内容）。 */
+    private static long countBytes(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) return 0;
+        long sum = 0;
+        for (File f : files) {
+            if (f.isDirectory()) sum += countBytes(f);
+            else sum += Math.max(0, f.length());
+        }
+        return sum;
+    }
+
     private static void copyDirectory(File src, File dst) throws IOException {
+        copyDirectory(src, dst, 0, null, null);
+    }
+
+    private static void copyDirectory(File src, File dst, long total, long[] state,
+                                      ProgressListener progress) throws IOException {
         if (!dst.exists() && !dst.mkdirs()) throw new IOException("无法创建 " + dst);
         File[] files = src.listFiles();
         if (files == null) return;
         for (File f : files) {
             File t = new File(dst, f.getName());
-            if (f.isDirectory()) copyDirectory(f, t);
-            else copyFile(f, t);
+            if (f.isDirectory()) copyDirectory(f, t, total, state, progress);
+            else copyFile(f, t, total, state, progress);
         }
     }
 
     private static void copyFile(File src, File dst) throws IOException {
+        copyFile(src, dst, 0, null, null);
+    }
+
+    private static void copyFile(File src, File dst, long total, long[] state,
+                                 ProgressListener progress) throws IOException {
         try (InputStream in = new FileInputStream(src);
              FileOutputStream out = new FileOutputStream(dst)) {
             byte[] buf = new byte[1 << 16];
             int n;
-            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+                if (progress != null && state != null && total > 0) {
+                    state[0] += n;
+                    long now = System.currentTimeMillis();
+                    if (now - state[1] >= 200) {
+                        state[1] = now;
+                        progress.onProgress(state[0], total);
+                    }
+                }
+            }
         }
     }
 

@@ -87,9 +87,39 @@ public class GalgameSettingsActivity extends AppCompatActivity {
 
         findViewById(R.id.rowInputControls).setOnClickListener(v ->
                 startActivity(new Intent(this, GalgameInputControlsActivity.class)));
-        findViewById(R.id.rowController).setOnClickListener(v ->
-                startActivity(new Intent(this, ExternalControllerBindingsActivity.class)));
+        findViewById(R.id.rowController).setOnClickListener(v -> {
+            // GalgameShell：上游 ExternalControllerBindingsActivity 必须带 profile_id/
+            // controller_id 进入；此前无参跳入 → loadProfile(file(0)) 得 null → NPE
+            // 闪退回页面（用户反馈「点击外接控制器直接回到页面」）。取第一个输入控制
+            // 配置进入；一个配置都没有时引导先去创建。
+            com.winlator.inputcontrols.InputControlsManager icm =
+                    new com.winlator.inputcontrols.InputControlsManager(this);
+            java.util.ArrayList<com.winlator.inputcontrols.ControlsProfile> profiles = icm.getProfiles(true);
+            if (profiles.isEmpty()) {
+                android.widget.Toast.makeText(this,
+                        "请先在「输入控制」里创建一个配置，再绑定外接控制器按键",
+                        android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            com.winlator.inputcontrols.ControlsProfile profile = profiles.get(0);
+            // 首个配置通常无已绑定控制器：直接进 default（上游 addController 幂等）
+            String controllerId = "default";
+            startActivity(new Intent(this, ExternalControllerBindingsActivity.class)
+                    .putExtra("profile_id", profile.id)
+                    .putExtra("controller_id", controllerId));
+        });
         findViewById(R.id.rowShortcuts).setOnClickListener(v -> openAdvanced());
+
+        // GalgameShell 第六轮：游戏内菜单（右上角☰）高级项显隐——默认隐藏，按需打开。
+        // 永显项（触控模式/性能显示/键盘/退出）不设开关。
+        bindMenuSwitch(R.id.SWMenuInputControls, "galgame_menu_input_controls");
+        bindMenuSwitch(R.id.SWMenuFullscreen, "galgame_menu_fullscreen");
+        bindMenuSwitch(R.id.SWMenuTaskManager, "galgame_menu_task_manager");
+        bindMenuSwitch(R.id.SWMenuActiveWindows, "galgame_menu_active_windows");
+        bindMenuSwitch(R.id.SWMenuMagnifier, "galgame_menu_magnifier");
+        bindMenuSwitch(R.id.SWMenuScreenEffect, "galgame_menu_screen_effect");
+        bindMenuSwitch(R.id.SWMenuPip, "galgame_menu_pip");
+        bindMenuSwitch(R.id.SWMenuTouchpadHelp, "galgame_menu_touchpad_help");
 
         findViewById(R.id.rowAbout).setOnClickListener(v ->
                 new AlertDialog.Builder(this)
@@ -122,5 +152,11 @@ public class GalgameSettingsActivity extends AppCompatActivity {
 
     private abstract static class SimpleSeekListener implements SeekBar.OnSeekBarChangeListener {
         @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+    }
+    /** 游戏内菜单项显隐开关：默认 false（隐藏），改动即时生效（下次进入游戏应用）。 */
+    private void bindMenuSwitch(int switchResId, String key) {
+        SwitchCompat sw = findViewById(switchResId);
+        sw.setChecked(prefs.getBoolean(key, false));
+        sw.setOnCheckedChangeListener((b, checked) -> prefs.edit().putBoolean(key, checked).apply());
     }
 }

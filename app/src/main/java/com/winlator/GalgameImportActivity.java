@@ -77,6 +77,9 @@ public class GalgameImportActivity extends AppCompatActivity {
     private TextView step3;
     private Button prev;
     private Button next;
+    private android.widget.LinearLayout importProgressPanel;
+    private android.widget.ProgressBar importProgressBar;
+    private android.widget.TextView importProgressText;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -111,6 +114,9 @@ public class GalgameImportActivity extends AppCompatActivity {
         step3 = findViewById(R.id.TVStep3);
         prev = findViewById(R.id.BTPrev);
         next = findViewById(R.id.BTNext);
+        importProgressPanel = findViewById(R.id.LLImportProgress);
+        importProgressBar = findViewById(R.id.PBImport);
+        importProgressText = findViewById(R.id.TVImportProgress);
 
         findViewById(R.id.BTBack).setOnClickListener(v -> onBack());
         prev.setOnClickListener(v -> onPrev());
@@ -283,7 +289,15 @@ public class GalgameImportActivity extends AppCompatActivity {
                 if (container == null) { fail(getString(R.string.galgame_import_failed)); return; }
                 executor.execute(() -> {
                     try {
-                        ImportFlow.stageGameFiles(container, result, source, appCtx);
+                        ImportFlow.stageGameFiles(container, result, source, appCtx,
+                                (done, total) -> main.post(() -> {
+                                    if (total <= 0) return;
+                                    importProgressPanel.setVisibility(View.VISIBLE);
+                                    importProgressBar.setProgress((int) (done * 100 / total));
+                                    importProgressText.setText(String.format(Locale.US,
+                                            "COPY %d%% · %s / %s", done * 100 / total,
+                                            formatBytes(done), formatBytes(total)));
+                                }));
                         GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
                         saveManager.redirectShellFolders(container);
                         GalgameLibraryIndex.markContainerized(appCtx, gameId);
@@ -334,8 +348,15 @@ public class GalgameImportActivity extends AppCompatActivity {
         builder.show();
     }
 
+    private static String formatBytes(long bytes) {
+        if (bytes < 1024 * 1024) return String.format(Locale.US, "%.0fKB", bytes / 1024f);
+        if (bytes < 1024L * 1024 * 1024) return String.format(Locale.US, "%.1fMB", bytes / 1048576f);
+        return String.format(Locale.US, "%.2fGB", bytes / 1073741824f);
+    }
+
     private void done() {
         setBusy(false);
+        importProgressPanel.setVisibility(View.GONE);
         String name = String.valueOf(nameInput.getText());
         getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_DONE_NAME, name).apply();
         step = 3;
