@@ -14,6 +14,12 @@
 
 ### Added
 
+- 修复「退出后仍显示 WINLATOR 页面」：前台服务通知非游戏会话时的点击落地页由上游
+  `MainActivity` 改为游戏库壳 `GalgameMainActivity`（通知是应用里最后一个能落到
+  WINLATOR 界面的入口；抽屉「退出」实测本就正常回库）。
+- 新增 [docs/fullscreen-fix-retrospective.md](docs/fullscreen-fix-retrospective.md)：
+  全屏修复的经验与教训（反向杠杆、装饰位挡门、测试方法论坑与上游影响面纪律）。
+
 - galgame 容器直启默认启用「窗口画面铺满」（上游 forceWindowsFullscreen）：游戏窗口等比
   放大居中到虚拟屏、输入坐标自动换算，无拉伸变形。修复 Wine 路线 galgame 几乎都以小于
   虚拟屏的窗口运行、画面只占物理屏一小块的问题（真机 7 用例复测：Wine 路线 5 用例
