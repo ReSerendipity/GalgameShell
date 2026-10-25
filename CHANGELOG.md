@@ -12,8 +12,34 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **随机启动游戏闪退（P0 回归修复）**：第四轮「FrameRating 无条件创建」把上游潜伏 bug
+  暴露成 wine 路线游戏启动必崩——`Box64Utils.extractBinVersion` 4096 分块读 box64 版本串
+  时，上游 `ArrayUtils.indexOf` 内层匹配循环缺 `j < length` 边界，"Box64 arm64 v" 前缀
+  恰落块尾即 `array[4096]` 越界，主线程 FATAL、整个 App 闪退（真机 test_siglus 取证
+  FATAL 堆栈）。修复两层：`indexOf` 补边界（根治，GamepadHandler 同受益）；
+  `FrameRating.run` 的版本串读取包 try-catch 降级 "Box64 v?" 并缓存。复测两轮冷启动
+  crash buffer 均空。
+- **运行时目录自污染拦截**：KR2 的 `getWritablePath()` 会在游戏源目录创建
+  `.preference/`、`files/`（内含 XP3 魔数存档封包），再次导入时被误判 KIRIKIRI 入库、
+  启动即黑屏挂起（真机库里的「files」「.preference」两条目即此来源）。新增
+  `EngineDetector.isRuntimeDirName` 三处拦截：detect 入口、深层下钻、`GameLauncher.launch`
+  兜底（旧库残留条目启动时明确提示移除重导）。
+
 ### Added
 
+- **启动加载 UI 品牌化**：`preloader_dialog` 重写为 Swiss 纸面语言——全屏 90% 黑遮罩 +
+  GALGAMESHELL 大写字距标 + 主文案 + 2dp 细进度条，不再引用 Winlator 的
+  preloaderBackground/progressBarIndeterminateImage attr（真机视觉实证，
+  real-device-verification.md §12.3）。
+- **性能显示多项化（13 项可选）**：新 `GalgamePerfHud`（零上游依赖）——FPS / CPU
+  使用率 / CPU 频率（avg·max）/ **CPU 各核占用** / 系统内存 / 游戏进程内存（含
+  box64/wine RSS）/ **游戏进程 CPU** / GPU 型号 / 负载（loadavg）/ **整机功耗**（电流×
+  电压）/ **温度**（CPU·电池 thermal zone）/ **电池**（电量·状态）/ **网络上下行**。
+  抽屉「性能显示」由三档改**多选对话框**，容器 extra `galgame_perf_items` 持久化、
+  中途开关立即生效；有选择项时接管左上角、上游三档 FrameRating 自动隐藏。
+  真机实证多选→应用→浮窗渲染（FPS 59.8 / CPU 45.2%，§12.4）。
 - 游戏内**返回键改为发送 ESC**（galgame 通用取消/呼出菜单键，与 PC 一致），不再像上游那样
   打开左侧功能抽屉（用户反馈「返回键弹出 Winlator 页面」）。功能菜单入口改为**右上角
   半透明 ☰ 浮钮**（画中画时自动隐藏；触摸板模式的四指点按呼出保留）；抽屉头部标语改为

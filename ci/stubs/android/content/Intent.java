@@ -31,4 +31,6 @@ public class Intent {
     public ComponentName getComponent() { return null; }
     public Intent setComponent(ComponentName component) { return this; }
     public static Intent makeRestartActivityTask(ComponentName mainActivityClassName) { return new Intent(); }
+    public static final String ACTION_BATTERY_CHANGED = "android.intent.action.BATTERY_CHANGED";
+    public int getIntExtra(String name, int defaultValue) { return defaultValue; }
 }

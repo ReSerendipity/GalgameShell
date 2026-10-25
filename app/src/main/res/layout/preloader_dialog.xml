@@ -1,35 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  GalgameShell 启动加载浮层（原上游 preloader 样式品牌化，2026-10-25）：
+  全屏 90% 黑遮罩 + 居中竖排——GALGAMESHELL 大写字距标 / 主文案 / 2dp 细进度条，
+  与库页、抽屉头的 Swiss 纸面语言一致；不再引用 Winlator 的 preloaderBackground /
+  progressBarIndeterminateImage attr。@+id/TextView 保留（PreloaderDialog.setText 用）。
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:clickable="false"
-    android:focusable="false">
+    android:focusable="false"
+    android:background="#E6000000">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="22dp"
-        android:paddingBottom="22dp"
-        android:paddingLeft="32dp"
-        android:paddingRight="32dp"
-        android:gravity="center_vertical"
-        android:layout_gravity="center"
-        android:background="?attr/preloaderBackground">
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingLeft="48dp"
+        android:paddingRight="48dp"
+        android:paddingTop="36dp"
+        android:paddingBottom="36dp"
+        android:layout_gravity="center">
 
-        <ProgressBar
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:indeterminate="true"
-            android:layout_marginRight="16dp"
-            android:indeterminateDrawable="?attr/progressBarIndeterminateImage" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/galgame_app_name"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.18"
+            android:textAllCaps="true"
+            android:alpha="0.55"
+            android:textColor="@color/swiss_paper" />
 
         <TextView
             android:id="@+id/TextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20dp"
-            android:textColor="?attr/colorPrimaryText" />
+            android:layout_marginTop="12dp"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="-0.02"
+            android:textColor="@color/swiss_paper" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/swiss_paper"
+            android:progressTint="@color/swiss_paper" />
     </LinearLayout>
 </FrameLayout>

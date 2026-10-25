@@ -218,6 +218,20 @@ public final class R {
         public static final int galgame_window_fit_off = 77;
         public static final int galgame_window_fit_on = 78;
         public static final int galgame_window_fit_title = 79;
+        public static final int galgame_perf_fps = 80;
+        public static final int galgame_perf_cpu = 81;
+        public static final int galgame_perf_cpu_freq = 82;
+        public static final int galgame_perf_ram = 83;
+        public static final int galgame_perf_proc = 84;
+        public static final int galgame_perf_gpu = 85;
+        public static final int galgame_perf_load = 86;
+        public static final int galgame_perf_power = 87;
+        public static final int galgame_perf_apply = 88;
+        public static final int galgame_perf_cores = 89;
+        public static final int galgame_perf_temp = 90;
+        public static final int galgame_perf_battery = 91;
+        public static final int galgame_perf_proc_cpu = 92;
+        public static final int galgame_perf_net = 93;
         public static final int removing_container = 73;
     }
 }

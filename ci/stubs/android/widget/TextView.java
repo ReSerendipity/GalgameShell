@@ -7,4 +7,6 @@ public class TextView extends View {
     public void setTextColor(int color) {}
     public CharSequence getText() { return null; }
     public void addTextChangedListener(android.text.TextWatcher watcher) {}
+    public void setTypeface(android.graphics.Typeface tf) {}
+    public void setTextSize(int unit, float size) {}
 }

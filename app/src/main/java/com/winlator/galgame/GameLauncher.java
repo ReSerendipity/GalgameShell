@@ -85,6 +85,11 @@ public final class GameLauncher {
     public static Result launch(Context context, File gamePath, Container container,
                                 String declaredEngine, String preferredEngine) {
         if (context == null) return Result.fail("上下文缺失，无法启动");
+        // 运行时目录兜底（导入侧 EngineDetector 已拦，这里防旧库残留条目）：
+        // KR2 在游戏源目录创建的 .preference/files 等不是游戏，进引擎只会黑屏挂起。
+        if (gamePath != null && EngineDetector.isRuntimeDirName(gamePath.getName())) {
+            return Result.fail("该条目是引擎运行时目录，不是游戏；请「从库中移除」后重新导入正确的游戏文件夹");
+        }
 
         EngineDetector.Engine declared = GameEngineRegistry.parseEngine(declaredEngine);
         EngineDetector.Engine override = resolveOverride(preferredEngine);
