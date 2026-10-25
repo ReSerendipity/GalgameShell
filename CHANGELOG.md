@@ -14,6 +14,13 @@
 
 ### Added
 
+- 项目身份重构（决策 A8）：GalgameShell 定位为**独立项目**，内嵌 winlator-app
+  （LGPL-2.1）为**源码组件**——声明方式同内嵌的 Kirikiroid2 / Ren'Py（`NOTICE` §1）。
+  GitHub 侧本就不是 fork（独立建仓）；「rebase 同步上游」工作流终结，上游更新改为
+  按需移植；零改例外登记表的双重身份明确为 LGPL-2.1 §2 修改标注 + 移植冲突面清单；
+  整仓保持单许可证 LGPL-2.1（组件部分继承不可更授，增量层自主选择保持一致）。
+  README / NOTICE / ci 文档同步改写。
+
 - 修复「退出后仍显示 WINLATOR 页面」：前台服务通知非游戏会话时的点击落地页由上游
   `MainActivity` 改为游戏库壳 `GalgameMainActivity`（通知是应用里最后一个能落到
   WINLATOR 界面的入口；抽屉「退出」实测本就正常回库）。

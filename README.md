@@ -1,8 +1,8 @@
 # GalgameShell — GalGame Android Shell
 
-基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）的 galgame 专用外壳：以 Winlator 为模拟层基座，自动识别游戏引擎，在「内嵌原生引擎 / 原生播放器 (B) / 模拟 (A)」之间智能路由，让 galgame 在 Android 上导入即玩。
+独立的 galgame 安卓运行器，内嵌 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）作为 Windows 模拟层**源码组件**——集成与修改标注方式同内嵌的 Kirikiroid2 / Ren'Py，见 [`NOTICE`](NOTICE)：由 Winlator 承载模拟层，GalgameShell 自动识别游戏引擎，在「内嵌原生引擎 / 原生播放器 (B) / 模拟 (A)」之间智能路由，让 galgame 在 Android 上导入即玩。
 
-> **GalgameShell** is a galgame-dedicated Android shell built on the official [Winlator](https://github.com/brunodev85/winlator-app) (LGPL-2.1). It detects each game's engine automatically and routes between the embedded native engines (Ren'Py / Kirikiri2), an optional external native player, and the Winlator emulation layer — import a game, then play.
+> **GalgameShell** is a standalone Android galgame player that embeds [Winlator](https://github.com/brunodev85/winlator-app) (LGPL-2.1) as its Windows-emulation source component — with modifications marked, same pattern as the bundled Kirikiroid2 / Ren'Py engines (see [`NOTICE`](NOTICE)). It detects each game's engine automatically and routes between the embedded native engines (Ren'Py / Kirikiri2), an optional external native player, and the Winlator emulation layer — import a game, then play.
 
 > 治理规范：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
 
@@ -29,7 +29,7 @@
 
 本仓库**按设计不附带大二进制运行时资源**：Wine / Box64 运行时（`app/src/main/assets/**/*.tzst`）与各架构原生库（`app/src/main/jniLibs/**/*.so`）不随源码仓分发（为控制仓库体积，运行时资源由使用者自行获取）。
 
-因此 clone 之后**不能直接 `./gradlew assembleDebug` 出完整可用的 APK**，需先从上游补齐这部分资源：
+因此 clone 之后**不能直接 `./gradlew assembleDebug` 出完整可用的 APK**，需先从 Winlator 组件官方仓库补齐这部分资源（`upstream` 远端即组件官方仓库，兼作按需移植官方修复的来源）：
 
 ```bash
 # 从上游取回被排除的运行时资源与 native 库（只落工作区，不写索引）
@@ -174,7 +174,7 @@ echo "exit=$?"                      # 0 才算成功，日志里应有 BUILD SUC
 ## 参与方式
 
 - 欢迎提交 Issue 与 Pull Request。本仓采用 DCO：所有提交须带 `Signed-off-by` 签署（`git commit -s` 自动追加），CI 会在 PR 上逐提交校验；本地门禁、提交约定与许可证要求见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)。
-- 改动上游核心文件前，先核对入库的例外登记 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)。
+- 改动 Winlator 组件文件前，先核对入库的例外登记 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)——它同时是 LGPL-2.1 §2 的修改标注与移植官方修复时的冲突面清单。
 - 项目文档（架构评审、决策记录、技术债登记等）随仓库分发在 [`docs/`](docs/) 下，clone 后可见。
 
 ## 文档索引
@@ -195,5 +195,6 @@ docs/ 下活动文档索引（随仓库分发，clone 后可见；CONTRIBUTING.m
 
 ## 许可证
 
-LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。
+整体以 LGPL-2.1 发布：Winlator 组件部分继承 LGPL-2.1（不可更授），GalgameShell
+增量层亦以 LGPL-2.1 发布（自主选择，保持整仓单许可证，见决策 A8）。
 第三方组件与字体政策详见 [`NOTICE`](NOTICE)。
