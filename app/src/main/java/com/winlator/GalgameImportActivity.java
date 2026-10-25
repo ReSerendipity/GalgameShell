@@ -127,6 +127,8 @@ public class GalgameImportActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             step = savedInstanceState.getInt("step", 0);
+            String src = savedInstanceState.getString("source");
+            if (src != null) source = new File(src);  // 重建后「删除源目录」询问仍可用
             pathInput.setText(savedInstanceState.getString("path", "/sdcard/Download"));
             nameInput.setText(savedInstanceState.getString("name", ""));
             String engine = savedInstanceState.getString("engine");
@@ -216,8 +218,11 @@ public class GalgameImportActivity extends AppCompatActivity {
         } else if (step == 2) {
             startImport();
         } else {
-            getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove(KEY_DONE_NAME).apply();
-            finish();
+            // COMPLETED → 返回游戏库：先问源目录清理（副本已在应用内部，删除不回滚）
+            maybeOfferSourceCleanup(() -> {
+                getSharedPreferences(PREFS, MODE_PRIVATE).edit().remove(KEY_DONE_NAME).apply();
+                finish();
+            });
         }
     }
 
@@ -274,9 +279,27 @@ public class GalgameImportActivity extends AppCompatActivity {
                 return;
             }
             if (result.route == EngineDetector.Route.B) {
+                // GalgameShell 第七轮：原生引擎游戏先「收纳」进应用私有目录
+                // （files/galgame-native/<gameId>，完整复制）——不再引用源目录，
+                // 用户在库外改名/移动/误删不再损坏游戏；KR2 运行时产物也留在私有空间。
+                final File stored;
+                try {
+                    stored = com.winlator.galgame.GalgameNativeStore.store(appCtx, result.gameId, source,
+                            (done, total) -> main.post(() -> {
+                                if (total <= 0) return;
+                                importProgressPanel.setVisibility(View.VISIBLE);
+                                importProgressBar.setProgress((int) (done * 100 / total));
+                                importProgressText.setText(String.format(Locale.US,
+                                        "COPY %d%% · %s / %s", done * 100 / total,
+                                        formatBytes(done), formatBytes(total)));
+                            }));
+                } catch (Exception e) {
+                    main.post(() -> fail("收纳游戏文件失败: " + e.getMessage()));
+                    return;
+                }
                 BuiltinEngine builtin = BuiltinEngineRegistry.resolve(result.engine);
-                if (builtin != null && builtin.isAvailable(appCtx) && builtin.launch(appCtx, source)) {
-                    GalgameLibraryIndex.putNative(appCtx, result.gameId, source.getName(), result.engine, source);
+                if (builtin != null && builtin.isAvailable(appCtx) && builtin.launch(appCtx, stored)) {
+                    GalgameLibraryIndex.putNative(appCtx, result.gameId, source.getName(), result.engine, stored);
                     main.post(this::done);
                 } else {
                     // 内置引擎不可用 → 回退外部原生播放器（Tier2 免责门禁与原导入流程一致）
@@ -348,6 +371,33 @@ public class GalgameImportActivity extends AppCompatActivity {
         builder.show();
     }
 
+    /**
+     * 导入完成（游戏文件已在应用内部留有完整副本）后，询问是否删除用户选中的源目录。
+     * 只对「应用外部目录」询问；删除失败不回滚导入（副本已完整），仅提示。
+     */
+    private void maybeOfferSourceCleanup(Runnable onDone) {
+        if (source == null || !source.isDirectory()) { onDone.run(); return; }
+        File filesDir = getFilesDir();
+        String srcPath = source.getAbsolutePath();
+        if (srcPath.startsWith(filesDir.getParentFile() != null
+                ? filesDir.getParentFile().getAbsolutePath() : filesDir.getAbsolutePath())) {
+            return; // 应用私有空间内部（重复导入已收纳的游戏）不询问
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("删除源目录？")
+                .setMessage("「" + source.getName() + "」已完整导入应用内部。\n是否删除原位置的源文件以释放空间？")
+                .setNegativeButton("保留", (d, w) -> onDone.run())
+                .setPositiveButton("删除源目录", (d, w) -> {
+                    if (com.winlator.core.FileUtils.delete(source)) {
+                        toast("源目录已删除");
+                    } else {
+                        toast("部分文件未能删除，可手动清理");
+                    }
+                    onDone.run();
+                })
+                .show();
+    }
+
     private static String formatBytes(long bytes) {
         if (bytes < 1024 * 1024) return String.format(Locale.US, "%.0fKB", bytes / 1024f);
         if (bytes < 1024L * 1024 * 1024) return String.format(Locale.US, "%.1fMB", bytes / 1048576f);
@@ -368,6 +418,7 @@ public class GalgameImportActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt("step", step);
+        if (source != null) outState.putString("source", source.getAbsolutePath());
         outState.putString("path", String.valueOf(pathInput.getText()));
         outState.putString("name", String.valueOf(nameInput.getText()));
         outState.putString("engine", detected != null ? detected.name() : null);

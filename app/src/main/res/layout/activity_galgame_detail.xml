@@ -224,6 +224,34 @@
                             android:text="切换  ›" />
                     </LinearLayout>
 
+                    <!-- GalgameShell 第七轮：引用型原生游戏收纳进应用内部 -->
+                    <LinearLayout
+                        android:id="@+id/BTMigrateStore"
+                        style="@style/SwissRow"
+                        android:visibility="gone">
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+                            <TextView
+                                style="@style/SwissRowTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="收入应用内部" />
+                            <TextView
+                                style="@style/SwissRowMeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="复制到程序私有空间，防止源文件被改动/误删" />
+                        </LinearLayout>
+                        <TextView
+                            style="@style/SwissMeta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="迁移  ›" />
+                    </LinearLayout>
+
                     <LinearLayout
                         android:id="@+id/BTForceContainer"
                         style="@style/SwissRow"

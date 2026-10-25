@@ -82,7 +82,7 @@ public class GalgameDetailActivity extends AppCompatActivity {
         if (container != null) {
             item = GalgameLibraryAdapter.fromContainer(container, preferred);
         } else {
-            if (indexEntry != null) item = GalgameLibraryAdapter.fromIndexEntry(indexEntry);
+            if (indexEntry != null) item = GalgameLibraryAdapter.fromIndexEntry(this, indexEntry);
             else item = new GalgameLibraryAdapter.Item(null, gameId, label != null ? label : gameId,
                     engine != null ? engine : "?", null, null, engine, preferred);
         }
@@ -148,6 +148,15 @@ public class GalgameDetailActivity extends AppCompatActivity {
         advancedView = findViewById(R.id.LLAdvanced);
         findViewById(R.id.BTAdvanced).setOnClickListener(v -> toggleAdvanced());
         findViewById(R.id.BTRoute).setOnClickListener(v -> showEnginePicker());
+        // 第七轮：引用型原生游戏（未收纳、无容器）给「收入应用内部」入口
+        android.view.View migrateRow = findViewById(R.id.BTMigrateStore);
+        if (migrateRow != null) {
+            boolean referenceMode = container == null && item.gameDir != null
+                    && !com.winlator.galgame.GalgameNativeStore.isStored(this, item.gameId);
+            migrateRow.setVisibility(referenceMode ? View.VISIBLE : View.GONE);
+            if (referenceMode) migrateRow.setOnClickListener(v -> confirmMigrateStore());
+        }
+
         findViewById(R.id.BTReinject).setOnClickListener(v -> {
             if (container == null) { toast("该游戏没有容器，无需重注入"); return; }
             GalgameLocaleInjector.Report re = GalgameLocaleInjector.reapply(container, this);
@@ -391,6 +400,36 @@ public class GalgameDetailActivity extends AppCompatActivity {
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
+    }
+
+    /** 第七轮：把引用型原生游戏复制进应用私有空间（收纳），成功后索引指向收纳目录。 */
+    private void confirmMigrateStore() {
+        if (item.gameDir == null || !item.gameDir.isDirectory()) {
+            toast("源目录不存在，无法迁移"); return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("收入应用内部")
+                .setMessage("将「" + item.label + "」完整复制到程序私有空间（需要额外 " +
+                        "约等于游戏体积的存储空间）。完成后可删除原位置文件。")
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .setPositiveButton("开始复制", (d, w) -> {
+                    toast("正在复制，请稍候…");
+                    executor.execute(() -> {
+                        try {
+                            File stored = com.winlator.galgame.GalgameNativeStore.store(
+                                    this, item.gameId, item.gameDir, null);
+                            GalgameLibraryIndex.putNative(this, item.gameId, item.label,
+                                    EngineDetector.detect(item.gameDir), stored);
+                            main.post(() -> {
+                                toast("已收入应用内部");
+                                recreate();
+                            });
+                        } catch (Exception e) {
+                            main.post(() -> toast("迁移失败: " + e.getMessage()));
+                        }
+                    });
+                })
                 .show();
     }
 

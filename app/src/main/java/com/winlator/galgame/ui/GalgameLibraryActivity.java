@@ -140,7 +140,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 if (it.gameId.equals(e.gameId)) { alreadyListed = true; break; }
             }
             if (alreadyListed) continue;
-            items.add(GalgameLibraryAdapter.fromIndexEntry(e));
+            items.add(GalgameLibraryAdapter.fromIndexEntry(getApplicationContext(), e));
         }
 
         adapter.notifyDataSetChanged();
