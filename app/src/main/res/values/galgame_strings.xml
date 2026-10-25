@@ -217,4 +217,11 @@
     <string name="galgame_settings_discard">放弃</string>
     <string name="galgame_settings_saved">设置已保存</string>
     <string name="galgame_about_version">GalgameShell 11.3 · Winlator-based</string>
+
+    <!-- 游戏内抽屉（XServerDisplayActivity） -->
+    <string name="galgame_drawer_header">游戏菜单</string>
+    <string name="galgame_hud_title">性能显示</string>
+    <string name="galgame_hud_off">关闭</string>
+    <string name="galgame_hud_simple">简单（FPS）</string>
+    <string name="galgame_hud_full">完整（FPS · CPU · 内存 · GPU）</string>
 </resources>

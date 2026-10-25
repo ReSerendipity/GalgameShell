@@ -14,6 +14,21 @@
 
 ### Added
 
+- 游戏内**返回键改为发送 ESC**（galgame 通用取消/呼出菜单键，与 PC 一致），不再像上游那样
+  打开左侧功能抽屉（用户反馈「返回键弹出 Winlator 页面」）。功能菜单入口改为**右上角
+  半透明 ☰ 浮钮**（画中画时自动隐藏；触摸板模式的四指点按呼出保留）；抽屉头部标语改为
+  「游戏菜单」，游戏中不再出现 "(Winlator-based)" 字样（关于页归属声明不变）。真机验证：
+  ESC 实际送达游戏（花弔！标题触发自身退出并落回游戏库，而非 Winlator 页面）、
+  浮钮/关抽屉/退出落点全部通过（docs/real-device-verification.md §11）。
+- 游戏内抽屉新增「**性能显示**」三档开关（关闭 / 简单(FPS) / 完整(FPS·CPU·内存·GPU)），
+  中途可切换、立即生效并写回容器。上游 FrameRating 本有此能力但只能在上游容器编辑页里开，
+  galgame 容器进不去该页；为此 `frameRating` 改为无条件创建（上游仅 HUDMode≠DISABLED 才
+  创建，中途开启会接不上已映射窗口的帧计数）。真机实测完整档：FPS 59.8 /
+  GPU Turnip Adreno 830 / RAM 8.7/15.5GB / CPU 3.19GHz | Box64 v0.4.5。
+- 新增 `docs/component-versions.md` **组件版本登记表**：Ren'Py / Kirikiroid2 / Winlator
+  三组件的内嵌版本、上游最新稳定版、核查日期（2026-10-25）与升级路径的单一事实源；
+  发版前核查、结果记入 CHANGELOG（当前结论：Ren'Py 8.5.3＝最新稳定版无需动作，
+  KR2 上游 2024-06 起停更无同步对象，Winlator 落后 5 笔按需移植）。
 - 启动前运行环境自愈 `GalgameLaunchHelper.ensureEngineRuntime`（引擎启动链自动执行，幂等）：
   ① AdvHD 引擎游戏目录注入 3KB 自制 x64 `icu.dll` 最小桩（assets 内置，仅导出引擎实际
   静态导入的 `uloc_getDefault`）——修复 AdvHD 系游戏「启动即退：加载器缺 icu.dll
