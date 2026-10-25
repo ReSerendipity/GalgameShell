@@ -52,7 +52,16 @@ A standalone Android galgame player: import a folder, auto-detect the engine, an
 
 > **仓库架构**：依据仓库真实目录结构绘制（main @ f466b3a），展示 `app/`、`ci/`、`docs/`、`tools/` 与内嵌 Winlator 组件的关系。
 
-> **注**：应用运行截图需在 ARM64 Android 真机（Vulkan 1.1+）上采集，当前 README 以架构图与流程图替代；真机验收记录见 [`docs/real-device-verification.md`](docs/real-device-verification.md)。
+### 真实界面截图
+
+以下截图在 x86_64 模拟器（API 30，SwiftShader 软件渲染）上用 `./gradlew assembleDebug -PgalgameUiAbi=x86_64` 构建的 UI 调试包截取。
+
+| | |
+|---|---|
+| ![游戏库空态](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-shot-1-library.png) | ![设置](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-shot-2-settings.png) |
+| **游戏库**：空态封面墙，含搜索与「导入游戏」入口 | **设置**：运行环境、输入控制、诊断等入口集中处 |
+
+> **注**：容器管理与工具页在 Swiss 单首页改版后不再有底部导航直达，需从游戏详情进入；完整真机（ARM64 + Vulkan）验收记录见 [`docs/real-device-verification.md`](docs/real-device-verification.md)。
 
 ### 快速开始
 
@@ -197,7 +206,16 @@ A：本项目为源码分发，Release 仅附源码 SBOM（CycloneDX）与 SHA25
 
 > **Repository architecture**: Drawn from the actual directory tree (main @ f466b3a), showing `app/`, `ci/`, `docs/`, `tools/`, and the embedded Winlator component.
 
-> **Note**: Runtime screenshots require an ARM64 Android device with Vulkan 1.1+. This README uses architecture and flow diagrams instead; real-device verification records are in [`docs/real-device-verification.md`](docs/real-device-verification.md).
+### Screenshots
+
+The screenshots below were captured on an x86_64 emulator (API 30, SwiftShader software rendering) running the UI debug build (`./gradlew assembleDebug -PgalgameUiAbi=x86_64`).
+
+| | |
+|---|---|
+| ![Library empty state](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-shot-1-library.png) | ![Settings](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-shot-2-settings.png) |
+| **Library**: empty cover wall with search and "Import Game" entry | **Settings**: runtime, input controls, diagnostics, and other entries |
+
+> **Note**: Container management and tools pages no longer have bottom-nav entries after the Swiss single-page redesign; they are reached from the game detail screen. Full ARM64 + Vulkan real-device verification records are in [`docs/real-device-verification.md`](docs/real-device-verification.md).
 
 ### Quick Start
 
