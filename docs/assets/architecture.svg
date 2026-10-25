@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GalgameShell 仓库架构图：依据仓库真实目录结构绘制（main @ 35a786a），非运行截图。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a94a6"/>
+    </marker>
+  </defs>
+
+  <!-- 背景 -->
+  <rect x="0" y="0" width="1200" height="860" fill="#f7f8fa"/>
+
+  <!-- 标题 -->
+  <text x="40" y="46" font-size="26" font-weight="bold" fill="#1f2937">GalgameShell 仓库架构</text>
+  <text x="40" y="74" font-size="14" fill="#6b7280">Repository Architecture · 基于仓库真实目录结构绘制 · 许可证 LGPL-2.1（继承自 winlator-app）</text>
+
+  <!-- 左栏标签轨 -->
+  <rect x="24" y="110" width="176" height="80" rx="10" fill="#eef2f7" stroke="#c9d2de"/>
+  <text x="112" y="142" text-anchor="middle" font-size="13" fill="#334155">CI / 门禁</text>
+  <text x="112" y="162" text-anchor="middle" font-size="11" fill="#64748b">.github/ · ci/</text>
+
+  <rect x="24" y="210" width="176" height="150" rx="10" fill="#eef2f7" stroke="#c9d2de"/>
+  <text x="112" y="272" text-anchor="middle" font-size="13" fill="#334155">App 层</text>
+  <text x="112" y="292" text-anchor="middle" font-size="11" fill="#64748b">app/（Android）</text>
+  <text x="112" y="312" text-anchor="middle" font-size="11" fill="#64748b">Java 增量层 + C++</text>
+  <text x="112" y="332" text-anchor="middle" font-size="11" fill="#64748b">渲染/兼容层 + assets</text>
+
+  <rect x="24" y="380" width="176" height="120" rx="10" fill="#eef2f7" stroke="#c9d2de"/>
+  <text x="112" y="432" text-anchor="middle" font-size="13" fill="#334155">引擎与运行时</text>
+  <text x="112" y="452" text-anchor="middle" font-size="11" fill="#64748b">renpy-engine/</text>
+  <text x="112" y="472" text-anchor="middle" font-size="11" fill="#64748b">engine_presets.json</text>
+
+  <rect x="24" y="520" width="176" height="80" rx="10" fill="#eef2f7" stroke="#c9d2de"/>
+  <text x="112" y="552" text-anchor="middle" font-size="13" fill="#334155">脚本与工具</text>
+  <text x="112" y="572" text-anchor="middle" font-size="11" fill="#64748b">scripts/ · tools/</text>
+
+  <rect x="24" y="620" width="176" height="100" rx="10" fill="#eef2f7" stroke="#c9d2de"/>
+  <text x="112" y="662" text-anchor="middle" font-size="13" fill="#334155">文档与治理</text>
+  <text x="112" y="682" text-anchor="middle" font-size="11" fill="#64748b">docs/ · README</text>
+  <text x="112" y="702" text-anchor="middle" font-size="11" fill="#64748b">.gitignore · AGENTS.md</text>
+
+  <!-- 右栏：CI / 门禁 -->
+  <g>
+    <rect x="230" y="110" width="300" height="80" rx="10" fill="#0f766e" opacity="0.92"/>
+    <text x="248" y="140" font-size="13" font-weight="bold" fill="#ffffff">.github/workflows/</text>
+    <text x="248" y="162" font-size="11" fill="#d1fae5">ci.yml（类型门禁 + EngineDetector 回归）</text>
+    <text x="248" y="178" font-size="11" fill="#d1fae5">gitleaks.yml（密钥扫描）· release.yml（发布链）</text>
+
+    <rect x="560" y="110" width="300" height="80" rx="10" fill="#0f766e" opacity="0.78"/>
+    <text x="578" y="140" font-size="13" font-weight="bold" fill="#ffffff">ci/（本地门禁）</text>
+    <text x="578" y="162" font-size="11" fill="#d1fae5">pre-push 钩子 · stubs 补桩 · hotspot-entries.txt</text>
+    <text x="578" y="178" font-size="11" fill="#d1fae5">check-dco.sh · check-zero-mod.sh</text>
+  </g>
+
+  <!-- 右栏：App 层 -->
+  <g>
+    <rect x="230" y="210" width="300" height="150" rx="10" fill="#1d4ed8" opacity="0.9"/>
+    <text x="248" y="240" font-size="13" font-weight="bold" fill="#ffffff">app/src/main/java/com/winlator/galgame</text>
+    <text x="248" y="262" font-size="11" fill="#dbeafe">GalgameShell 增量层（本仓核心）</text>
+    <text x="248" y="282" font-size="11" fill="#dbeafe">EngineDetector 引擎识别 · A/B 双路由</text>
+    <text x="248" y="302" font-size="11" fill="#dbeafe">ImportFlow 导入 · 容器/Wine 启动链</text>
+    <text x="248" y="322" font-size="11" fill="#dbeafe">GalgameLibraryActivity / HomeFragment UI</text>
+    <text x="248" y="342" font-size="11" fill="#dbeafe">诊断向导 · 存档重定向 · 一键日文化</text>
+
+    <rect x="560" y="210" width="300" height="150" rx="10" fill="#1d4ed8" opacity="0.7"/>
+    <text x="578" y="240" font-size="13" font-weight="bold" fill="#ffffff">app/src/main/cpp/</text>
+    <text x="578" y="262" font-size="11" fill="#dbeafe">winlator（容器基座）</text>
+    <text x="578" y="282" font-size="11" fill="#dbeafe">virglrenderer / vortekrenderer / gladiorenderer</text>
+    <text x="578" y="302" font-size="11" fill="#dbeafe">libadrenotools（Adreno 驱动）</text>
+    <text x="578" y="322" font-size="11" fill="#dbeafe">midihandler</text>
+
+    <rect x="890" y="210" width="276" height="150" rx="10" fill="#1d4ed8" opacity="0.55"/>
+    <text x="908" y="240" font-size="13" font-weight="bold" fill="#ffffff">app/src/main/assets/</text>
+    <text x="908" y="262" font-size="11" fill="#dbeafe">engine_presets.json（引擎预设）</text>
+    <text x="908" y="282" font-size="11" fill="#dbeafe">renpy-engine/（引擎载荷）</text>
+    <text x="908" y="302" font-size="11" fill="#dbeafe">box64 / wine 运行时（不随仓分发）</text>
+    <text x="908" y="322" font-size="11" fill="#dbeafe">字体 / 输入控件 / 壁纸等资源</text>
+  </g>
+
+  <!-- 右栏：引擎与运行时 -->
+  <g>
+    <rect x="230" y="380" width="300" height="120" rx="10" fill="#7c3aed" opacity="0.88"/>
+    <text x="248" y="410" font-size="13" font-weight="bold" fill="#ffffff">renpy-engine/renpy/（Ren'Py 8.5.3 源码）</text>
+    <text x="248" y="432" font-size="11" fill="#ede9fe">Python 3.12.8 引擎包（audio / display / sl2 / text…）</text>
+    <text x="248" y="452" font-size="11" fill="#ede9fe">编译中间产物 __pycache__ 不入库（2026-10-25 清理）</text>
+    <text x="248" y="472" font-size="11" fill="#ede9fe">librenpython.so 配套运行时（lib/ 载荷保留）</text>
+
+    <rect x="560" y="380" width="300" height="120" rx="10" fill="#7c3aed" opacity="0.72"/>
+    <text x="578" y="410" font-size="13" font-weight="bold" fill="#ffffff">Kirikiri2（Kirikiroid2 内嵌）</text>
+    <text x="578" y="432" font-size="11" fill="#ede9fe">libgame.so，真机验证通过（bosei2）</text>
+    <text x="578" y="452" font-size="11" fill="#ede9fe">KR2Activity 原生直启渲染</text>
+
+    <rect x="890" y="380" width="276" height="120" rx="10" fill="#7c3aed" opacity="0.6"/>
+    <text x="908" y="410" font-size="13" font-weight="bold" fill="#ffffff">Winlator 容器引擎</text>
+    <text x="908" y="432" font-size="11" fill="#ede9fe">模拟层兜底（A 路由）</text>
+    <text x="908" y="452" font-size="11" fill="#ede9fe">Wine / box64 运行时按设计不随仓分发</text>
+    <text x="908" y="472" font-size="11" fill="#ede9fe">由使用者从上游补齐（README「获取运行时资源」）</text>
+  </g>
+
+  <!-- 右栏：脚本与工具 -->
+  <g>
+    <rect x="230" y="520" width="300" height="80" rx="10" fill="#d97706" opacity="0.85"/>
+    <text x="248" y="550" font-size="13" font-weight="bold" fill="#ffffff">scripts/</text>
+    <text x="248" y="572" font-size="11" fill="#fef3c7">seed_and_merge.sh（并入上游增量层，身份环境变量可覆盖）</text>
+    <text x="248" y="588" font-size="11" fill="#fef3c7">check_licenses.py · gen_galgame_stubs.py</text>
+
+    <rect x="560" y="520" width="300" height="80" rx="10" fill="#d97706" opacity="0.72"/>
+    <text x="578" y="550" font-size="13" font-weight="bold" fill="#ffffff">tools/</text>
+    <text x="578" y="572" font-size="11" fill="#fef3c7">prepare_box64_lib.sh · make_runtime_checksums.sh</text>
+    <text x="578" y="588" font-size="11" fill="#fef3c7">detect-test · renpy-testgame · smoke_e2e_adb.sh</text>
+  </g>
+
+  <!-- 右栏：文档与治理 -->
+  <g>
+    <rect x="230" y="620" width="300" height="100" rx="10" fill="#15803d" opacity="0.85"/>
+    <text x="248" y="650" font-size="13" font-weight="bold" fill="#ffffff">docs/（12 篇活动文档，随仓库分发）</text>
+    <text x="248" y="672" font-size="11" fill="#dcfce7">架构评审 · 决策登记 · 技术债登记 · 真机验证</text>
+    <text x="248" y="692" font-size="11" fill="#dcfce7">发布规范 · 引擎集成 · 上游回馈清单等</text>
+
+    <rect x="560" y="620" width="300" height="100" rx="10" fill="#15803d" opacity="0.68"/>
+    <text x="578" y="650" font-size="13" font-weight="bold" fill="#ffffff">README.md（本图入口 + 文档索引）</text>
+    <text x="578" y="672" font-size="11" fill="#dcfce7">CHANGELOG.md · NOTICE（第三方许可）</text>
+    <text x="578" y="692" font-size="11" fill="#dcfce7">.gitignore（AGENTS.md 不入库，2026-10-25 迁移）</text>
+
+    <rect x="890" y="620" width="276" height="100" rx="10" fill="#15803d" opacity="0.55"/>
+    <text x="908" y="650" font-size="13" font-weight="bold" fill="#ffffff">AGENTS.md</text>
+    <text x="908" y="672" font-size="11" fill="#dcfce7">AI 辅助开发指南（本地维护者上下文）</text>
+    <text x="908" y="692" font-size="11" fill="#dcfce7">仅本地保留，不入库（git rm --cached）</text>
+  </g>
+
+  <!-- 流程箭头（左侧垂直主线） -->
+  <line x1="112" y1="190" x2="112" y2="210" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="112" y1="360" x2="112" y2="380" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="112" y1="500" x2="112" y2="520" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="112" y1="600" x2="112" y2="620" stroke="#8a94a6" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 路由说明 -->
+  <rect x="230" y="742" width="936" height="92" rx="10" fill="#ffffff" stroke="#c9d2de"/>
+  <text x="250" y="768" font-size="13" font-weight="bold" fill="#1f2937">运行路由（引擎识别 → 自动选择）</text>
+  <text x="250" y="790" font-size="12" fill="#374151">B 路由：Ren'Py / Kirikiri2 游戏 → 内嵌原生引擎直启渲染（librenpython.so / libgame.so）</text>
+  <text x="250" y="812" font-size="12" fill="#374151">A 路由：其余游戏 → Winlator 容器模拟（Wine / box64）；外部原生播放器为可选回退（默认关闭）</text>
+
+  <!-- 图注 -->
+  <text x="24" y="852" font-size="11" fill="#9ca3af">图注：依据仓库真实目录结构绘制（main @ 35a786a，2026-10-25）；本机未运行 Android 应用，故以架构图替代运行截图。</text>
+</svg>

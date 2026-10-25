@@ -105,7 +105,7 @@
 ## 4. 验证手法（模型读不了图，用客观像素分析替代主观描述）
 - 真机取证：`adb -s dc57ebe3 shell am start ...` / `screencap -p` / `adb pull` 到 `C:/Users/Doro/Desktop/GalgameShell验证截图/`。
 - 像素分析脚本：`.workbuddy/verify/analyze_png.py`（仓根相对路径；`.workbuddy/` 为本地不入库目录）（`python analyze_png.py <png>` 统计黑占比 / 占位灰(170,170,170) / 彩色占比 / 颜色数）。
-- UI 改动用截图核对布局/色板（可 `show_widget` 内联 `<img src="C:/绝对路径">` 兜底预览）。
+- UI 改动用截图核对布局/色板（可 `show_widget` 内联 `<img src="<仓内相对路径>">` 兜底预览）。
 
 ---
 
