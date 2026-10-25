@@ -106,11 +106,26 @@ public final class EngineDetector {
     }
 
     /**
+     * 引擎运行时目录名（KR2 的 getWritablePath 会在<b>游戏源目录</b>里创建
+     * {@code .preference/}、{@code files/}（KrkrEngine javadoc 有载），里面带
+     * XP3 魔数的存档封包；wine 路线的存档落在 S: 重定向不落源目录。这些目录
+     * 不是游戏——被当游戏目录选中/扫到时会误判 KIRIKIRI 并入库成打不开的条目
+     * （真机实测「files」「.preference」两条目即此来源，2026-10-25）。
+     */
+    public static boolean isRuntimeDirName(String name) {
+        if (name == null || name.isEmpty()) return false;
+        String n = name.toLowerCase();
+        return n.equals(".preference") || n.equals("files") || n.equals("savedata")
+                || n.equals("savedata ") || n.equals(".trash");
+    }
+
+    /**
      * 识别游戏目录的引擎并给出路由（B1 优先级裁决）。
      * @param gameDir 游戏根目录（A3 复制后的容器外/容器内路径）
      */
     public static Engine detect(File gameDir) {
         if (gameDir == null || !gameDir.isDirectory()) return Engine.UNKNOWN;
+        if (isRuntimeDirName(gameDir.getName())) return Engine.UNKNOWN;
         File[] files = gameDir.listFiles();
         if (files == null) return Engine.UNKNOWN;
 
@@ -179,7 +194,7 @@ public final class EngineDetector {
         // 2b) 浅层下钻（仅一层）：真实发布包常把 exe/资源收在单层子目录，
         // 导入时不做深扫会一律判 UNKNOWN，导致预设与展示名失准。
         for (File d : files) {
-            if (!d.isDirectory()) continue;
+            if (!d.isDirectory() || isRuntimeDirName(d.getName())) continue;
             File[] sub = d.listFiles();
             if (sub == null) continue;
             for (File f : sub) {
