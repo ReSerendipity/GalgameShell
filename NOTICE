@@ -4,11 +4,14 @@ GalgameShell — NOTICE
 本文件汇总 GalgameShell（下称"本外壳"）的版权、许可证与第三方组件归属。
 本项目遵守 LGPL-2.1（见同目录 LICENSE），并履行其"提供对应源码"的义务（A6 / AC-18）。
 
-1. 项目与上游
+1. 项目与内嵌组件
 -------------
-- 本外壳：GalgameShell，是 galgame 专用外壳（装修层）。
-- 上游基座：winlator-app (https://github.com/brunodev85/winlator-app)，作者 BrunoDev85，
-  许可证 LGPL-2.1。
+- 本项目：GalgameShell，独立的 galgame 安卓运行器。
+- 内嵌组件：winlator-app (https://github.com/brunodev85/winlator-app)，作者 BrunoDev85，
+  许可证 LGPL-2.1 —— 以**源码组件**形式内嵌于本仓库 app/ 目录，声明方式同 §5/§8
+  的 Kirikiroid2 / Ren'Py；对本组件的修改在 ci/zero-mod-exceptions.md 逐条登记
+  （LGPL-2.1 §2 修改标注）。组件运行时二进制（.tzst / .so）按 README 从组件官方
+  仓库取回，不随本源码仓分发。
 - 本外壳以 LGPL-2.1 发布，且公开源码：
   https://github.com/ReSerendipity/GalgameShell
 
@@ -24,7 +27,8 @@ GalgameShell — NOTICE
   res/values/galgame_strings.xml、res/layout/activity_galgame_library.xml
 上述新增部分同样以 LGPL-2.1 发布。
 
-设计铁律（Plan §VIII.4）：不修改上游以下文件，以保持 rebase 友好：
+设计铁律（Plan §VIII.4 / A8）：不修改 Winlator 组件以下文件，保持组件差异面
+  最小、便于按需移植官方修复：
   Container.java / LocaleHelper.java / res/values/strings.xml 现有条目。
 
 3. 上游随附的第三方组件（未在本仓库内修改）

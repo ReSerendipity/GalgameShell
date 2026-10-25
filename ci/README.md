@@ -2,7 +2,7 @@
 
 ## `stubs/`
 给 CI 用的「离线类型门禁」桩代码：`com.winlator.galgame` 包与热点入口清单（见下文）
-引用了 Android SDK / androidx / 官方 `com.winlator.*` 的部分 API，而本 fork 按设计
+引用了 Android SDK / androidx / Winlator 组件的 `com.winlator.*` 部分 API，而本仓库按设计
 **不含大二进制**、CI 也不装 Android SDK。因此用一组最小签名桩顶替这些外部符号，让
 `javac -Xlint:all` 能在秒级内抓出真正的编译错误（签名不符、不可达 catch、缺 import 等）。
 

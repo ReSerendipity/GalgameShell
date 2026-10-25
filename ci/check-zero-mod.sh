@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ci/check-zero-mod.sh — 零改铁律校验（CI `rebase-guard` 与本地共用这一份实现）
 #
-# 为什么存在：本 fork 基于官方 winlator-app 靠 rebase 同步上游，官方核心文件不得改动。
+# 为什么存在：本项目以源码组件形式内嵌 winlator-app（LGPL-2.1，见 NOTICE §1 / 决策 A8），
+# 组件文件不得随意改动——例外必须登记：既是 LGPL §2 的修改标注，也是按需移植官方修复时的冲突面清单。
 # 原实现把基线写死成「push 事件字段，取不到就回落 HEAD~1」，在 pull_request 上退化成
 # 只比最后一笔，且把 git diff 的失败用 `|| true` 吞成空名单——空名单同样打印 OK。
 # 现在按事件取权威基线，基线不可解析就显式失败，绝不回落。

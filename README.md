@@ -1,11 +1,9 @@
 <div align="center">
 
-<img src="docs/assets/readme-galgameshell-logo.png" alt="GalgameShell" width="320">
-
 # GalgameShell
 
-**Galgame 的 Android 外壳 —— 导入即玩，自动识别引擎并路由到原生或模拟层。**
-A galgame-dedicated Android shell: import a folder, auto-detect the engine, and play.
+**Galgame 的 Android 运行器 —— 导入即玩，自动识别引擎并路由到原生或模拟层。**
+A standalone Android galgame player: import a folder, auto-detect the engine, and play.
 
 [![CI](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ReSerendipity/GalgameShell?color=orange)](https://github.com/ReSerendipity/GalgameShell/releases)
@@ -25,7 +23,7 @@ A galgame-dedicated Android shell: import a folder, auto-detect the engine, and 
 
 ### 项目简介
 
-**GalgameShell** 是基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）二次开发的 galgame 专用 Android 外壳。它以 Winlator 的 Box64 + Wine 模拟层为基座，同时在 APK 内内嵌 Ren'Py 与 Kirikiri2 原生运行时——导入游戏文件夹后自动识别引擎（v11.3 已覆盖 19 种指纹），在「内嵌原生引擎 / 外部原生播放器（可选）/ Winlator 模拟」之间智能路由，无需手工配置 Wine 容器。
+**GalgameShell** 是独立的 galgame 安卓运行器，内嵌 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）作为 Windows 模拟层**源码组件**——集成与修改标注方式同内嵌的 Kirikiroid2 / Ren'Py，见 [`NOTICE`](NOTICE)。它在 APK 内同时内嵌 Ren'Py 与 Kirikiri2 原生运行时，导入游戏文件夹后自动识别引擎（v11.3 已覆盖 19 种指纹），在「内嵌原生引擎 / 外部原生播放器（可选）/ Winlator 模拟」之间智能路由，无需手工配置 Wine 容器。
 
 > 治理规范：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
 
@@ -52,7 +50,7 @@ A galgame-dedicated Android shell: import a folder, auto-detect the engine, and 
 
 ![仓库架构](docs/assets/architecture.svg)
 
-> **仓库架构**：依据仓库真实目录结构绘制（main @ 35a786a），展示 `app/`、`ci/`、`docs/`、`tools/` 与上游 winlator-app 增量层的关系。
+> **仓库架构**：依据仓库真实目录结构绘制（main @ f466b3a），展示 `app/`、`ci/`、`docs/`、`tools/` 与内嵌 Winlator 组件的关系。
 
 > **注**：应用运行截图需在 ARM64 Android 真机（Vulkan 1.1+）上采集，当前 README 以架构图与流程图替代；真机验收记录见 [`docs/real-device-verification.md`](docs/real-device-verification.md)。
 
@@ -61,12 +59,12 @@ A galgame-dedicated Android shell: import a folder, auto-detect the engine, and 
 #### 前置环境
 
 - JDK 17
-- Android SDK（platform-35、build-tools 35、NDK 24.0.8215888）
-- Git（用于从上游取回运行时资源）
+- Android SDK（platform-35、NDK 24.0.8215888）
+- Git（用于从 Winlator 组件官方仓库补齐运行时资源）
 
 #### 1. 克隆并补齐运行时资源
 
-本仓库**按设计不附带大二进制运行时**：Wine / Box64 运行时（`*.tzst`）与各架构原生库（`*.so`）不随源码分发。
+本仓库**按设计不附带大二进制运行时**：Wine / Box64 运行时（`*.tzst`）与各架构原生库（`*.so`）不随源码分发。因此 clone 之后**不能直接 `./gradlew assembleDebug` 出完整可用的 APK**，需先从 Winlator 组件官方仓库补齐这部分资源（`upstream` 远端即组件官方仓库，兼作按需移植官方修复的来源）：
 
 ```bash
 git clone https://github.com/ReSerendipity/GalgameShell.git
@@ -156,12 +154,12 @@ A：本项目为源码分发，Release 仅附源码 SBOM（CycloneDX）与 SHA25
 
 - 欢迎 Issue 与 PR。本仓采用 DCO：所有提交须带 `Signed-off-by`（`git commit -s` 自动追加）。
 - 本地类型门禁：`cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push`
-- 改动上游核心文件前，先核对 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)
+- 改动 Winlator 组件文件前，先核对 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)——它同时是 LGPL-2.1 §2 的修改标注与移植官方修复时的冲突面清单。
 - 详细贡献指南见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
 
 ### 许可证
 
-LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。第三方组件与字体政策详见 [`NOTICE`](NOTICE)。
+整体以 LGPL-2.1 发布：Winlator 组件部分继承 LGPL-2.1（不可更授），GalgameShell 增量层亦以 LGPL-2.1 发布（自主选择，保持整仓单许可证，见决策 A8）。第三方组件与字体政策详见 [`NOTICE`](NOTICE)。
 
 ---
 
@@ -169,7 +167,7 @@ LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。�
 
 ### Introduction
 
-**GalgameShell** is a galgame-dedicated Android shell built on top of the official [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app) (LGPL-2.1). It uses Winlator's Box64 + Wine emulation layer as the base, while embedding Ren'Py and Kirikiri2 native runtimes inside the APK. After you pick a game folder, GalgameShell auto-detects the engine (19 fingerprints in v11.3) and routes the game to the embedded native engine, an optional external native player, or the Winlator emulation layer — no manual Wine container configuration needed.
+**GalgameShell** is a standalone Android galgame player that embeds [Winlator](https://github.com/brunodev85/winlator-app) (LGPL-2.1) as its Windows-emulation source component — with modifications marked, same pattern as the bundled Kirikiroid2 / Ren'Py engines (see [`NOTICE`](NOTICE)). It also embeds Ren'Py and Kirikiri2 native runtimes inside the APK. After you pick a game folder, GalgameShell auto-detects the engine (19 fingerprints in v11.3) and routes the game to the embedded native engine, an optional external native player, or the Winlator emulation layer — no manual Wine container configuration needed.
 
 > Governance: [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
 
@@ -196,7 +194,7 @@ LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。�
 
 ![Repository architecture](docs/assets/architecture.svg)
 
-> **Repository architecture**: Drawn from the actual directory tree (main @ 35a786a), showing `app/`, `ci/`, `docs/`, `tools/`, and the delta layer on top of upstream winlator-app.
+> **Repository architecture**: Drawn from the actual directory tree (main @ f466b3a), showing `app/`, `ci/`, `docs/`, `tools/`, and the embedded Winlator component.
 
 > **Note**: Runtime screenshots require an ARM64 Android device with Vulkan 1.1+. This README uses architecture and flow diagrams instead; real-device verification records are in [`docs/real-device-verification.md`](docs/real-device-verification.md).
 
@@ -205,7 +203,7 @@ LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。�
 #### Prerequisites
 
 - JDK 17
-- Android SDK (platform-35, build-tools 35, NDK 24.0.8215888)
+- Android SDK (platform-35, NDK 24.0.8215888)
 - Git (to fetch runtime assets from upstream)
 
 #### 1. Clone and fetch runtime assets
@@ -298,9 +296,9 @@ A: This project distributes source only. Releases attach a CycloneDX SBOM and SH
 
 - Issues and PRs welcome. This repo uses DCO: every commit must carry a `Signed-off-by` trailer (`git commit -s`).
 - Local type gate: `cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push`
-- Before modifying upstream core files, check [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)
+- Before modifying Winlator component files, check [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md) — it is both the LGPL-2.1 §2 modification-notice register and the conflict surface list when porting upstream fixes.
 - Full guide: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
 
 ### License
 
-LGPL-2.1 (inherited from winlator-app). This delta layer is also released under LGPL-2.1. Third-party components and font policy are listed in [`NOTICE`](NOTICE).
+The whole project is released under LGPL-2.1: the Winlator component inherits LGPL-2.1 (cannot be re-licensed), and the GalgameShell delta layer is also released under LGPL-2.1 (deliberate choice to keep a single license across the repo, see decision A8). Third-party components and font policy are listed in [`NOTICE`](NOTICE).
