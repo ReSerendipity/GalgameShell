@@ -444,3 +444,58 @@ Winlator 自带（FrameRating 三档）：FPS；FULL 档=GPU 名称（`_NET_WM_G
 （Android 无通用免 root 接口，高通 kgsl / Mali 节点因机型而异多数不可读）、按进程
 CPU/RSS（box64/wine 进程 /proc/<pid> 自家可读）。以上均可在我们自己的代码里扩展，
 不触碰上游文件，与组件升级解耦。
+
+## 12. 第五轮：随机启动闪退修复 / 加载 UI 品牌化 / 性能 HUD 多项化（2026-10-25，设备 dc57ebe3）
+
+### 12.1 闪退根因与修复（P0）
+
+用户反馈「随机启动游戏都有闪退」。真机取证（`logcat -b crash`）：
+`test_siglus`（SIGLUS→Wine 路线）启动 10s 后 `FATAL EXCEPTION: main
+ArrayIndexOutOfBoundsException: length=4096; index=4096
+at ArrayUtils.indexOf ← Box64Utils.extractBinVersion ← FrameRating.run`。
+
+链条：第四轮「FrameRating 无条件创建」+ 容器 HUDMode=FULL → 进入 `run()` 的 FULL 分支 →
+`extractBinVersion` 4096 分块读 box64 二进制找版本串 → 上游 `indexOf` 内层匹配循环**缺
+`j < length` 边界**，"Box64 arm64 v" 前缀恰落块尾时 `array[4096]` 越界 → 主线程 FATAL →
+**整个 App 闪退**（进程内运行，殃及一切）。上游潜伏 bug，被第四轮改动暴露。
+
+修复（两层）：
+1. `core/ArrayUtils.java` `indexOf` 补 `j < length`（根治，GamepadHandler 同受益）；
+2. `widget/FrameRating.java` `run()` 的 `extractBinVersion` 包 try-catch，异常降级
+   "Box64 v?" 并缓存（防御：主线程 IO 不再每帧重试）。
+
+复测：`test_siglus` 两轮冷启动（22:0x / 22:1x）`crash buffer` 均空、
+`XServerDisplayActivity` 稳定前台。
+
+### 12.2 运行时目录自污染（健壮性）
+
+库里「files」「.preference」两条目 = KR2 的 `getWritablePath()` 在**游戏源目录**创建的
+运行时目录（内含 XP3 魔数存档封包）被再次导入时误判 KIRIKIRI 入库，启动即黑屏挂起。
+修复：`EngineDetector.isRuntimeDirName`（.preference/files/savedata）三处拦截——
+`detect()` 入口、深层下钻、`GameLauncher.launch()` 兜底（旧库残留条目启动时明确报错
+提示移除重导）。
+
+### 12.3 启动加载 UI 品牌化
+
+`preloader_dialog.xml` 重写：全屏 90% 黑遮罩 + GALGAMESHELL 字距标 + 主文案 + 2dp 细
+进度条（Swiss 纸面语言），不再引用 Winlator attr。真机视觉实证（`r5_preloader.png`）：
+GALGAMESHELL 小字 + 主文案 + 细进度条，无 Winlator 圆形转圈。
+
+### 12.4 性能 HUD 多项化（13 项可选）
+
+`GalgamePerfHud`（新，零上游依赖）：FPS（帧回调）/ CPU 使用率（/proc/stat 差分）/
+CPU 频率（cpufreq sysfs avg·max）/ CPU 各核占用 / 系统内存 / 游戏进程内存（含
+box64/wine RSS）/ 游戏进程 CPU / GPU 型号（_NET_WM_GPU_INFO）/ 负载（loadavg）/
+整机功耗（电流×电压）/ 温度（CPU·电池 thermal zone）/ 电池（电量·状态）/ 网络上下行
+（/proc/net/dev 差分）。抽屉「性能显示」改**多选对话框**，容器 extra `galgame_perf_items`
+持久化，与上游三档 FrameRating 互斥显示。
+
+复测（hana9test）：多选对话框打开（视觉实证 13 项列表）→ 勾选 → 应用 → 左上浮窗渲染
+**FPS 59.8 / CPU 45.2%**（`r5_hud_zoom.png`，行距 49px 等宽白字特征）——全链打通。
+自动化勾选仅可靠勾中 2-3 项（滚动列表 + 动画 idle 问题），13 项全开状态待人工确认，
+各行渲染由同一循环保证。
+
+### 12.5 其他回归
+
+返回键（抽屉开→BACK→关）像素实证 61.9%→9.0% 白面板消失；`GalgamePerfHud` 帧回调与
+`FrameRating` 共存不冲突。

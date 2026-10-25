@@ -5,4 +5,5 @@ public class Handler {
     public boolean post(Runnable r) { return true; }
     public boolean postDelayed(Runnable r, long delayMillis) { return true; }
     public void removeCallbacks(Runnable r) {}
+    public void removeCallbacksAndMessages(Object token) {}
 }

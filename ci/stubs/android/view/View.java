@@ -9,6 +9,9 @@ public class View {
     public void setOnLongClickListener(OnLongClickListener l) {}
     public int getId() { return 0; }
     public Context getContext() { return null; }
+    public android.content.res.Resources getResources() { return null; }
+    public void setLayoutParams(ViewGroup.LayoutParams params) {}
+    public ViewParent getParent() { return null; }
     public Object getTag() { return null; }
     public Object getTag(int key) { return null; }
     public void setTag(Object tag) {}
@@ -21,6 +24,7 @@ public class View {
     public void setScaleX(float scaleX) {}
     public void setScaleY(float scaleY) {}
     public void setVisibility(int visibility) {}
+    public int getVisibility() { return VISIBLE; }
     public void setBackgroundColor(int color) {}
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {}
     public boolean onTouchEvent(MotionEvent event) { return false; }

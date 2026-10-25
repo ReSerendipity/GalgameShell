@@ -114,6 +114,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private InputControlsManager inputControlsManager;
     private RootFS rootFS;
     private FrameRating frameRating;
+    private com.winlator.galgame.widget.GalgamePerfHud galgamePerfHud;
     private android.widget.ImageView galgameMenuHandle;
     private Runnable editInputControlsCallback;
     private Shortcut shortcut;
@@ -241,7 +242,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         xServer.windowManager.addOnWindowModificationListener(new WindowManager.OnWindowModificationListener() {
             @Override
             public void onUpdateWindowContent(Window window) {
-                if (window.id == frameRatingWindowId) frameRating.update();
+                if (window.id == frameRatingWindowId) {
+                    if (frameRating != null) frameRating.update();
+                    if (galgamePerfHud != null) galgamePerfHud.onFrame();
+                }
             }
 
             @Override
@@ -345,6 +349,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     protected void onDestroy() {
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
+        if (galgamePerfHud != null) {
+            galgamePerfHud.destroy();
+            galgamePerfHud = null;
+        }
         ForegroundService.stopSession(this);
         super.onDestroy();
     }
@@ -390,8 +398,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 break;
             }
             case R.id.menu_item_galgame_hud: {
-                // GalgameShell：性能浮窗三档开关（上游 FrameRating：FPS / +CPU·内存·GPU）。
-                // 上游只能容器编辑页里改，galgame 容器进不了那页，所以在抽屉里给开关。
+                // GalgameShell：性能浮窗多项选择（FPS/CPU/频率/内存/进程/GPU/负载/功耗）。
+                // 上游三档 FrameRating 只能在容器编辑页开，galgame 容器进不去；此入口逐项可选。
                 showHudPicker();
                 break;
             }
@@ -453,32 +461,51 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         return preferences;
     }
 
-    /** GalgameShell：性能浮窗选择器（关闭 / 简单 / 完整），立即生效并写回容器。 */
+    /** GalgameShell：性能浮窗多项选择（FPS/CPU 使用率/CPU 频率/系统内存/进程内存/GPU/负载/功耗），
+     *  立即生效并写回容器 extra；全不选 = 关闭（此时若容器 hudMode≠DISABLED 回落上游三档浮窗）。 */
     private void showHudPicker() {
         if (container == null) return;
-        final FrameRating.Mode current = FrameRating.Mode.values()[Math.max(0, container.getHUDMode())];
-        final String[] labels = {
-                getString(R.string.galgame_hud_off),
-                getString(R.string.galgame_hud_simple),
-                getString(R.string.galgame_hud_full)};
+        final String[] keys = com.winlator.galgame.widget.GalgamePerfHud.ALL_KEYS;
+        final java.util.Set<String> current = com.winlator.galgame.widget.GalgamePerfHud.selectedKeys(container);
+        final boolean[] checked = new boolean[keys.length];
+        final int[] labelRes = {
+                R.string.galgame_perf_fps, R.string.galgame_perf_cpu, R.string.galgame_perf_cpu_freq,
+                R.string.galgame_perf_cores, R.string.galgame_perf_ram, R.string.galgame_perf_proc,
+                R.string.galgame_perf_proc_cpu, R.string.galgame_perf_gpu, R.string.galgame_perf_load,
+                R.string.galgame_perf_power, R.string.galgame_perf_temp, R.string.galgame_perf_battery,
+                R.string.galgame_perf_net};
+        CharSequence[] items = new CharSequence[keys.length];
+        for (int i = 0; i < keys.length; i++) {
+            checked[i] = current.contains(keys[i]);
+            items[i] = getString(labelRes[i]);
+        }
         new android.app.AlertDialog.Builder(this)
                 .setTitle(R.string.galgame_hud_title)
-                .setSingleChoiceItems(labels, current.ordinal(), (dialog, which) -> {
-                    applyHudMode(FrameRating.Mode.values()[which]);
-                    dialog.dismiss();
+                .setMultiChoiceItems(items, checked, (dialog, which, isChecked) -> {})
+                .setPositiveButton(R.string.galgame_perf_apply, (dialog, which) -> {
+                    java.util.Set<String> sel = new java.util.LinkedHashSet<>();
+                    for (int i = 0; i < keys.length; i++) if (checked[i]) sel.add(keys[i]);
+                    com.winlator.galgame.widget.GalgamePerfHud.saveSelectedKeys(container, sel);
+                    container.saveData();
+                    applyPerfHud(sel);
                     drawerLayout.closeDrawers();
                 })
                 .setNegativeButton(R.string.galgame_cancel, null)
                 .show();
     }
 
-    private void applyHudMode(FrameRating.Mode mode) {
-        container.setHUDMode((byte) mode.ordinal());
-        container.saveData();
-        if (frameRating != null) {
-            frameRating.setMode(mode);
-            frameRating.setVisibility(mode == FrameRating.Mode.DISABLED ? View.GONE : View.VISIBLE);
-            frameRating.reset();
+    private void applyPerfHud(java.util.Set<String> sel) {
+        FrameLayout rootView = findViewById(R.id.FLXServerDisplay);
+        if (galgamePerfHud != null) {
+            galgamePerfHud.destroy();
+            galgamePerfHud = null;
+        }
+        if (!sel.isEmpty() && rootView != null) {
+            galgamePerfHud = com.winlator.galgame.widget.GalgamePerfHud.attach(rootView, container);
+            if (frameRating != null) frameRating.setVisibility(View.GONE);
+        }
+        else if (frameRating != null && frameRating.getMode() != FrameRating.Mode.DISABLED) {
+            frameRating.setVisibility(View.VISIBLE);
         }
     }
 
@@ -709,6 +736,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             frameRating.setMode(FrameRating.Mode.values()[container.getHUDMode()]);
             frameRating.setVisibility(View.GONE);
             rootView.addView(frameRating);
+
+            // GalgameShell：多项可选性能浮窗（FPS/CPU/频率/内存/进程/GPU/负载/功耗）。
+            // 有选择项时接管左上角，上游三档 FrameRating 保持隐藏避免双浮窗。
+            galgamePerfHud = com.winlator.galgame.widget.GalgamePerfHud.attach(rootView, container);
         }
 
         if (shortcut != null) {
@@ -1218,9 +1249,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
 
             if (frameRatingWindow != null) {
-                if (frameRating.getMode() == FrameRating.Mode.FULL) {
+                // GalgameShell：GPU 型号同时喂给多项浮窗（上游仅在 FULL 档读取）
+                if (frameRating.getMode() == FrameRating.Mode.FULL || galgamePerfHud != null) {
                     Property gpuInfo = frameRatingWindow.getProperty(Atom._NET_WM_GPU_INFO);
-                    frameRating.setGPUInfo(gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A");
+                    String gpuText = gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A";
+                    if (frameRating.getMode() == FrameRating.Mode.FULL) frameRating.setGPUInfo(gpuText);
+                    if (galgamePerfHud != null) galgamePerfHud.setGPUInfo(gpuText);
                 }
                 frameRatingWindowId = frameRatingWindow.id;
                 frameRating.reset();

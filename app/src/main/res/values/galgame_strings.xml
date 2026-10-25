@@ -224,4 +224,18 @@
     <string name="galgame_hud_off">关闭</string>
     <string name="galgame_hud_simple">简单（FPS）</string>
     <string name="galgame_hud_full">完整（FPS · CPU · 内存 · GPU）</string>
+    <string name="galgame_perf_fps">FPS 帧率</string>
+    <string name="galgame_perf_cpu">CPU 使用率</string>
+    <string name="galgame_perf_cpu_freq">CPU 频率（各核实时）</string>
+    <string name="galgame_perf_ram">内存（系统）</string>
+    <string name="galgame_perf_proc">内存（游戏进程）</string>
+    <string name="galgame_perf_gpu">GPU 型号</string>
+    <string name="galgame_perf_load">负载（loadavg）</string>
+    <string name="galgame_perf_power">整机功耗</string>
+    <string name="galgame_perf_cores">CPU 各核占用</string>
+    <string name="galgame_perf_temp">温度（CPU · 电池）</string>
+    <string name="galgame_perf_battery">电池（电量 · 状态）</string>
+    <string name="galgame_perf_proc_cpu">游戏进程 CPU</string>
+    <string name="galgame_perf_net">网络上下行</string>
+    <string name="galgame_perf_apply">应用</string>
 </resources>

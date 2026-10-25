@@ -14,6 +14,10 @@ public abstract class Context {
     public String getString(int resId, Object... formatArgs) { return ""; }
     public SharedPreferences getSharedPreferences(String name, int mode) { return null; }
     public Context getApplicationContext() { return this; }
+    public static final String ACTIVITY_SERVICE = "activity";
+    public static final String BATTERY_SERVICE = "batterymanager";
+    public Object getSystemService(String name) { return null; }
+    public Intent registerReceiver(BroadcastReceiver receiver, IntentFilter filter) { return null; }
     public File getFilesDir() { return null; }
     public File getExternalFilesDir(String type) { return null; }
 }
