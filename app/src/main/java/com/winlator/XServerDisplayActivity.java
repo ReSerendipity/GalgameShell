@@ -164,6 +164,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (enableLogs) ProcessHelper.addDebugCallback(debugDialog = new DebugDialog(this));
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.menu_item_logs).setVisible(enableLogs);
+        // GalgameShell 第六轮：游戏内菜单高级项按设置页开关显隐（默认隐藏；
+        // 永显项：触控模式/性能显示/键盘/退出）
+        setMenuVisible(menu, R.id.menu_item_input_controls, "galgame_menu_input_controls");
+        setMenuVisible(menu, R.id.menu_item_toggle_fullscreen, "galgame_menu_fullscreen");
+        setMenuVisible(menu, R.id.menu_item_task_manager, "galgame_menu_task_manager");
+        setMenuVisible(menu, R.id.menu_item_active_windows, "galgame_menu_active_windows");
+        setMenuVisible(menu, R.id.menu_item_magnifier, "galgame_menu_magnifier");
+        setMenuVisible(menu, R.id.menu_item_screen_effect, "galgame_menu_screen_effect");
+        setMenuVisible(menu, R.id.menu_item_pip_mode, "galgame_menu_pip");
+        setMenuVisible(menu, R.id.menu_item_touchpad_help, "galgame_menu_touchpad_help");
         navigationView.setNavigationItemSelectedListener(this);
 
         rootFS = RootFS.find(this);
@@ -247,7 +257,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                     if (galgamePerfHud != null) galgamePerfHud.onFrame();
                 }
             }
-
             @Override
             public void onMapWindow(Window window) {
                 if (!flags[0] && window.isRenderable() && !window.getClassName().isEmpty()) {
@@ -502,11 +511,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
         if (!sel.isEmpty() && rootView != null) {
             galgamePerfHud = com.winlator.galgame.widget.GalgamePerfHud.attach(rootView, container);
-            if (frameRating != null) frameRating.setVisibility(View.GONE);
         }
-        else if (frameRating != null && frameRating.getMode() != FrameRating.Mode.DISABLED) {
-            frameRating.setVisibility(View.VISIBLE);
-        }
+        // galgame 路线无上游 FrameRating（见 setupUI），全不选 = 浮窗全关；
+        // 上游路线的三档浮窗仍由容器 hudMode 控制，与本方法无关。
     }
 
     private void exit() {
@@ -729,16 +736,19 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         rootView.addView(inputControlsView);
 
         if (container != null) {
-            // GalgameShell：无条件创建（上游仅在 HUDMode!=DISABLED 时创建）。
-            // 若用户游戏中途在抽屉开启 HUD，frameRating 已存在才能立即接上
-            // 已映射窗口的帧计数（frameRatingWindowId 在 onMapWindow 才解析）。
-            frameRating = new FrameRating(this);
-            frameRating.setMode(FrameRating.Mode.values()[container.getHUDMode()]);
-            frameRating.setVisibility(View.GONE);
-            rootView.addView(frameRating);
+            // GalgameShell：上游三档 FrameRating 仅服务上游路线（shortcut/容器直启）。
+            // galgame 直启（exec_path）完全由 GalgamePerfHud 接管——此前一度无条件创建，
+            // 结果上游 FULL 档与 PerfHud 双浮窗，且 FrameRating.update() 每帧把自身
+            // 拉回 VISIBLE 造成「关闭设置仍在显示」（用户反馈，2026-10-25 第六轮）。
+            // 容器残留的 hudMode 对 galgame 路线自此不再生效。
+            if (!getIntent().hasExtra("exec_path")) {
+                frameRating = new FrameRating(this);
+                frameRating.setMode(FrameRating.Mode.values()[container.getHUDMode()]);
+                frameRating.setVisibility(View.GONE);
+                rootView.addView(frameRating);
+            }
 
             // GalgameShell：多项可选性能浮窗（FPS/CPU/频率/内存/进程/GPU/负载/功耗）。
-            // 有选择项时接管左上角，上游三档 FrameRating 保持隐藏避免双浮窗。
             galgamePerfHud = com.winlator.galgame.widget.GalgamePerfHud.attach(rootView, container);
         }
 
@@ -1205,6 +1215,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         this.screenEffectProfile = screenEffectProfile;
     }
 
+    /** GalgameShell：游戏内菜单项显隐（设置页开关，默认隐藏高级项）。 */
+    private void setMenuVisible(Menu menu, int itemId, String key) {
+        MenuItem item = menu.findItem(itemId);
+        if (item != null) item.setVisible(preferences.getBoolean(key, false));
+    }
+
     private void changeWineAudioDriver() {
         if (!audioDriver.equals(container.getExtra("audioDriver"))) {
             File rootDir = rootFS.getRootDir();
@@ -1234,7 +1250,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     public void changeFrameRatingVisibility(Window window, boolean visible) {
-        if (frameRating == null) return;
+        // GalgameShell：帧率窗口解析与 frameRating 实例解耦——galgame 直启路线
+        // 不创建上游 FrameRating（GalgamePerfHud 接管），但 frameRatingWindowId 仍需
+        // 解析，否则 PerfHud 的 FPS 无帧来源。
+        if (frameRating == null && galgamePerfHud == null) return;
         if (visible) {
             if (window.id == frameRatingWindowId) return;
             Window child = window.getChildAt(0);
@@ -1250,19 +1269,19 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
             if (frameRatingWindow != null) {
                 // GalgameShell：GPU 型号同时喂给多项浮窗（上游仅在 FULL 档读取）
-                if (frameRating.getMode() == FrameRating.Mode.FULL || galgamePerfHud != null) {
+                if ((frameRating != null && frameRating.getMode() == FrameRating.Mode.FULL) || galgamePerfHud != null) {
                     Property gpuInfo = frameRatingWindow.getProperty(Atom._NET_WM_GPU_INFO);
                     String gpuText = gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A";
-                    if (frameRating.getMode() == FrameRating.Mode.FULL) frameRating.setGPUInfo(gpuText);
+                    if (frameRating != null && frameRating.getMode() == FrameRating.Mode.FULL) frameRating.setGPUInfo(gpuText);
                     if (galgamePerfHud != null) galgamePerfHud.setGPUInfo(gpuText);
                 }
                 frameRatingWindowId = frameRatingWindow.id;
-                frameRating.reset();
+                if (frameRating != null) frameRating.reset();
             }
         }
         else if (window.id == frameRatingWindowId) {
             frameRatingWindowId = -1;
-            runOnUiThread(() -> frameRating.setVisibility(View.GONE));
+            if (frameRating != null) runOnUiThread(() -> frameRating.setVisibility(View.GONE));
         }
     }
 
