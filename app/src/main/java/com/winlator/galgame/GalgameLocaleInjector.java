@@ -42,6 +42,9 @@ public final class GalgameLocaleInjector {
     private static final String FONT_KEY_WIN = "Software\\Microsoft\\Windows\\CurrentVersion\\Fonts";
     private static final String INTL_KEY = "Control Panel\\International";
 
+    /** Wine X11 驱动键：Decorated=N 让顶层窗口不带 Wine 自绘标题栏（无边框、纯客户区尺寸）。 */
+    private static final String X11DRV_KEY = "Software\\Wine\\X11 Driver";
+
     /**
      * 对一个已创建的容器施加日文化（幂等，可重复调用）。
      *
@@ -77,6 +80,12 @@ public final class GalgameLocaleInjector {
         File userReg = new File(container.getRootDir(), ".wine/user.reg");
         try (WineRegistryEditor reg = new WineRegistryEditor(userReg)) {
             writeInternational(reg, locale);
+
+            // GalgameShell 全屏链（2026-10-25）：本 app 的 X server 是不重定父的极简 WM，
+            // Wine 会对顶层窗口自绘标题栏——整窗带装饰位，GLRenderer 的窗口铺满变换
+            // （forceWindowsFullscreen 只接手无装饰窗口）因此失效。Decorated=N 让 winex11
+            // 直接建无边框窗口（纯客户区尺寸），铺满变换生效且不会把标题栏一起放大。
+            reg.setStringValue(X11DRV_KEY, "Decorated", "N");
 
             // 中文时忽略 preset 的日文 preferredName，强制按 hints 自动选 CJK 字体
             String preferredName = (chineseFont || preset == null) ? null : preset.font;

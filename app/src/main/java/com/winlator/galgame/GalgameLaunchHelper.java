@@ -119,4 +119,25 @@ public final class GalgameLaunchHelper {
     public static boolean isExecMissing(Container container) {
         return isGalgameContainer(container) && !isExecPathPresent(container);
     }
+
+    /** 容器 extra：galgame 直启的窗口铺满开关。"1"/缺省 = 铺满，"0" = 原始窗口尺寸。 */
+    public static final String EXTRA_WINDOW_FIT = "galgame_window_fit";
+
+    /**
+     * galgame 容器直启（exec_path 路线）是否启用上游 forceWindowsFullscreen：
+     * 把游戏窗口等比放大居中到虚拟屏、不渲染装饰框架，输入坐标由 InputDeviceManager
+     * 自动换算（无拉伸变形）。
+     *
+     * <p>缺省开启。Wine 下 galgame 几乎都以小于虚拟屏的窗口运行（800x600 / 960x540 /
+     * 1024x768 常态），虚拟屏整体等比缩放到物理屏后画面只占一小块——2026-10-25 真机
+     * 实测 12%–45%。上游该开关只有 shortcut 一个入口，galgame 直启路线永远拿不到，
+     * 故此处按容器 extra 判定（用户可在详情页「高级设置 → 窗口画面铺满」关闭）。
+     *
+     * <p>shortcut 路线与普通（无 overlay 的）Winlator 容器不受影响，沿用上游行为。
+     */
+    public static boolean shouldForceWindowFullscreen(Container container) {
+        return container != null
+                && isGalgameContainer(container)
+                && !"0".equals(container.getExtra(EXTRA_WINDOW_FIT));
+    }
 }

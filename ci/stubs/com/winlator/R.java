@@ -35,6 +35,7 @@ public final class R {
         public static final int BTReinject = 17;
         public static final int BTRemove = 18;
         public static final int BTResolution = 19;
+        public static final int BTWindowFit = 183;
         public static final int BTRoute = 20;
         public static final int BTRun = 21;
         public static final int BTSaves = 22;
@@ -90,6 +91,7 @@ public final class R {
         public static final int TVRecentMeta = 72;
         public static final int TVRecentTitle = 73;
         public static final int TVResolutionValue = 74;
+        public static final int TVWindowFitValue = 184;
         public static final int TVRoute = 75;
         public static final int TVRouteHint = 76;
         public static final int TVRouteValue = 77;
@@ -210,6 +212,12 @@ public final class R {
         public static final int galgame_switch_engine_done = 70;
         public static final int galgame_switch_engine_reset = 71;
         public static final int galgame_switch_engine_title = 72;
+        public static final int galgame_window_fit_action = 74;
+        public static final int galgame_window_fit_done_off = 75;
+        public static final int galgame_window_fit_done_on = 76;
+        public static final int galgame_window_fit_off = 77;
+        public static final int galgame_window_fit_on = 78;
+        public static final int galgame_window_fit_title = 79;
         public static final int removing_container = 73;
     }
 }

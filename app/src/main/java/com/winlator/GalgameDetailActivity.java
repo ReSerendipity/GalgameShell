@@ -25,6 +25,7 @@ import com.winlator.galgame.GalgameCoverProvider;
 import com.winlator.galgame.engine.GameEngineRegistry;
 import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
+import com.winlator.galgame.GalgameLaunchHelper;
 import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
 import com.winlator.galgame.ImportFlow;
@@ -164,6 +165,7 @@ public class GalgameDetailActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.TVSavesMeta)).setText("S: 盘 · 已重定向");
         bindForceContainer();
         bindResolution();
+        bindWindowFit();
     }
 
     /** 可选虚拟屏尺寸：默认 720p 对多数 galgame 是"正好铺满"，越大越不容易裁切但小窗感越强。 */
@@ -210,6 +212,56 @@ public class GalgameDetailActivity extends AppCompatActivity {
                     ((TextView) findViewById(R.id.TVResolutionValue)).setText(
                             getString(R.string.galgame_resolution_value, picked));
                     toast(getString(R.string.galgame_resolution_done, picked));
+                })
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
+    }
+
+    /**
+     * 「窗口画面铺满」：galgame 容器直启默认启用 forceWindowsFullscreen
+     * （游戏窗口等比放大到虚拟屏、去装饰框架、输入坐标自动换算，无拉伸变形）。
+     *
+     * <p>存在理由：Wine 下 galgame 几乎都以小于虚拟屏的窗口运行，虚拟屏整体等比缩放到
+     * 物理屏后画面只占一小块（2026-10-25 真机实测 12%–45%）。窗口比虚拟屏大时的裁切
+     * 仍由「运行环境分辨率」处理，两个开关管相反方向的两种病灶。
+     */
+    private void bindWindowFit() {
+        View row = findViewById(R.id.BTWindowFit);
+        if (row == null) return;
+        if (container == null) {
+            row.setVisibility(View.GONE);
+            return;
+        }
+        row.setVisibility(View.VISIBLE);
+        updateWindowFitValue();
+        row.setOnClickListener(v -> showWindowFitPicker());
+    }
+
+    private boolean isWindowFitOn() {
+        return !"0".equals(container.getExtra(GalgameLaunchHelper.EXTRA_WINDOW_FIT));
+    }
+
+    private void updateWindowFitValue() {
+        ((TextView) findViewById(R.id.TVWindowFitValue)).setText(
+                getString(isWindowFitOn() ? R.string.galgame_window_fit_on : R.string.galgame_window_fit_off));
+    }
+
+    private void showWindowFitPicker() {
+        if (container == null) return;
+        boolean on = isWindowFitOn();
+        String[] labels = {
+                getString(R.string.galgame_window_fit_on) + (on ? "（当前）" : ""),
+                getString(R.string.galgame_window_fit_off) + (!on ? "（当前）" : ""),
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_window_fit_title)
+                .setItems(labels, (dialog, which) -> {
+                    container.putExtra(GalgameLaunchHelper.EXTRA_WINDOW_FIT, which == 0 ? "1" : "0");
+                    container.saveData();
+                    updateWindowFitValue();
+                    toast(getString(which == 0
+                            ? R.string.galgame_window_fit_done_on : R.string.galgame_window_fit_done_off));
                 })
                 .setNegativeButton(R.string.galgame_cancel, null)
                 .show();
