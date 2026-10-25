@@ -302,7 +302,10 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
                 short height = window.getHeight();
                 FullscreenTransformation fullscreenTransformation = null;
 
-                boolean inBounds = width >= ScreenInfo.MIN_WIDTH && height >= ScreenInfo.MIN_HEIGHT && width < xServer.screenInfo.width && height < xServer.screenInfo.height;
+                // GalgameShell: <= (upstream <) — a window exactly the screen size must also
+                // qualify: KiriKiri pins its window at (152,152), so an equal-size window is
+                // offset-cropped at the right/bottom edges without the centered transform (TD-14).
+                boolean inBounds = width >= ScreenInfo.MIN_WIDTH && height >= ScreenInfo.MIN_HEIGHT && width <= xServer.screenInfo.width && height <= xServer.screenInfo.height;
                 if (window.getType() == Window.Type.NORMAL && inBounds && window.hasNoDecorations()) {
                     fullscreenTransformation = window.getFullscreenTransformation();
                     if (fullscreenTransformation == null) window.setFullscreenTransformation(fullscreenTransformation = new FullscreenTransformation(window));

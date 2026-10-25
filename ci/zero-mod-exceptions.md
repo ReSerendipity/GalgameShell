@@ -44,6 +44,7 @@
 
 | 路径 | 改动内容 | 依据 | 为什么不放进 `com.winlator.galgame` |
 |---|---|---|---|
+| `app/src/main/java/com/winlator/renderer/GLRenderer.java` | `collectRenderableWindows` 的 `inBounds` 上界由 `width < screen` 放宽为 `<=`：窗口恰好等于虚拟屏尺寸时也获得居中的 FullscreenTransformation。KiriKiri 把主窗口固定在 (152,152)，等尺寸窗口右/下边缘被裁（TD-14 残留①） | 2026-10-25 全屏修复（窗口铺满 P2） | 窗口入格判定是 renderer 私有循环条件，galgame 包无等价注入点 |
 | `app/src/main/cpp/winlator/src/xoutput_stream.c` | `XOutputStream_send` 由裸 `write()` 改为 `send(MSG_NOSIGNAL)` 循环写满；EINTR 重试；EAGAIN 时 `poll(POLLOUT)` 上限 2 秒；整体发送失败（含附带 fd 的短写）返回 false | 2026-10-24 `docs/box64-wine-launch-chain.md` §7.2 | X 协议写入是 JNI 原生实现，没有 Java 侧等价物，只能就地修 |
 
 > 这是本 fork **第一处**对 upstream 原生 C 的改动——此前对 upstream 的改动全部落在
