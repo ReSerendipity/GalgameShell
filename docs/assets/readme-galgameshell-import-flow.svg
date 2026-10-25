@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 导入即玩流程图：依据 GalgameImportActivity 与 strings.xml 导入阶段文案绘制。
+     非运行截图，为流程图解。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="320" viewBox="0 0 1000 320" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#455a64"/>
+    </marker>
+  </defs>
+
+  <text x="500" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#222">导入即玩：从文件夹到启动</text>
+
+  <!-- Step 1 -->
+  <rect x="20" y="80" width="170" height="120" rx="10" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="105" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">1. 选择文件夹</text>
+  <text x="105" y="130" text-anchor="middle" font-size="11" fill="#1565c0">文件选取器 / 路径输入</text>
+  <text x="105" y="148" text-anchor="middle" font-size="11" fill="#1565c0">启动 exe 须在顶层</text>
+  <text x="105" y="175" text-anchor="middle" font-size="10" fill="#1976d2">SiglusEngine.exe</text>
+  <text x="105" y="190" text-anchor="middle" font-size="10" fill="#1976d2">Game.EXE / data.xp3</text>
+
+  <!-- Step 2 -->
+  <line x1="190" y1="140" x2="225" y2="140" stroke="#455a64" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <rect x="225" y="80" width="170" height="120" rx="10" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="310" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#4a148c">2. 引擎识别</text>
+  <text x="310" y="130" text-anchor="middle" font-size="11" fill="#6a1b9a">指纹匹配</text>
+  <text x="310" y="148" text-anchor="middle" font-size="11" fill="#6a1b9a">detectDeep() 下钻</text>
+  <text x="310" y="175" text-anchor="middle" font-size="10" fill="#7b1fa2">→ 选择 B/A 路由</text>
+  <text x="310" y="190" text-anchor="middle" font-size="10" fill="#7b1fa2">加密 → 提示但不破解</text>
+
+  <!-- Step 3 -->
+  <line x1="395" y1="140" x2="430" y2="140" stroke="#455a64" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <rect x="430" y="80" width="170" height="120" rx="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="1.5"/>
+  <text x="515" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#1b5e20">3. 创建容器</text>
+  <text x="515" y="130" text-anchor="middle" font-size="11" fill="#2e7d32">独立 Wine/Box64 容器</text>
+  <text x="515" y="148" text-anchor="middle" font-size="11" fill="#2e7d32">复制游戏文件</text>
+  <text x="515" y="175" text-anchor="middle" font-size="10" fill="#388e3c">注入 ja_JP.UTF-8 区域</text>
+  <text x="515" y="190" text-anchor="middle" font-size="10" fill="#388e3c">配置日文字体（不捆绑）</text>
+
+  <!-- Step 4 -->
+  <line x1="600" y1="140" x2="635" y2="140" stroke="#455a64" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <rect x="635" y="80" width="170" height="120" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="1.5"/>
+  <text x="720" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#e65100">4. 游戏库入库</text>
+  <text x="720" y="130" text-anchor="middle" font-size="11" fill="#ef6c00">封面墙刷新</text>
+  <text x="720" y="148" text-anchor="middle" font-size="11" fill="#ef6c00">共 N 个游戏</text>
+  <text x="720" y="175" text-anchor="middle" font-size="10" fill="#f57c00">存档重定向 S: 盘</text>
+  <text x="720" y="190" text-anchor="middle" font-size="10" fill="#f57c00">便携存档先搬后链</text>
+
+  <!-- Step 5 -->
+  <line x1="805" y1="140" x2="840" y2="140" stroke="#455a64" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <rect x="840" y="80" width="145" height="120" rx="10" fill="#fce4ec" stroke="#c62828" stroke-width="1.5"/>
+  <text x="912" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#b71c1c">5. 点按启动</text>
+  <text x="912" y="130" text-anchor="middle" font-size="11" fill="#c62828">触控模式</text>
+  <text x="912" y="148" text-anchor="middle" font-size="11" fill="#c62828">诊断向导</text>
+  <text x="912" y="175" text-anchor="middle" font-size="10" fill="#c62828">日志/导出存档</text>
+  <text x="912" y="190" text-anchor="middle" font-size="10" fill="#c62828">切换运行方式</text>
+
+  <text x="500" y="250" text-anchor="middle" font-size="12" fill="#555">全程无需手工配置 Wine 容器；导入进度在向导对话框中分步显示。</text>
+  <text x="500" y="275" text-anchor="middle" font-size="11" fill="#888">失败可走诊断向导：GPU / 日文显示 / 视频解码 / 位宽 / 音频 / 加密逐项排查。</text>
+</svg>

@@ -1,199 +1,306 @@
-# GalgameShell — GalGame Android Shell
+<div align="center">
 
-基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）的 galgame 专用外壳：以 Winlator 为模拟层基座，自动识别游戏引擎，在「内嵌原生引擎 / 原生播放器 (B) / 模拟 (A)」之间智能路由，让 galgame 在 Android 上导入即玩。
+<img src="docs/assets/readme-galgameshell-logo.png" alt="GalgameShell" width="320">
 
-> **GalgameShell** is a galgame-dedicated Android shell built on the official [Winlator](https://github.com/brunodev85/winlator-app) (LGPL-2.1). It detects each game's engine automatically and routes between the embedded native engines (Ren'Py / Kirikiri2), an optional external native player, and the Winlator emulation layer — import a game, then play.
+# GalgameShell
+
+**Galgame 的 Android 外壳 —— 导入即玩，自动识别引擎并路由到原生或模拟层。**
+A galgame-dedicated Android shell: import a folder, auto-detect the engine, and play.
+
+[![CI](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ReSerendipity/GalgameShell?color=orange)](https://github.com/ReSerendipity/GalgameShell/releases)
+[![License: LGPL-2.1](https://img.shields.io/badge/License-LGPL--2.1-blue.svg)](LICENSE)
+![Language](https://img.shields.io/badge/Java-Kotlin%2FC%2FC%2B%2B-orange)
+![GitHub last commit](https://img.shields.io/github/last-commit/ReSerendipity/GalgameShell)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
+[![Governance](https://img.shields.io/badge/governance-ReSerendipity%2F.github-purple.svg)](https://github.com/ReSerendipity/.github/tree/main/governance)
+
+[中文](#中文) · [English](#english)
+
+</div>
+
+---
+
+## 中文
+
+### 项目简介
+
+**GalgameShell** 是基于官方 [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app)（LGPL-2.1）二次开发的 galgame 专用 Android 外壳。它以 Winlator 的 Box64 + Wine 模拟层为基座，同时在 APK 内内嵌 Ren'Py 与 Kirikiri2 原生运行时——导入游戏文件夹后自动识别引擎（v11.3 已覆盖 19 种指纹），在「内嵌原生引擎 / 外部原生播放器（可选）/ Winlator 模拟」之间智能路由，无需手工配置 Wine 容器。
 
 > 治理规范：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
 
-[![CI](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml)
-[![License: LGPL-2.1](https://img.shields.io/github/license/ReSerendipity/GalgameShell)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/ReSerendipity/GalgameShell)](https://github.com/ReSerendipity/GalgameShell/releases)
+### 核心特性
 
-![GalgameShell 仓库架构](docs/assets/architecture.svg)
+- **导入即玩**：选定游戏目录后自动创建专属容器、复制游戏文件、注入运行环境，导入完成即从封面墙启动。
+- **内嵌原生引擎**：APK 内嵌 Ren'Py 8.5.3（`librenpython.so`，Python 3.12.8）与 Kirikiri2 / Kirikiroid2（`libgame.so`），识别到对应引擎的游戏由进程内直启渲染。
+- **引擎识别与 A/B 双路由**：通过 19 种引擎指纹（Siglus / YU-RIS / Artemis / CatSystem2 / AdvHD / SystemNNN / BGI / CMVS / Unity 等）自动选择运行方式；`detectDeep()` 支持有限深度下钻。
+- **一键日文化**：自动注入 `LC_ALL=ja_JP.UTF-8` 区域环境与日文字体配置，解决日文游戏乱码（字体文件不随应用捆绑）。
+- **游戏内视频播放**：自动启用 DirectShow / Windows Media 解码，老游戏开场动画与过场视频可正常播放。
+- **存档重定向**：存档统一重定向到 S: 盘与 Shell Folder，便携存档自动「先搬后链」，支持导出与恢复。
+- **诊断向导与日志**：GPU、日文显示、视频解码、位宽、音频、加密逐项检查；日志自动提取要害行。
+- **统一游戏库**：导入、启动、诊断、日志、存档、原生路由开关集中在一处。
 
-> 图：GalgameShell 仓库架构，依据仓库真实目录结构绘制（本机未运行 Android 应用，故以架构图替代运行截图）。
+### 展示
 
-## 功能亮点
+![引擎检测与 A/B 路由](docs/assets/readme-galgameshell-routing.svg)
 
-- **导入即玩**：选定游戏目录后，自动创建专属容器、复制游戏文件、注入运行环境，导入完成即可从库中启动，无需手工配置 Wine 容器。
-- **内嵌原生引擎**：APK 内嵌 Ren'Py 引擎运行时（`librenpython.so`，Python 3.12.8 + Ren'Py 8.5.3，真机已跑通真实商业游戏《候鸟》全链路）与 Kirikiri2 引擎运行时（内嵌 Kirikiroid2，`libgame.so`，真机验证通过），识别到对应引擎的游戏由内嵌引擎进程内直启渲染；Winlator 容器引擎承载其余模拟游戏。
-- **引擎识别与 A/B 双路由**：通过引擎指纹判断游戏引擎并自动选择运行方式——适合原生运行的游戏优先走内嵌原生引擎（B 路由默认渲染路线）；内嵌引擎不可用时可唤起外部原生播放器作为可选回退（闭源原生播放器默认关闭，需在设置中显式开启），其余游戏走 Winlator 模拟层；检测到加密仅作提示，不破解。
-- **一键日文化**：自动注入日文区域环境（`LC_ALL` / `LANG` 环境变量与区域注册表）并配置日文字体，解决日文游戏乱码问题（字体文件不随应用捆绑）。
-- **游戏内视频正常播放**：自动启用 DirectShow / Windows Media 解码，老游戏的开场动画与过场视频可正常播放。
-- **存档重定向**：存档统一重定向到 S: 盘与 Shell Folder，便携存档自动「先搬后链」，并支持存档导出与恢复。
-- **诊断向导与日志**：GPU、日文显示、视频解码、位宽、音频、加密逐项检查，配合日志查看（`logs.txt` / `stderr` / DXVK，自动提取要害行），启动失败时按向导逐项排查。
-- **统一的游戏库界面**：导入、启动、诊断、日志、存档、原生路由开关集中在一处。
+> **引擎路由**：导入后由 EngineDetector 判定引擎类型，优先走内嵌原生引擎（B 路由），不可用时可唤起外部原生播放器作为可选回退，其余游戏走 Winlator Box64+Wine 模拟层（A 路由）。
 
-## 获取运行时资源
+![导入即玩流程](docs/assets/readme-galgameshell-import-flow.svg)
 
-本仓库**按设计不附带大二进制运行时资源**：Wine / Box64 运行时（`app/src/main/assets/**/*.tzst`）与各架构原生库（`app/src/main/jniLibs/**/*.so`）不随源码仓分发（为控制仓库体积，运行时资源由使用者自行获取）。
+> **导入流程**：选择文件夹 → 引擎识别 → 创建容器并注入区域/字体 → 封面墙入库 → 点按启动。全程向导对话框分步显示进度。
 
-因此 clone 之后**不能直接 `./gradlew assembleDebug` 出完整可用的 APK**，需先从上游补齐这部分资源：
+![仓库架构](docs/assets/architecture.svg)
+
+> **仓库架构**：依据仓库真实目录结构绘制（main @ 35a786a），展示 `app/`、`ci/`、`docs/`、`tools/` 与上游 winlator-app 增量层的关系。
+
+> **注**：应用运行截图需在 ARM64 Android 真机（Vulkan 1.1+）上采集，当前 README 以架构图与流程图替代；真机验收记录见 [`docs/real-device-verification.md`](docs/real-device-verification.md)。
+
+### 快速开始
+
+#### 前置环境
+
+- JDK 17
+- Android SDK（platform-35、build-tools 35、NDK 24.0.8215888）
+- Git（用于从上游取回运行时资源）
+
+#### 1. 克隆并补齐运行时资源
+
+本仓库**按设计不附带大二进制运行时**：Wine / Box64 运行时（`*.tzst`）与各架构原生库（`*.so`）不随源码分发。
 
 ```bash
+git clone https://github.com/ReSerendipity/GalgameShell.git
+cd GalgameShell
+
 # 从上游取回被排除的运行时资源与 native 库（只落工作区，不写索引）
-git remote add upstream https://github.com/brunodev85/winlator-app   # 若尚未添加
+git remote add upstream https://github.com/brunodev85/winlator-app
 git fetch upstream
 git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs
 ```
 
-> ⚠️ 不要用 `git checkout upstream/main -- <路径>` 取这些文件：带 tree-ish 的 checkout 会**同时写索引**，
-> 而 `.gitignore` 对已入索引的路径不再生效，实测会把 2 个 `*.tzst` 变成 `A`（已暂存）状态——
-> 随后一次 `git commit` / `git commit -a` 就把本仓按设计排除的大二进制提交进来。
-> 用上面的 `git restore --worktree` 形式，工作区拿到文件、`git status` 保持干净。
+> ⚠️ 不要用 `git checkout upstream/main -- <路径>`：带 tree-ish 的 checkout 会写索引，把本应排除的大二进制纳入暂存。用 `git restore --worktree` 形式保持 `git status` 干净。
 
-## 系统要求与免责声明
-
-### 系统要求
-
-- Android 11（API 30）或更高版本
-- ARM64 设备，需支持 Vulkan 1.1+
-- 存储空间预留 8–16 GB；建议 12 GB 及以上 RAM
-- 不支持无 Vulkan 能力的设备（如 Kirin 平台）；Mali GPU 可走 Vortek / VirGL 兜底
-
-### 免责声明
-
-- 本应用仅为 galgame 运行外壳，**不含任何游戏本体，不提供破解**；请自备合法获得的游戏副本。
-- 检测到加密的游戏仅作提示，不做破解。
-- 内嵌原生引擎（Ren'Py / Kirikiroid2）按其各自开源许可随 APK 分发，许可信息见 [`NOTICE`](NOTICE)；第三方原生播放器为可选回退唤起功能，使用风险自负。
-- 开源许可与源码获取方式见应用内「关于」及 [`NOTICE`](NOTICE)。
-
-## 无需补齐二进制的最小验证路线
-
-完整 APK 构建（下一节「构建」中的 `./gradlew assembleDebug`）有前置条件：必须**先完成上文的「获取运行时资源」**（`git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs` 取回 `.tzst` 与 `.so`），否则无法产出完整可用的 APK。
-
-若只想在 clone 后立刻验证框架侧代码，可不补齐任何大二进制，直接执行与 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 中 `galgame-compile` job 完全一致的三步检查（仅需 JDK 17，无需 Android SDK；覆盖范围为 `com.winlator.galgame` 全树 + 热点入口清单，边界与补桩方法见 [`ci/README.md`](ci/README.md)）：
+#### 2. 配置 SDK 并构建
 
 ```bash
-# 1) 类型门禁：com.winlator.galgame 全树 + 热点入口清单（对 ci/stubs，命令与 ci.yml "类型门禁" step 一致）
+# 项目根目录 local.properties
+echo "sdk.dir=/path/to/android-sdk" > local.properties
+
+./gradlew assembleDebug
+```
+
+输出 APK：`app/build/outputs/apk/debug/app-debug.apk`。
+
+#### 3. 最小验证（不补大二进制）
+
+若只想验证框架侧代码（无需 Android SDK，仅需 JDK 17），执行与 CI `galgame-compile` job 一致的三步 javac 检查：
+
+```bash
 rm -rf /tmp/stubs-out /tmp/check /tmp/hot
 mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
 javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
 javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
   $(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt)
-
-# 2) EngineDetector 回归测试（命令与 ci.yml "EngineDetector 回归测试" step 一致）
-mkdir -p /tmp/detect-out
-javac -cp /tmp/stubs-out:/tmp/check -d /tmp/detect-out tools/detect-test/DetectTest.java
-java -cp /tmp/stubs-out:/tmp/check:/tmp/detect-out DetectTest
 ```
 
-## 本地门禁：推送前类型检查（pre-push）
+### 系统要求与兼容性
 
-CI 的 `galgame-compile` 只在代码推上去之后才跑，而它的历史红灯全来自同一类问题：新代码用了 `ci/stubs` 里没有的 API。[`ci/pre-push`](ci/pre-push) 把同一套三步 `javac`（galgame 全树 + 热点入口清单）做成 git 钩子，让这类问题在本地 `git push` 前几秒暴露。
+| 项目 | 要求 |
+|---|---|
+| Android 版本 | 11（API 30）或更高 |
+| CPU 架构 | ARM64（arm64-v8a） |
+| GPU | 支持 Vulkan 1.1+；Mali GPU 可走 Vortek / VirGL 兜底 |
+| 存储 | 预留 8–16 GB |
+| 内存 | 建议 12 GB 及以上 |
+| 不支持 | 无 Vulkan 能力的设备（如部分 Kirin 平台） |
 
-钩子位于 `.git/hooks/`，**不随 `git clone` 传播**，每个 clone 需各自启用一次（一次性，在仓库根目录执行，按宿主 shell 二选一）：
+> **模拟器 UI 调试**：可用 `-PgalgameUiAbi=x86_64` 构建 x86_64 APK 仅调试 UI 层（游戏库/主题/布局），此模式跳过原生编译，但 Wine/Box64 运行时不可用。
+
+### 使用示例
+
+1. 安装 APK 后打开应用，底部导航为「游戏库 / 容器管理 / 工具 / 设置」四个 Tab。
+2. 点「导入游戏」选择存放 galgame 的文件夹（启动 exe 须在所选文件夹顶层）。
+3. 向导自动检测引擎、创建容器、复制文件并注入日文环境。
+4. 回到游戏库，点封面墙中的游戏卡片即可启动。
+5. 长按卡片可查看详情、诊断、导出存档或切换运行方式。
+
+### 常见问题
+
+**Q：构建报错找不到 `librenpython.so` / `*.tzst`？**
+A：你还没补齐运行时资源。按上文「获取运行时资源」一节执行 `git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs`。
+
+**Q：`./gradlew` 下载 gradle-8.14.5-bin.zip 失败（PKIX 报错）？**
+A：代理/TLS 拦截导致。先检查 `~/.gradle/wrapper/dists/` 是否有完整版本，有则直接调用其二进制加 `--offline`；详见 README 原文与 [`ci/pre-push`](ci/pre-push)。
+
+**Q：支持哪些引擎？**
+A：v11.3 已识别 19 种引擎指纹，包括 SiglusEngine、YU-RIS、Artemis、CatSystem2、AdvHD、SystemNNN、BGI、CMVS、Unity 等；识别逻辑见 [`app/src/main/java/com/winlator/galgame/`](app/src/main/java/com/winlator/galgame/)。
+
+**Q：检测到加密怎么办？**
+A：应用仅作提示，不做破解。请自备已合法获得的、可直接运行的游戏文件。
+
+**Q：为什么 Release 里没有 APK？**
+A：本项目为源码分发，Release 仅附源码 SBOM（CycloneDX）与 SHA256SUMS。完整 APK 需自行按上文构建，或从可信渠道获取。
+
+### 文档与治理
+
+- [架构评审记录](docs/ARCHITECTURE-REVIEW.md)
+- [原生引擎内嵌方案](docs/native-engine-integration.md)
+- [真机验证报告](docs/real-device-verification.md)
+- [全屏修复复盘](docs/fullscreen-fix-retrospective.md)
+- [发布 / 回滚规范](docs/release-governance.md)
+- [技术债登记表](docs/tech-debt-register.md)
+- 完整文档索引见 [`docs/`](docs/)
+
+### 贡献 / 安全 / 支持
+
+- 欢迎 Issue 与 PR。本仓采用 DCO：所有提交须带 `Signed-off-by`（`git commit -s` 自动追加）。
+- 本地类型门禁：`cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push`
+- 改动上游核心文件前，先核对 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)
+- 详细贡献指南见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
+
+### 许可证
+
+LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。第三方组件与字体政策详见 [`NOTICE`](NOTICE)。
+
+---
+
+## English
+
+### Introduction
+
+**GalgameShell** is a galgame-dedicated Android shell built on top of the official [`brunodev85/winlator-app`](https://github.com/brunodev85/winlator-app) (LGPL-2.1). It uses Winlator's Box64 + Wine emulation layer as the base, while embedding Ren'Py and Kirikiri2 native runtimes inside the APK. After you pick a game folder, GalgameShell auto-detects the engine (19 fingerprints in v11.3) and routes the game to the embedded native engine, an optional external native player, or the Winlator emulation layer — no manual Wine container configuration needed.
+
+> Governance: [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
+
+### Features
+
+- **Import and play**: Pick a game folder; GalgameShell creates an isolated container, copies files, and injects the runtime. Tap the cover art to launch.
+- **Embedded native engines**: Ren'Py 8.5.3 (`librenpython.so`, Python 3.12.8) and Kirikiri2 / Kirikiroid2 (`libgame.so`) are bundled; matching games run in-process without Wine.
+- **Engine detection and A/B routing**: 19 engine fingerprints (Siglus / YU-RIS / Artemis / CatSystem2 / AdvHD / SystemNNN / BGI / CMVS / Unity …); `detectDeep()` supports bounded deep scanning.
+- **One-tap Japanese locale**: Auto-injects `ja_JP.UTF-8` and configures Japanese fonts to fix mojibake (fonts are not bundled).
+- **In-game video**: Auto-enables DirectShow / Windows Media decoding for intros and cutscenes.
+- **Save redirection**: Saves are redirected to drive S: and Shell Folder; portable saves are relocated and symlinked; export/restore supported.
+- **Diagnostics wizard and logs**: Step-by-step checks for GPU, Japanese display, video decode, bit width, audio, and encryption; logs auto-extract relevant lines.
+- **Unified game library**: Import, launch, diagnose, logs, saves, and native-route toggles in one place.
+
+### Showcase
+
+![Engine detection and A/B routing](docs/assets/readme-galgameshell-routing.svg)
+
+> **Engine routing**: After import, EngineDetector picks the route — embedded native engine (Route B, default), optional external native player fallback, or Winlator Box64+Wine emulation (Route A).
+
+![Import-to-launch flow](docs/assets/readme-galgameshell-import-flow.svg)
+
+> **Import flow**: Pick folder → detect engine → create container and inject locale/fonts → appear in cover wall → tap to launch. Progress is shown step by step in a wizard dialog.
+
+![Repository architecture](docs/assets/architecture.svg)
+
+> **Repository architecture**: Drawn from the actual directory tree (main @ 35a786a), showing `app/`, `ci/`, `docs/`, `tools/`, and the delta layer on top of upstream winlator-app.
+
+> **Note**: Runtime screenshots require an ARM64 Android device with Vulkan 1.1+. This README uses architecture and flow diagrams instead; real-device verification records are in [`docs/real-device-verification.md`](docs/real-device-verification.md).
+
+### Quick Start
+
+#### Prerequisites
+
+- JDK 17
+- Android SDK (platform-35, build-tools 35, NDK 24.0.8215888)
+- Git (to fetch runtime assets from upstream)
+
+#### 1. Clone and fetch runtime assets
+
+This repo **by design does not bundle large binary runtimes**: Wine / Box64 rootfs (`*.tzst`) and native libs (`*.so`) are distributed separately.
 
 ```bash
-# POSIX shell / Windows Git-Bash
-cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+git clone https://github.com/ReSerendipity/GalgameShell.git
+cd GalgameShell
+
+# Restore excluded runtime assets and native libs (worktree only, not staged)
+git remote add upstream https://github.com/brunodev85/winlator-app
+git fetch upstream
+git restore --source=upstream/main --worktree -- app/src/main/assets app/src/main/jniLibs
 ```
 
-```powershell
-# Windows PowerShell 7（无需 chmod：Git for Windows 用自带的 sh.exe 执行这个 #!/bin/sh 钩子，
-# 不需要另装 bash，也不需要 WSL）
-Copy-Item ci/pre-push .git/hooks/pre-push
-```
+> ⚠️ Do **not** use `git checkout upstream/main -- <path>`: tree-ish checkout stages the files, and `.gitignore` no longer applies to staged paths — a later `git commit` would bundle the large binaries. Use `git restore --worktree` so `git status` stays clean.
 
-不想动 `.git/hooks`，也可以直接手动跑门禁（仅需 JDK，产物落系统临时目录，不入库）。下面等价于钩子的核心三步（编译 `ci/stubs` + 校验 `com.winlator.galgame` 全树 + 热点入口清单）：
-
-```powershell
-$out = Join-Path $env:TEMP 'galgame-prepush'          # 钩子核心三步的 PowerShell 等价形式
-Remove-Item -Recurse -Force $out -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force "$out\stubs", "$out\check", "$out\hot" | Out-Null
-javac -d "$out\stubs" (Get-ChildItem -Recurse -Filter *.java ci\stubs).FullName
-javac -Xlint:all -cp "$out\stubs" -d "$out\check" (Get-ChildItem -Recurse -Filter *.java app\src\main\java\com\winlator\galgame).FullName
-# 热点入口清单唯一来源：ci\hotspot-entries.txt（跳过注释与空行，勿在此抄文件列表）
-$hot = Get-Content ci\hotspot-entries.txt | Where-Object { $_ -and $_ -notmatch '^\s*#' }
-javac -Xlint:all -cp "$out\stubs;$out\check" -d "$out\hot" $hot
-if ($LASTEXITCODE -eq 0) { '[gate] PASS' } else { '[gate] FAIL：新代码用到了 ci/stubs 里没有的 API，按 ci/README.md 补桩' }
-```
-
-Git-Bash / WSL 下则直接执行钩子本体（`sh ci/pre-push`），它与已安装的钩子永远同口径；钩子如再扩展额外清单（见 [`ci/pre-push`](ci/pre-push) 末尾），以该文件为准。
-
-> **未安装钩子时的兜底**：由 CI 承担 —— [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 在 `push`（`galgame` / `main`）与 `pull_request` 上跑同一套类型门禁，红灯照样出现，只是发现时间从本地几秒推迟到 CI 数分钟。同理，钩子在 `PATH` 与 `JAVA_HOME` 里都找不到 `javac` 时**打印警告后放行**（不阻断推送，以免把本地门禁变成环境依赖门禁），这一路同样由 CI 兜底。补桩方法与钩子行为细节见 [`ci/README.md`](ci/README.md)。
-
-## 构建
-
-1. 配置 Android SDK：在项目根目录 `local.properties` 中设置 `sdk.dir`。
-2. 编译调试包（需先按上文「获取运行时资源」补齐运行时资源）：
-
-   ```bash
-   ./gradlew assembleDebug
-   ```
-
-3. （可选，分发 APK 前）生成运行时资源 SHA-256 校验清单并随包分发，供接收方核验
-   `.tzst` / `.so` 完整性：
-
-   ```bash
-   bash tools/make_runtime_checksums.sh   # 输出 RELEASE-RUNTIME-CHECKSUMS.txt（勿提交，随包分发）
-   ```
-
-### Gradle wrapper 拉不下来时（PKIX 报错 / 半截缓存）
-
-`./gradlew` 按 `gradle/wrapper/gradle-wrapper.properties` 去下载 `gradle-8.14.5-bin.zip`。
-在有 TLS 拦截的代理 / VPN 环境下这一步会失败：
-
-```
-Caused by: sun.security.validator.ValidatorException: PKIX path building failed:
-  sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid
-  certification path to requested target
-```
-
-失败还会在 `~/.gradle/wrapper/dists/gradle-8.14.5-bin/` 留下**半截缓存**（只有
-`gradle-8.14.5-bin.zip.part` 与 `.lck`，没有解包目录、没有 `.ok`）。此后每次 `./gradlew`
-都会重试下载并同样失败，表现为"构建卡住"。
-
-> 这是本机缓存与网络环境的状态，不是仓库缺陷；网络正常的机器上不会遇到。
-
-先看缓存里有没有**已完整**的其它版本（有解包目录 + `.ok` 才算完整）：
+#### 2. Configure SDK and build
 
 ```bash
-for d in ~/.gradle/wrapper/dists/*/*/; do
-  [ -d "$d" ] || continue
-  ok=$(find "$d" -maxdepth 1 -name "*.ok" 2>/dev/null | wc -l)
-  printf "%-60s %s\n" "$(basename "$(dirname "$d")")/$(basename "$d")" \
-    "$([ "$ok" -gt 0 ] && echo 完整 || echo 不完整)"
-done
+echo "sdk.dir=/path/to/android-sdk" > local.properties
+./gradlew assembleDebug
 ```
 
-若某个版本完整（例如 `gradle-8.14.3`），直接调用它的二进制并加 `--offline`，完全绕开网络：
+Output: `app/build/outputs/apk/debug/app-debug.apk`.
+
+#### 3. Minimal verification (without large binaries)
+
+To validate the framework-side code only (JDK 17, no Android SDK), run the same three javac gates as CI's `galgame-compile` job:
 
 ```bash
-G=$(ls -d ~/.gradle/wrapper/dists/gradle-8.14.3-bin/*/gradle-8.14.3/bin/gradle | head -1)
-"$G" --version                      # 先确认能跑
-"$G" :app:assembleDebug --offline --console=plain > build.log 2>&1
-echo "exit=$?"                      # 0 才算成功，日志里应有 BUILD SUCCESSFUL
+rm -rf /tmp/stubs-out /tmp/check /tmp/hot
+mkdir -p /tmp/stubs-out /tmp/check /tmp/hot
+javac -d /tmp/stubs-out $(find ci/stubs -name '*.java')
+javac -Xlint:all -cp /tmp/stubs-out -d /tmp/check $(find app/src/main/java/com/winlator/galgame -name '*.java')
+javac -Xlint:all -cp /tmp/stubs-out:/tmp/check -d /tmp/hot \
+  $(grep -vE '^[[:space:]]*(#|$)' ci/hotspot-entries.txt)
 ```
 
-> ⚠️ 不要用 `./gradlew … | tail` 的管道退出码判断构建成败：那是 `tail` 的退出码，
-> 构建失败也会显示 0。要么直接看 `$?`，要么 grep 日志里的 `BUILD SUCCESSFUL` / `FAILURE`。
+### Requirements and Compatibility
 
-## 参与方式
+| Item | Requirement |
+|---|---|
+| Android | 11 (API 30) or newer |
+| CPU | ARM64 (arm64-v8a) |
+| GPU | Vulkan 1.1+; Mali GPUs fall back to Vortek / VirGL |
+| Storage | 8–16 GB free |
+| RAM | 12 GB+ recommended |
+| Not supported | Devices without Vulkan (e.g. some Kirin platforms) |
 
-- 欢迎提交 Issue 与 Pull Request。本仓采用 DCO：所有提交须带 `Signed-off-by` 签署（`git commit -s` 自动追加），CI 会在 PR 上逐提交校验；本地门禁、提交约定与许可证要求见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)。
-- 改动上游核心文件前，先核对入库的例外登记 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)。
-- 项目文档（架构评审、决策记录、技术债登记等）随仓库分发在 [`docs/`](docs/) 下，clone 后可见。
+> **Emulator UI debugging**: Build with `-PgalgameUiAbi=x86_64` to produce an x86_64 APK for UI-only debugging (skips native compilation). Wine/Box64 runtime is not available in this mode.
 
-## 文档索引
+### Usage
 
-docs/ 下活动文档索引（随仓库分发，clone 后可见；CONTRIBUTING.md 已在上文链接、agent-contract.md 为 ReSerendipity/.github 治理模板的 vendored 副本，均不重复收录）：
+1. Install the APK and open the app. Bottom navigation has four tabs: **Library / Containers / Tools / Settings**.
+2. Tap **Import Game** and pick a folder containing your galgame (the launcher exe must be at the top level).
+3. The wizard detects the engine, creates a container, copies files, and injects Japanese locale.
+4. Return to the library and tap the game card to launch.
+5. Long-press a card for details, diagnostics, save export, or engine-route override.
 
-- [架构评审记录](docs/ARCHITECTURE-REVIEW.md)：重大变更评审决议与否决原因
-- [上游回馈清单](docs/UPSTREAM-PR-CHECKLIST.md)：可回馈 winlator-app 的候选修复清单
-- [box64 / wine 启动链修复记录](docs/box64-wine-launch-chain.md)：GT7 Pro 启动链问题与修复
-- [决策与风险编号登记表](docs/decision-registry.md)：仓内决策/风险编号索引
-- [引擎等价化 + UI 个性化落地记录](docs/engine-equivalence-ui-landed.md)：落地结果、勘误与真机复测手册
-- [原生引擎内嵌方案](docs/native-engine-integration.md)：Ren'Py / Kirikiroid2 内嵌集成记录
-- [引擎等价化 + UI 个性化实施简报](docs/plan-engine-equivalence-ui.md)：前置计划与已拍板决策
-- [真机验证报告](docs/real-device-verification.md)：真机验证结论与复现方式
-- [全屏修复复盘](docs/fullscreen-fix-retrospective.md)：画面只占一小块的根因、弯路与测试方法论教训
-- [发布 / 回滚规范](docs/release-governance.md)：发布链与回滚规则
-- [技术债登记表](docs/tech-debt-register.md)：技术债编号、偿还计划与状态
+### FAQ
 
-## 许可证
+**Q: Build fails with missing `librenpython.so` / `*.tzst`?**
+A: You haven't fetched the runtime assets yet. Run the `git restore --source=upstream/main --worktree -- …` step above.
 
-LGPL-2.1（继承自 winlator-app）。本增量层同样以 LGPL-2.1 发布。
-第三方组件与字体政策详见 [`NOTICE`](NOTICE)。
+**Q: `./gradlew` fails downloading gradle-8.14.5-bin.zip (PKIX error)?**
+A: TLS interception in a proxy/VPN environment. Check `~/.gradle/wrapper/dists/` for a complete alternative version and invoke its binary with `--offline`. See the build notes in this file and [`ci/pre-push`](ci/pre-push).
+
+**Q: Which engines are supported?**
+A: v11.3 detects 19 engine fingerprints including SiglusEngine, YU-RIS, Artemis, CatSystem2, AdvHD, SystemNNN, BGI, CMVS, Unity, and more. Detection logic lives in [`app/src/main/java/com/winlator/galgame/`](app/src/main/java/com/winlator/galgame/).
+
+**Q: What about encrypted games?**
+A: The app detects encryption and warns, but does not crack. Please provide legally obtained, directly runnable game files.
+
+**Q: Why is there no APK attached to Releases?**
+A: This project distributes source only. Releases attach a CycloneDX SBOM and SHA256SUMS. Build the APK yourself per the instructions above, or obtain it through trusted channels.
+
+### Documentation and Governance
+
+- [Architecture review records](docs/ARCHITECTURE-REVIEW.md)
+- [Native engine integration notes](docs/native-engine-integration.md)
+- [Real-device verification report](docs/real-device-verification.md)
+- [Fullscreen fix retrospective](docs/fullscreen-fix-retrospective.md)
+- [Release / rollback governance](docs/release-governance.md)
+- [Technical debt register](docs/tech-debt-register.md)
+- Full index: [`docs/`](docs/)
+
+### Contributing / Security / Support
+
+- Issues and PRs welcome. This repo uses DCO: every commit must carry a `Signed-off-by` trailer (`git commit -s`).
+- Local type gate: `cp ci/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push`
+- Before modifying upstream core files, check [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)
+- Full guide: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
+
+### License
+
+LGPL-2.1 (inherited from winlator-app). This delta layer is also released under LGPL-2.1. Third-party components and font policy are listed in [`NOTICE`](NOTICE).
