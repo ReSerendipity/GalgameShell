@@ -101,10 +101,20 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
                 gameDir, exe, engine, preferredEngine);
     }
 
-    /** 由索引条目构造（无容器的原生游戏）。 */
-    public static Item fromIndexEntry(GalgameLibraryIndex.Entry entry) {
-        File dir = (entry.sourcePath == null || entry.sourcePath.isEmpty())
-                ? null : new File(entry.sourcePath);
+    /**
+     * 由索引条目构造（无容器的原生游戏）。
+     *
+     * <p>目录优先级（第七轮起）：① 收纳库 {@code galgame-native/<gameId>}（新导入与
+     * 已迁移的游戏）；② 索引里的 sourcePath（第七轮之前的引用型存量——保持可玩，
+     * 详情页长按/启动前会提示迁移）。①存在说明游戏已被程序接管，sourcePath 仅作
+     * 旧源位置参考。
+     */
+    public static Item fromIndexEntry(android.content.Context context, GalgameLibraryIndex.Entry entry) {
+        File stored = com.winlator.galgame.GalgameNativeStore.gameDir(context, entry.gameId);
+        File dir = com.winlator.galgame.GalgameNativeStore.isStored(context, entry.gameId)
+                ? stored
+                : (entry.sourcePath == null || entry.sourcePath.isEmpty())
+                    ? null : new File(entry.sourcePath);
         String title = (entry.title == null || entry.title.isEmpty()) ? entry.gameId : entry.title;
         String sub = displayOf(entry.engineName);
         return new Item(null, entry.gameId, title, sub, dir, null,

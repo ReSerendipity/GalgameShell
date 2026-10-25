@@ -229,7 +229,7 @@ public class GalgameHomeFragment extends Fragment {
             for (GalgameLibraryAdapter.Item it : master) {
                 if (it.gameId.equals(e.gameId)) { listed = true; break; }
             }
-            if (!listed) master.add(GalgameLibraryAdapter.fromIndexEntry(e));
+            if (!listed) master.add(GalgameLibraryAdapter.fromIndexEntry(requireContext(), e));
         }
 
         if (countView != null) countView.setText(String.format(Locale.US, "%02d", master.size()));

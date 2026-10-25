@@ -12,6 +12,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- **导入后可选删除源目录**：导入完成页「返回游戏库」时询问「删除源目录？」（保留 /
+  删除）——两条路由（Wine 容器复制、原生收纳）统一生效；应用内部路径不询问。删除失败
+  不回滚（副本已完整），仅提示手动清理。
+- **原生引擎游戏收入应用内部（健壮性）**：Kirikiroid2 / Ren'Py 路线导入时不再引用用户
+  源目录，改为完整复制到应用私有空间 `files/galgame-native/<gameId>`（新
+  `GalgameNativeStore`，幂等、带进度回调）——库外的改名/移动/误删不再损坏游戏，KR2
+  运行时产物（.preference/files）也留在私有空间。存量引用型游戏保持可玩，详情页新增
+  「收入应用内部」手动迁移入口。真机闭环：导入→删源→从库启动 logcat 证实
+  `gamePath=…/galgame-native/bosei2 ok=true`（real-device-verification.md §14）。
+
 ### Fixed
 
 - **性能显示重复与关不掉（P0）**：用户反馈左上角一直有性能显示、关闭设置后仍在、再开

@@ -537,3 +537,32 @@ FrameRating」+ 容器残留 hudMode=FULL → 上游三档浮窗按容器设置�
 A 路由（Wine 容器）：`ImportFlow.stageGameFiles` **复制**源目录到容器
 `drive_c/galgame/<gameId>`（源保留原位，双份占用空间，删除游戏不影响源）。
 B 路由（原生 KR2/Ren'Py）：**引用**源目录（不复制，库记录 sourcePath）。
+
+## 14. 第七轮：源目录清理选项 + 原生引擎收入应用内部（2026-10-26，设备 dc57ebe3）
+
+### 14.1 原生游戏「收纳」（B 路由语义升级）
+
+背景（用户健壮性诉求）：B 路由此前引用用户源目录，库外的改名/移动/误删都会损坏游戏。
+现新增 `GalgameNativeStore`（`files/galgame-native/<gameId>` 应用私有空间）：导入时完整
+复制（进度条复用第六轮 UI），索引与启动全部指向收纳目录；adapter 取目录时收纳优先、
+sourcePath 兜底（存量引用型游戏保持可玩，详情页可手动「收入应用内部」迁移）。
+
+真机证据（bosei2，KR2）：
+- 导入 → 自动从收纳目录启动（KR2Activity 前台）✓
+- 「返回游戏库」点击时弹「删除源目录？」对话框（保留/删除源目录）✓
+  （曾两轮不出框：① 询问在 done() 里被引擎 Activity 切换吞掉——挪到返回按钮点击；
+  ② builtin.launch 期间本 Activity 被回收重建、source 字段丢失——onSaveInstanceState
+  增存 source 绝对路径并在 onCreate 恢复）
+- 点「删除源目录」→ `/sdcard/Games/bosei2` 实际消失、回库页条目仍在 ✓
+- 删源后从库再启动 → logcat：`gamePath=/data/user/0/com.winlator/files/galgame-native/
+  bosei2`、`launch via krkr ok=true`——游戏完全独立于源目录 ✓
+
+### 14.2 Wine 路线（A 路由）
+
+同一条「删除源目录？」询问对 A 路由同样生效（stageGameFiles 复制完成后 COMPLETED 页
+返回库时询问）；应用内部路径（重复导入已收纳游戏）不询问。
+
+### 14.3 已知残留
+
+详情页「不可用 · 原生目录」标签对已收纳游戏显示旧索引文案（启动行为正确，仅展示
+层未区分「已收纳」），下一轮随详情页状态条目化一并清理。

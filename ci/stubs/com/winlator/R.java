@@ -101,6 +101,7 @@ public final class R {
         public static final int SWMenuTouchpadHelp = 192;
         public static final int LLImportProgress = 193;
         public static final int TVImportProgress = 195;
+        public static final int BTMigrateStore = 196;
         public static final int TVWindowFitValue = 184;
         public static final int TVRoute = 75;
         public static final int TVRouteHint = 76;
