@@ -1,4 +1,13 @@
 {
+  "kirikiri": {
+    "locale": "ja_JP.UTF-8",
+    "font_face": "IPAexGothic",
+    "dxwrapper": "dxvk",
+    "windows_version": "win7",
+    "startup_selection": 1,
+    "screen_size": "1920x1080",
+    "env": "LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8"
+  },
   "siglus": {
     "locale": "ja_JP.UTF-8",
     "font": "ipaexg.ttf",
