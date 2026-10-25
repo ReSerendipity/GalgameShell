@@ -32,6 +32,8 @@ public abstract class Fragment implements FragmentContainer {
     public Activity getActivity() { return null; }
     public Context getContext() { return null; }
     public View getView() { return null; }
+    public android.content.res.Resources getResources() { return null; }
+    public Object getViewLifecycleOwner() { return null; }
     public View requireView() { return null; }
     public Activity requireActivity() { return null; }
     public Context requireContext() { return null; }

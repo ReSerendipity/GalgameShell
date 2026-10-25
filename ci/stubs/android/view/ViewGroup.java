@@ -3,6 +3,8 @@ public class ViewGroup extends View {
     public void addView(View child) {}
     public void removeAllViews() {}
     public void removeView(View child) {}
+    public int getChildCount() { return 0; }
+    public View getChildAt(int index) { return null; }
     public static class LayoutParams {
         public static final int MATCH_PARENT = -1;
         public static final int WRAP_CONTENT = -2;

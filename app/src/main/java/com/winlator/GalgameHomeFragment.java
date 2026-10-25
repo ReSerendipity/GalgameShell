@@ -76,7 +76,10 @@ public class GalgameHomeFragment extends Fragment {
             public void onGameClick(GalgameLibraryAdapter.Item item) { openDetail(item); }
 
             @Override
-            public void onGameLongClick(GalgameLibraryAdapter.Item item) { showGameActions(item); }
+            public void onGameLongClick(GalgameLibraryAdapter.Item item) { enterSelectMode(item); }
+
+            @Override
+            public void onGameSelectionChanged() { updateSelectionBar(); }
         });
 
         grid = view.findViewById(R.id.GVGalgames);
@@ -106,6 +109,13 @@ public class GalgameHomeFragment extends Fragment {
         refresh();
     }
 
+    @Override
+    public void onDestroyView() {
+        // 选择条挂在 Activity 内容层上，Fragment 视图销毁前必须摘除，避免泄漏/遮挡
+        if (adapter != null && adapter.isSelectionMode()) exitSelectMode();
+        super.onDestroyView();
+    }
+
     private void openImport() {
         startActivity(new Intent(requireContext(), GalgameImportActivity.class));
     }
@@ -121,85 +131,137 @@ public class GalgameHomeFragment extends Fragment {
         requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
-    /** GalgameShell 第六轮：长按卡片操作菜单（启动/详情/桌面快捷方式/彻底删除）。 */
-    private void showGameActions(final GalgameLibraryAdapter.Item item) {
-        new android.app.AlertDialog.Builder(requireContext())
-                .setTitle(item.label)
-                .setItems(new String[]{"启动", "打开详情", "添加到桌面快捷方式",
-                        item.hasContainer() ? "彻底删除（含运行环境）" : "从库中移除"}, (d, which) -> {
-                    switch (which) {
-                        case 0: launchGame(item); break;
-                        case 1: openDetail(item); break;
-                        case 2: pinShortcut(item); break;
-                        default: confirmDelete(item); break;
-                    }
-                })
-                .setNegativeButton(com.winlator.R.string.galgame_cancel, null)
-                .show();
+    // ---- 多选模式（第八轮：长按进入；批量彻底删除/仅移除记录）----
+
+    private android.widget.LinearLayout selectionBar;
+    private androidx.activity.OnBackPressedCallback selectBackCallback;
+
+    private void enterSelectMode(GalgameLibraryAdapter.Item item) {
+        adapter.enterSelectionMode(item != null ? item.gameId : null);
+        showSelectionBar();
     }
 
-    private void launchGame(final GalgameLibraryAdapter.Item item) {
-        com.winlator.galgame.GameLauncher.Result r = com.winlator.galgame.GameLauncher.launch(
-                requireContext(), item.gameDir, item.container, item.engineName, item.preferredEngine);
-        if (!r.launched && r.message != null) {
-            android.widget.Toast.makeText(requireContext(), r.message, android.widget.Toast.LENGTH_LONG).show();
+    private void exitSelectMode() {
+        adapter.exitSelectionMode();
+        if (selectionBar != null && selectionBar.getParent() instanceof android.view.ViewGroup) {
+            ((android.view.ViewGroup) selectionBar.getParent()).removeView(selectionBar);
+        }
+        selectionBar = null;
+        if (selectBackCallback != null) selectBackCallback.setEnabled(false);
+    }
+
+    private void showSelectionBar() {
+        if (selectionBar == null) {
+            selectionBar = new android.widget.LinearLayout(requireActivity());
+            selectionBar.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+            selectionBar.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            selectionBar.setBackgroundColor(0xEE101010);
+            int pad = Math.round(10 * getResources().getDisplayMetrics().density);
+            selectionBar.setPadding(pad, pad, pad, pad);
+
+            android.widget.TextView count = new android.widget.TextView(requireActivity());
+            count.setTextColor(0xFFFFFFFF);
+            count.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
+            count.setTag("count");
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            count.setLayoutParams(lp);
+            selectionBar.addView(count);
+
+            String[] labels = {"全选", "彻底删除", "仅移除记录", "退出"};
+            String[] tags = {"all", "purge", "records", "exit"};
+            for (int i = 0; i < labels.length; i++) {
+                android.widget.Button b = new android.widget.Button(requireActivity());
+                b.setText(labels[i]);
+                b.setTag(tags[i]);
+                b.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
+                b.setOnClickListener(v -> onSelectionAction((String) v.getTag()));
+                selectionBar.addView(b);
+            }
+
+            android.widget.FrameLayout.LayoutParams barLp = new android.widget.FrameLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    android.view.Gravity.TOP);
+            requireActivity().addContentView(selectionBar, barLp);
+
+            if (selectBackCallback == null) {
+                selectBackCallback = new androidx.activity.OnBackPressedCallback(false) {
+                    @Override public void handleOnBackPressed() { exitSelectMode(); }
+                };
+                requireActivity().getOnBackPressedDispatcher().addCallback(
+                        getViewLifecycleOwner(), selectBackCallback);
+            }
+            selectBackCallback.setEnabled(true);
+        }
+        updateSelectionBar();
+    }
+
+    private void updateSelectionBar() {
+        if (selectionBar == null) return;
+        android.widget.TextView count = null;
+        for (int i = 0; i < selectionBar.getChildCount(); i++) {
+            android.view.View c = selectionBar.getChildAt(i);
+            if ("count".equals(c.getTag())) { count = (android.widget.TextView) c; break; }
+        }
+        if (count != null) {
+            count.setText("已选 " + adapter.getSelectedCount() + " 项 · 点选卡片，返回键退出");
         }
     }
 
-    /** 请求桌面固定快捷方式（系统确认弹窗），点击直启游戏。 */
-    private void pinShortcut(final GalgameLibraryAdapter.Item item) {
-        android.content.Context ctx = requireContext();
-        if (!androidx.core.content.pm.ShortcutManagerCompat.isRequestPinShortcutSupported(ctx)) {
-            android.widget.Toast.makeText(ctx, "当前桌面启动器不支持固定快捷方式", android.widget.Toast.LENGTH_SHORT).show();
+    private void onSelectionAction(String action) {
+        if ("exit".equals(action)) { exitSelectMode(); return; }
+        if ("all".equals(action)) {
+            // 已全选时再点 = 清空选择（保留多选模式）
+            if (adapter.isAllSelected()) adapter.clearSelection();
+            else adapter.selectAll();
+            showSelectionBar();
             return;
         }
-        android.content.Intent target = new android.content.Intent(ctx, com.winlator.GalgameShortcutActivity.class)
-                .setAction(android.content.Intent.ACTION_VIEW)
-                .putExtra("game_id", item.gameId);
-        String label = item.label == null ? item.gameId : item.label;
-        androidx.core.content.pm.ShortcutInfoCompat.Builder b =
-                new androidx.core.content.pm.ShortcutInfoCompat.Builder(ctx, "galgame-" + item.gameId)
-                        .setShortLabel(label.length() > 12 ? label.substring(0, 12) : label)
-                        .setLongLabel(label)
-                        .setIntent(target);
-        if (item.coverBitmap != null) {
-            b.setIcon(androidx.core.graphics.drawable.IconCompat.createWithAdaptiveBitmap(item.coverBitmap));
+        final java.util.List<GalgameLibraryAdapter.Item> sel = adapter.getSelectedItems();
+        if (sel.isEmpty()) {
+            android.widget.Toast.makeText(requireContext(), "未选择任何游戏", android.widget.Toast.LENGTH_SHORT).show();
+            return;
         }
-        else {
-            b.setIcon(androidx.core.graphics.drawable.IconCompat.createWithResource(ctx, com.winlator.R.mipmap.ic_launcher));
-        }
-        androidx.core.content.pm.ShortcutManagerCompat.requestPinShortcut(ctx, b.build(), null);
-    }
-
-    /** 彻底删除：A 路由=容器（含游戏文件）+ S: 独立存档 + 库记录；原生路由=仅库记录。 */
-    private void confirmDelete(final GalgameLibraryAdapter.Item item) {
-        final android.content.Context ctx = requireContext();
-        String msg = item.hasContainer()
-                ? "将删除「" + item.label + "」的游戏文件、独立存档与整个运行环境容器。\n导入源不受影响；此操作不可恢复。"
-                : "该游戏为原生目录引用，文件保留在你的原始位置，仅移除库记录。";
-        new android.app.AlertDialog.Builder(ctx)
-                .setTitle(item.hasContainer() ? "彻底删除" : "从库中移除")
+        final boolean purge = "purge".equals(action);
+        int withEnv = 0;
+        for (GalgameLibraryAdapter.Item it : sel) if (it.hasContainer()) withEnv++;
+        String msg = purge
+                ? "将删除 " + sel.size() + " 个游戏的库记录" + (withEnv > 0
+                    ? "，其中 " + withEnv + " 个连同游戏文件、独立存档与运行环境容器一并删除" : "")
+                  + "。\n导入源不受影响；此操作不可恢复。"
+                : "仅移除 " + sel.size() + " 个游戏的库记录，不删除任何文件。";
+        new android.app.AlertDialog.Builder(requireContext())
+                .setTitle(purge ? "批量彻底删除" : "批量移除记录")
                 .setMessage(msg)
                 .setNegativeButton(com.winlator.R.string.galgame_cancel, null)
-                .setNeutralButton("仅移除记录", (d, w) -> {
-                    GalgameLibraryIndex.remove(ctx, item.gameId);
-                    refresh();
-                })
-                .setPositiveButton("删除", (d, w) -> {
-                    if (item.hasContainer()) {
-                        new ContainerManager(ctx).removeContainerAsync(item.container, () -> {
-                            com.winlator.core.FileUtils.delete(
-                                    new File(new com.winlator.galgame.GalgameSaveManager(item.gameId).savePath()));
-                            GalgameLibraryIndex.remove(ctx, item.gameId);
-                            refresh();
-                        });
-                    }
-                    else {
-                        GalgameLibraryIndex.remove(ctx, item.gameId);
-                        refresh();
-                    }
-                })
+                .setPositiveButton("删除", (d, w) -> batchDelete(new java.util.ArrayList<>(sel), purge, 0))
                 .show();
+    }
+
+    /** 顺序批删：容器删除是异步的，逐个排队避免并发重建容器目录。 */
+    private void batchDelete(final java.util.List<GalgameLibraryAdapter.Item> rest, final boolean purge, final int done) {
+        if (rest.isEmpty()) {
+            refresh();
+            exitSelectMode();
+            android.widget.Toast.makeText(requireContext(),
+                    "已删除 " + done + " 个游戏", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final GalgameLibraryAdapter.Item it = rest.remove(0);
+        final android.content.Context ctx = requireContext();
+        Runnable next = () -> {
+            if (purge && it.hasContainer()) {
+                com.winlator.core.FileUtils.delete(
+                        new File(new com.winlator.galgame.GalgameSaveManager(it.gameId).savePath()));
+            }
+            GalgameLibraryIndex.remove(ctx, it.gameId);
+            batchDelete(rest, purge, done + 1);
+        };
+        if (purge && it.hasContainer()) {
+            new ContainerManager(ctx).removeContainerAsync(it.container, next);
+        }
+        else next.run();
     }
 
     private void refresh() {

@@ -12,6 +12,7 @@ public class View {
     public android.content.res.Resources getResources() { return null; }
     public void setLayoutParams(ViewGroup.LayoutParams params) {}
     public ViewParent getParent() { return null; }
+    public static int generateViewId() { return 0; }
     public Object getTag() { return null; }
     public Object getTag(int key) { return null; }
     public void setTag(Object tag) {}

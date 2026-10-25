@@ -51,6 +51,8 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
     public interface OnGameActionListener {
         void onGameClick(Item item);
         void onGameLongClick(Item item);
+        /** 多选模式下勾选状态变化（刷新顶部计数条）。 */
+        default void onGameSelectionChanged() {}
     }
 
     /** 单项数据（封面卡片：主标题 + 副标题 + 懒加载封面）。 */
@@ -157,6 +159,8 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
     private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final Handler main = new Handler(Looper.getMainLooper());
     private OnGameActionListener actionListener;
+    private boolean selectionMode = false;
+    private final java.util.Set<String> selectedIds = new java.util.HashSet<>();
 
     public GalgameLibraryAdapter(Context context, List<Item> items) {
         this.inflater = LayoutInflater.from(context);
@@ -164,6 +168,52 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
     }
 
     public void setOnGameActionListener(OnGameActionListener l) { this.actionListener = l; }
+
+    // ---- 多选模式（第八轮：长按进入，批量删除）----
+
+    public boolean isSelectionMode() { return selectionMode; }
+
+    public void enterSelectionMode(String firstGameId) {
+        selectionMode = true;
+        selectedIds.clear();
+        if (firstGameId != null) selectedIds.add(firstGameId);
+        notifyDataSetChanged();
+    }
+
+    public void exitSelectionMode() {
+        selectionMode = false;
+        selectedIds.clear();
+        notifyDataSetChanged();
+    }
+
+    public void toggleSelection(String gameId) {
+        if (gameId == null) return;
+        if (selectedIds.contains(gameId)) selectedIds.remove(gameId);
+        else selectedIds.add(gameId);
+        notifyDataSetChanged();
+    }
+
+    /** 清空选择但保持多选模式（「全选→再点」取消全选用）。 */
+    public void clearSelection() {
+        selectedIds.clear();
+        notifyDataSetChanged();
+    }
+
+    public void selectAll() {
+        for (Item it : items) selectedIds.add(it.gameId);
+        notifyDataSetChanged();
+    }
+
+    public boolean isAllSelected() { return !items.isEmpty() && selectedIds.size() == items.size(); }
+
+    public int getSelectedCount() { return selectedIds.size(); }
+
+    /** 当前选中项（按展示顺序）。 */
+    public java.util.List<Item> getSelectedItems() {
+        java.util.List<Item> out = new java.util.ArrayList<>();
+        for (Item it : items) if (selectedIds.contains(it.gameId)) out.add(it);
+        return out;
+    }
 
     @Override
     public int getCount() { return items.size(); }
@@ -188,12 +238,23 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         TextView index = view.findViewById(R.id.TVIndex);
         if (index != null) index.setText(String.format(java.util.Locale.US, "%02d", position + 1));
 
+        // 多选模式：未选中卡片压暗、选中保持全亮（顶部条显示已选数量）
+        boolean selected = selectionMode && selectedIds.contains(item.gameId);
+        view.setAlpha(selectionMode ? (selected ? 1.0f : 0.35f) : 1.0f);
+        tv.setText(selectionMode && selected ? "✓ " + item.label : item.label);
+
         // 交互必须挂在 item view 自身：卡片根为 clickable（涟漪需要），
         // 会吞掉触摸事件，GridView 的 onItemClick/onItemLongClick 不会触发。
         view.setOnClickListener(v -> {
+            if (selectionMode) {
+                toggleSelection(item.gameId);
+                if (actionListener != null) actionListener.onGameSelectionChanged();
+                return;
+            }
             if (actionListener != null) actionListener.onGameClick(item);
         });
         view.setOnLongClickListener(v -> {
+            if (selectionMode) return true; // 多选中长按无操作（避免误触二级菜单）
             if (actionListener != null) actionListener.onGameLongClick(item);
             return true;
         });
