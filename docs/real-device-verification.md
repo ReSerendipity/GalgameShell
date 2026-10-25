@@ -291,3 +291,71 @@ YU-RIS / SystemNNN / ADVHD / BGI 无一通过。
 > 虚拟屏 (152,152)，当窗口尺寸等于容器尺寸时画布右下被裁（约右 156px / 下 175px 在屏外）。
 > 另记两条独立缺陷：键盘事件到不了 Wine 客户程序（TD-13）、启动尺寸对话框每次必弹（TD-15）。
 
+
+---
+
+## 9. 「画面只占一小块」全屏修复——修复前/后对照（2026-10-25）
+
+问题：Wine 路线部分游戏无法全屏 / 画面只占屏幕一小块。根因与修复方案见
+`CHANGELOG` [Unreleased] 与 §9.1；本节只记录真机数据。
+
+### 9.1 方法与判据
+
+- 与 §7 同机同包基线（RMX5010，v11.3 debug 覆盖安装）。
+- 直启 `am start XServerDisplayActivity(container_id, exec_path)`，28s/50s 各截一帧；
+  内容块按列/行亮度密度（>0.5% 采样点亮）判定，剔除边缘杂散像素。
+- 修复前/后各跑同一批用例，KR2 / Ren'Py 原生路线作回归对照。
+
+### 9.2 结果
+
+| 用例 | 路线 | 修复前占屏 | 修复后占屏 | 判定 |
+|---|---|---|---|---|
+| `krkr_caste`（KIRIKIRI 4:3，1920 容器） | Wine | 31.8% | **78.8%** | ✅ |
+| `siglus_test`（SIGLUS 960x540 窗口） | Wine | 45.2% | **90.3%** | ✅ 16:9 letterbox 满幅 |
+| `hana9test`（SIGLUS 800x600 窗口） | Wine | 42.1% | **80.3%** | ✅ |
+| `krkr_tobenai`（启动分辨率对话框） | Wine | 11.8% | **88.9%** | ✅ 对话框等比放大可读 |
+| `test_unity`（自设全屏，回归） | Wine | 78.3%（密度口径） | 90.3%（bbox 口径） | ✅ 无回归 |
+| `krkr_munse`（回归） | KR2 | 99.9% | **99.9%** | ✅ |
+| `renpy-testgame`（回归） | Ren'Py | 80.1% | **80.1%** | ✅ |
+
+### 9.3 输入链验证（铺满变换开启后）
+
+- `krkr_caste` 变换后点击屏幕中部：帧差在点击行出现 50px 高菜单高亮条（悬停响应）；
+  `WINEDEBUG=+event` trace 里 `MotionNotify / ButtonPress / ButtonRelease` 完整到达
+  游戏窗口（`hwnd 0x2007c`，两次点击 press→release 齐全）——坐标映射与事件投递正常。
+  屏幕未推进属估点位置非可交互元素，与 §8.4 教训一致（先确认落点再怀疑输入链）。
+
+### 9.4 关键机理（记档，防回归误判）
+
+1. 上游 `forceWindowsFullscreen`（FullscreenTransformation）只接手**无装饰位**的窗口；
+   本 app 的 X server 是不重定父的极简 WM，Wine 会对顶层窗口**自绘标题栏**（单窗口
+   整体带 `_MOTIF_WM_HINTS` 装饰位，实测 `deco=58`）→ 不注入 `X11 Driver Decorated=N`
+   时铺满变换静默不生效。此键已进语言/字体注入链（`GalgameLocaleInjector.apply`），
+   旧容器走详情页「重新注入运行环境」补齐。
+2. `GLRenderer.inBounds` 上界放宽为 `<=`：等屏窗口（KiriKiri (152,152) 偏移）也获得
+   居中变换，不再右下裁切（TD-14 残留①）。
+3. 虚拟屏尺寸与画面大小是**反向**杠杆：窗口小于虚拟屏时，虚拟屏越大画面越小
+   （caste 1920 容器 31.8% vs siglus 720 容器 45.2% 即此效应）。「运行环境分辨率」
+   只用于"窗口大于虚拟屏被裁"的场景。
+
+### 9.5 引擎类型覆盖矩阵（补测，2026-10-25）
+
+| 引擎 | 代表用例 | 路线 | 结果 |
+|---|---|---|---|
+| KIRIKIRI（4:3 窗口） | `krkr_caste` | Wine | ✅ 31.8% → 78.8% |
+| KIRIKIRI（启动对话框） | `krkr_tobenai` | Wine | ✅ 11.8% → 88.9% |
+| SIGLUS（800x600 窗口） | `hana9test` | Wine | ✅ 42.1% → 80.3% |
+| SIGLUS（960x540 窗口） | `test_siglus` | Wine | ✅ 45.2% → 90.3%（16:9 letterbox 满幅） |
+| UNITY（自设全屏，窗口==虚拟屏，覆盖 P2 `<=` 路径） | `test_unity` | Wine | ✅ 无回归 |
+| UNITY（§7 未进入样本） | `unity_nekoya` | Wine | 与 §7 一致：未进入游戏（启动级，非显示级） |
+| YU-RIS（SoftDenchi DRM 对话框） | `yuris_karakoi` | Wine | 对话框为 DIALOG 类窗口，不参与铺满变换，原生尺寸居中可读；无回归 |
+| YU-RIS（TD-09） | `yuris_lufia` | Wine | 与 §2.2 一致：黑屏 + 左侧竖线（上游 quartz 死锁，非本修复范围） |
+| SystemNNN（TD-09） | `sysnnn_sainogami` | Wine | 同上 |
+| AdvHD | `test_advhd` | Wine | 与 §7 一致：启动即退回库页（启动级；`wine_exec.log` 仅 `esync: up and running.` 一行，无错误输出，原因未取到） |
+| BGI（非 ASCII exe 名） | `bgi_ryo` | Wine | **§7.4 的"结论未定"更新为：确认启动失败**——本次已正确传 `exec_path_wine`（`C:\galgame\bgi_ryo\両腕…exe`），仍落回库页；属启动级问题，非 §7.4 猜测的转义缺陷，与显示修复无关 |
+| KIRIKIRI 原生 ×2 | `krkr_munse` / `krkr_tokekaze` | KR2 | ✅ 99.9% / 99.9% |
+| Ren'Py 原生 | `renpy-testgame` | Ren'Py | ✅ 80.1% |
+
+**覆盖结论**：所有能渲染出画面的引擎类型（KIRIKIRI / SIGLUS / UNITY / KR2 / Ren'Py）均验证
+铺满生效或无回归；渲染不出来的是另行登记的启动级 / 上游问题（TD-09、AdvHD/BGI 启动链），
+行为与修复前文档记录一致，无一例由本修复引入。
