@@ -27,4 +27,6 @@ public class Activity extends Context {
     public ApplicationInfo getApplicationInfo() { return null; }
     public Context getApplicationContext() { return null; }
     public void overridePendingTransition(int enterAnim, int exitAnim) {}
+    public void addContentView(android.view.View view, android.view.ViewGroup.LayoutParams params) {}
+    public androidx.activity.OnBackPressedDispatcher getOnBackPressedDispatcher() { return null; }
 }

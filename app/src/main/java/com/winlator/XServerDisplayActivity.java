@@ -115,6 +115,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     private RootFS rootFS;
     private FrameRating frameRating;
     private com.winlator.galgame.widget.GalgamePerfHud galgamePerfHud;
+    private String lastGpuInfo;
     private android.widget.ImageView galgameMenuHandle;
     private Runnable editInputControlsCallback;
     private Shortcut shortcut;
@@ -511,6 +512,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
         if (!sel.isEmpty() && rootView != null) {
             galgamePerfHud = com.winlator.galgame.widget.GalgamePerfHud.attach(rootView, container);
+            if (galgamePerfHud != null && lastGpuInfo != null) galgamePerfHud.setGPUInfo(lastGpuInfo);
         }
         // galgame 路线无上游 FrameRating（见 setupUI），全不选 = 浮窗全关；
         // 上游路线的三档浮窗仍由容器 hudMode 控制，与本方法无关。
@@ -1250,10 +1252,12 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     }
 
     public void changeFrameRatingVisibility(Window window, boolean visible) {
-        // GalgameShell：帧率窗口解析与 frameRating 实例解耦——galgame 直启路线
-        // 不创建上游 FrameRating（GalgamePerfHud 接管），但 frameRatingWindowId 仍需
-        // 解析，否则 PerfHud 的 FPS 无帧来源。
-        if (frameRating == null && galgamePerfHud == null) return;
+        // GalgameShell：帧率窗口解析与 frameRating/HUD 实例解耦——galgame 直启路线
+        // 不创建上游 FrameRating（GalgamePerfHud 接管），但 frameRatingWindowId 必须在
+        // 窗口映射时就解析：HUD 可能中途才开启，届时不再有 map 事件，否则 FPS 恒 0
+        // （第八轮用户反馈「监控显示 0」的根因之一）。
+        boolean galgameRoute = getIntent().hasExtra("exec_path");
+        if (frameRating == null && galgamePerfHud == null && !galgameRoute) return;
         if (visible) {
             if (window.id == frameRatingWindowId) return;
             Window child = window.getChildAt(0);
@@ -1268,12 +1272,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
 
             if (frameRatingWindow != null) {
-                // GalgameShell：GPU 型号同时喂给多项浮窗（上游仅在 FULL 档读取）
-                if ((frameRating != null && frameRating.getMode() == FrameRating.Mode.FULL) || galgamePerfHud != null) {
+                // GalgameShell：GPU 型号同时喂给多项浮窗（上游仅在 FULL 档读取）。
+                // galgame 路线无论 HUD 是否已开启都缓存（lastGpuInfo），中途开启时回填。
+                if ((frameRating != null && frameRating.getMode() == FrameRating.Mode.FULL)
+                        || galgamePerfHud != null || galgameRoute) {
                     Property gpuInfo = frameRatingWindow.getProperty(Atom._NET_WM_GPU_INFO);
-                    String gpuText = gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A";
-                    if (frameRating != null && frameRating.getMode() == FrameRating.Mode.FULL) frameRating.setGPUInfo(gpuText);
-                    if (galgamePerfHud != null) galgamePerfHud.setGPUInfo(gpuText);
+                    lastGpuInfo = gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A";
+                    if (frameRating != null && frameRating.getMode() == FrameRating.Mode.FULL) frameRating.setGPUInfo(lastGpuInfo);
+                    if (galgamePerfHud != null) galgamePerfHud.setGPUInfo(lastGpuInfo);
                 }
                 frameRatingWindowId = frameRatingWindow.id;
                 if (frameRating != null) frameRating.reset();

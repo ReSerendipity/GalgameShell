@@ -206,7 +206,17 @@ public final class GalgamePerfHud {
                 return sb.toString();
             }
             case KEY_TEMP: {
-                float cpu = readThermal(true), bat = readThermal(false);
+                float cpu = readThermal(true);
+                if (cpu < 0) {
+                    int t = com.winlator.core.CPUStatus.getTemperature();
+                    if (t > 0 && t < 120) cpu = t;
+                }
+                float bat = -1;
+                android.content.Intent b = stickyBattery(ctx);
+                if (b != null) {
+                    int extra = b.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, Integer.MIN_VALUE);
+                    if (extra != Integer.MIN_VALUE && extra > 0 && extra < 1200) bat = extra / 10f;
+                }
                 return "TEMP  cpu " + (cpu >= 0 ? String.format(Locale.ENGLISH, "%.1f", cpu) : "N/A")
                         + "°C · bat " + (bat >= 0 ? String.format(Locale.ENGLISH, "%.1f", bat) : "N/A") + "°C";
             }
@@ -328,7 +338,7 @@ public final class GalgamePerfHud {
         List<Long> out = new ArrayList<>();
         for (File cpu : list) {
             if (!cpu.isDirectory() || !cpu.getName().matches("cpu\\d+")) continue;
-            File freq = new File(cpu, "cpufreq/scaling_cur_frequency");
+            File freq = new File(cpu, "cpufreq/scaling_cur_freq");
             String v = readFirstLine(freq.getAbsolutePath());
             if (v == null) continue;
             try {
@@ -352,13 +362,18 @@ public final class GalgamePerfHud {
     /** BatteryManager 电流（μA）× sticky 电池广播电压（mV）→ 毫瓦（取绝对值，方向设备实现不一）。 */
     private static Float readPowerMw(Context ctx) {
         try {
+            long ua = Long.MIN_VALUE;
             BatteryManager bm = (BatteryManager) ctx.getSystemService(Context.BATTERY_SERVICE);
-            if (bm == null) return null;
-            long ua = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-            if (ua == Long.MIN_VALUE || ua == 0) return null;
-            android.content.Intent battery = ctx.registerReceiver(null,
-                    new android.content.IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED));
+            if (bm != null) ua = bm.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+            android.content.Intent battery = stickyBattery(ctx);
             if (battery == null) return null;
+            if (ua == Long.MIN_VALUE || ua == 0) {
+                // 部分实现（如联发科 GKI）属性接口恒 0：回退 sticky 广播 EXTRA_CURRENT_NOW（µA）
+                // EXTRA_CURRENT_NOW 无公开常量，广播键名固定为 "current_now"
+                int extra = battery.getIntExtra("current_now", Integer.MIN_VALUE);
+                if (extra == Integer.MIN_VALUE || extra == 0) return null;
+                ua = extra;
+            }
             int mv = battery.getIntExtra(android.os.BatteryManager.EXTRA_VOLTAGE, -1);
             if (mv <= 0) return null;
             return Math.abs(ua * mv / 1_000_000f); // μA·mV/1e6 = mW

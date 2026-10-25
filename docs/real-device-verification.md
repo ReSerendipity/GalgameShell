@@ -566,3 +566,39 @@ sourcePath 兜底（存量引用型游戏保持可玩，详情页可手动「收
 
 详情页「不可用 · 原生目录」标签对已收纳游戏显示旧索引文案（启动行为正确，仅展示
 层未区分「已收纳」），下一轮随详情页状态条目化一并清理。
+
+## 15. 第八轮：性能监控 0/N/A 修复 / 多选模式 / 巡检（2026-10-26，设备 dc57ebe3）
+
+### 15.1 性能监控 0/N/A（三项根因 + 修复）
+
+用户反馈部分监控项显示 0 或 N/A。逐项根因：
+1. **FPS 恒 0**：帧率窗口（frameRatingWindowId）只在窗口映射事件里解析，而 galgame
+   路线 HUD 关闭时启动 → `changeFrameRatingVisibility` 早退 → 中途开 HUD 无帧源。
+   修复：galgame 路线（exec_path）无条件解析帧率窗口 + GPU 型号缓存（lastGpuInfo），
+   HUD 中途开启时回填。
+2. **FREQ N/A**：读的是 `scaling_cur_frequency`——文件名错误，正确为
+   `scaling_cur_freq`（上游 CPUStatus 同路径，本机实证可读）。
+3. **TEMP/PWR/BAT N/A**：thermal zone 缺电池节点、BatteryManager 电流属性恒 0。
+   修复：电池温度走 sticky 广播 EXTRA_TEMPERATURE（0.1°C）、CPU 温度加上游
+   CPUStatus.getTemperature 回退、电流属性无效时回退广播 "current_now"、
+   EXTRA_VOLTAGE 电压（EXTRA_CURRENT_NOW 无公开常量，用字面量）。
+
+复测（hana9test，13 项全开，截图 r8_hud_top/bottom.png 逐行视觉识读）：
+FPS 59.8 · CPU 12.5% · FREQ avg 2.55/max 3.19GHz · RAM 8.7/15.5GB · PROC 1.2GB ·
+PCPU 98% · GPU Turnip Adreno 830 · LOAD 4.32/3.86 · PWR 6.11W · TEMP cpu 42.5°C/
+bat 28.1°C · BAT 65% 放电 · NET ↓38.2KB/s ↑2.1KB/s——**13/13 全部真实数据**。
+
+### 15.2 多选模式
+
+长按网格卡片进入多选（✓ 前缀 + 未选卡片压暗 0.35 alpha），顶部选择条：
+已选计数 / 全选（再点清空）/ 彻底删除（容器+S:存档+记录，容器异步逐个排队避免并发）
+/ 仅移除记录 / 退出（BACK 亦可，OnBackPressedCallback）。onDestroyView 摘除选择条
+防泄漏。复测：长按进入 ✓、点第二卡勾选 ✓（✓ test_advhd + ✓ unity_shina）、BACK 退出
+勾选清零 ✓。桌面快捷方式入口从长按菜单迁至详情页「添加到桌面」行（swiss_detail_rows）。
+
+### 15.3 巡检修复与备注
+
+- 详情页环境标签三态化：容器名 / 「已收纳 · 应用内部」/ 「内嵌引擎 · 引用原目录」
+  （§14.3 残留清理，引用态提示可迁移）。
+- 设备端 NotificationShade 在巡检中被系统 heads-up 通知卡住（USB 调试通知），
+  常规手势/service call 均无法收起——系统层现象与本 App 无关，记录备忘。

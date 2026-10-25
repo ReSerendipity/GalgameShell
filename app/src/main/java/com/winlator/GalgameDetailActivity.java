@@ -144,6 +144,7 @@ public class GalgameDetailActivity extends AppCompatActivity {
         findViewById(R.id.BTImportSave).setOnClickListener(v -> importSave());
         findViewById(R.id.BTLogs).setOnClickListener(v -> showLogs());
         findViewById(R.id.BTRemove).setOnClickListener(v -> removeFromLibrary());
+        findViewById(R.id.BTPinShortcut).setOnClickListener(v -> pinShortcut());
 
         advancedView = findViewById(R.id.LLAdvanced);
         findViewById(R.id.BTAdvanced).setOnClickListener(v -> toggleAdvanced());
@@ -165,8 +166,12 @@ public class GalgameDetailActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.TVRouteValue)).setText(
                 item.preferredEngine == null ? "自动裁决" : item.preferredEngine);
-        ((TextView) findViewById(R.id.TVEnvValue)).setText(
-                container != null ? container.getName() : getString(R.string.galgame_env_embedded));
+        // 第八轮：环境标签三态——容器 / 已收纳（应用内部）/ 引用原目录（提示可迁移）
+        String envText;
+        if (container != null) envText = container.getName();
+        else if (com.winlator.galgame.GalgameNativeStore.isStored(this, item.gameId)) envText = "已收纳 · 应用内部";
+        else envText = getString(R.string.galgame_env_embedded) + " · 引用原目录";
+        ((TextView) findViewById(R.id.TVEnvValue)).setText(envText);
         ((TextView) findViewById(R.id.TVDiagMeta)).setText(
                 container != null ? "逐项检查 GPU / 日文 / 视频 / 位宽 / 音频 / 存档" : "需要 Winlator 容器");
         TextView diagTag = findViewById(R.id.TVDiagTag);
@@ -431,6 +436,41 @@ public class GalgameDetailActivity extends AppCompatActivity {
                     });
                 })
                 .show();
+    }
+
+
+    /** 第八轮：请求桌面固定快捷方式（封面作图标，直启本游戏）。 */
+    private void pinShortcut() {
+        if (!androidx.core.content.pm.ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
+            toast("当前桌面启动器不支持固定快捷方式");
+            return;
+        }
+        final String label = item.label == null ? item.gameId : item.label;
+        executor.execute(() -> {
+            android.graphics.Bitmap bmp = null;
+            try {
+                File cover = com.winlator.galgame.GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                if (cover != null && cover.isFile()) {
+                    android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+                    o.inSampleSize = 2;
+                    bmp = android.graphics.BitmapFactory.decodeFile(cover.getAbsolutePath(), o);
+                }
+            } catch (Throwable ignored) {}
+            final android.graphics.Bitmap icon = bmp;
+            main.post(() -> {
+                androidx.core.content.pm.ShortcutInfoCompat.Builder b =
+                        new androidx.core.content.pm.ShortcutInfoCompat.Builder(this, "galgame-" + item.gameId)
+                                .setShortLabel(label.length() > 12 ? label.substring(0, 12) : label)
+                                .setLongLabel(label)
+                                .setIntent(new android.content.Intent(this, com.winlator.GalgameShortcutActivity.class)
+                                        .setAction(android.content.Intent.ACTION_VIEW)
+                                        .putExtra("game_id", item.gameId));
+                b.setIcon(icon != null
+                        ? androidx.core.graphics.drawable.IconCompat.createWithAdaptiveBitmap(icon)
+                        : androidx.core.graphics.drawable.IconCompat.createWithResource(this, R.mipmap.ic_launcher));
+                androidx.core.content.pm.ShortcutManagerCompat.requestPinShortcut(this, b.build(), null);
+            });
+        });
     }
 
     /** 从库中移除：仅删索引记录；有容器的游戏需先在运行环境里清理容器。 */
