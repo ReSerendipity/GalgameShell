@@ -144,6 +144,7 @@ A：本项目为源码分发，Release 仅附源码 SBOM（CycloneDX）与 SHA25
 
 - [架构评审记录](docs/ARCHITECTURE-REVIEW.md)
 - [原生引擎内嵌方案](docs/native-engine-integration.md)
+- [组件版本登记表](docs/component-versions.md)
 - [真机验证报告](docs/real-device-verification.md)
 - [全屏修复复盘](docs/fullscreen-fix-retrospective.md)
 - [发布 / 回滚规范](docs/release-governance.md)

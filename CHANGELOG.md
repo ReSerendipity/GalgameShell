@@ -25,6 +25,10 @@
   galgame 容器进不去该页；为此 `frameRating` 改为无条件创建（上游仅 HUDMode≠DISABLED 才
   创建，中途开启会接不上已映射窗口的帧计数）。真机实测完整档：FPS 59.8 /
   GPU Turnip Adreno 830 / RAM 8.7/15.5GB / CPU 3.19GHz | Box64 v0.4.5。
+- 新增 `docs/component-versions.md` **组件版本登记表**：Ren'Py / Kirikiroid2 / Winlator
+  三组件的内嵌版本、上游最新稳定版、核查日期（2026-10-25）与升级路径的单一事实源；
+  发版前核查、结果记入 CHANGELOG（当前结论：Ren'Py 8.5.3＝最新稳定版无需动作，
+  KR2 上游 2024-06 起停更无同步对象，Winlator 落后 5 笔按需移植）。
 - 启动前运行环境自愈 `GalgameLaunchHelper.ensureEngineRuntime`（引擎启动链自动执行，幂等）：
   ① AdvHD 引擎游戏目录注入 3KB 自制 x64 `icu.dll` 最小桩（assets 内置，仅导出引擎实际
   静态导入的 `uloc_getDefault`）——修复 AdvHD 系游戏「启动即退：加载器缺 icu.dll
