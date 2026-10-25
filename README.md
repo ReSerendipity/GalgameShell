@@ -189,6 +189,7 @@ docs/ 下活动文档索引（随仓库分发，clone 后可见；CONTRIBUTING.m
 - [原生引擎内嵌方案](docs/native-engine-integration.md)：Ren'Py / Kirikiroid2 内嵌集成记录
 - [引擎等价化 + UI 个性化实施简报](docs/plan-engine-equivalence-ui.md)：前置计划与已拍板决策
 - [真机验证报告](docs/real-device-verification.md)：真机验证结论与复现方式
+- [全屏修复复盘](docs/fullscreen-fix-retrospective.md)：画面只占一小块的根因、弯路与测试方法论教训
 - [发布 / 回滚规范](docs/release-governance.md)：发布链与回滚规则
 - [技术债登记表](docs/tech-debt-register.md)：技术债编号、偿还计划与状态
 
