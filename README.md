@@ -40,15 +40,15 @@ A standalone Android galgame player: import a folder, auto-detect the engine, an
 
 ### 展示
 
-![引擎检测与 A/B 路由](docs/assets/readme-galgameshell-routing.svg)
+![引擎检测与 A/B 路由](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-routing.svg)
 
 > **引擎路由**：导入后由 EngineDetector 判定引擎类型，优先走内嵌原生引擎（B 路由），不可用时可唤起外部原生播放器作为可选回退，其余游戏走 Winlator Box64+Wine 模拟层（A 路由）。
 
-![导入即玩流程](docs/assets/readme-galgameshell-import-flow.svg)
+![导入即玩流程](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-import-flow.svg)
 
 > **导入流程**：选择文件夹 → 引擎识别 → 创建容器并注入区域/字体 → 封面墙入库 → 点按启动。全程向导对话框分步显示进度。
 
-![仓库架构](docs/assets/architecture.svg)
+![仓库架构](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/architecture.svg)
 
 > **仓库架构**：依据仓库真实目录结构绘制（main @ f466b3a），展示 `app/`、`ci/`、`docs/`、`tools/` 与内嵌 Winlator 组件的关系。
 
@@ -184,15 +184,15 @@ A：本项目为源码分发，Release 仅附源码 SBOM（CycloneDX）与 SHA25
 
 ### Showcase
 
-![Engine detection and A/B routing](docs/assets/readme-galgameshell-routing.svg)
+![Engine detection and A/B routing](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-routing.svg)
 
 > **Engine routing**: After import, EngineDetector picks the route — embedded native engine (Route B, default), optional external native player fallback, or Winlator Box64+Wine emulation (Route A).
 
-![Import-to-launch flow](docs/assets/readme-galgameshell-import-flow.svg)
+![Import-to-launch flow](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/readme-galgameshell-import-flow.svg)
 
 > **Import flow**: Pick folder → detect engine → create container and inject locale/fonts → appear in cover wall → tap to launch. Progress is shown step by step in a wizard dialog.
 
-![Repository architecture](docs/assets/architecture.svg)
+![Repository architecture](https://gcore.jsdelivr.net/gh/ReSerendipity/GalgameShell@main/docs/assets/architecture.svg)
 
 > **Repository architecture**: Drawn from the actual directory tree (main @ f466b3a), showing `app/`, `ci/`, `docs/`, `tools/`, and the embedded Winlator component.
 
