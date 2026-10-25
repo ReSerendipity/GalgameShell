@@ -39,7 +39,8 @@ git add -A
 if git diff --cached --quiet; then
   echo "ℹ️ 无新增改动，跳过提交"
 else
-  git -c user.email="doro@local" -c user.name="Doro" \
+  git -c user.email="${GIT_AUTHOR_EMAIL:-259081123+ReSerendipity@users.noreply.github.com}" \
+      -c user.name="${GIT_AUTHOR_NAME:-ReSerendipity}" \
       commit -q -m "GalgameShell: 并入增量层（engine_presets / galgame_strings / com.winlator.galgame 包 / CI）"
   echo "✅ 已提交 galgame 增量层"
 fi

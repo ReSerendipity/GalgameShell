@@ -6,6 +6,14 @@
 
 > 治理规范：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
 
+[![CI](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/GalgameShell/actions/workflows/ci.yml)
+[![License: LGPL-2.1](https://img.shields.io/github/license/ReSerendipity/GalgameShell)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ReSerendipity/GalgameShell)](https://github.com/ReSerendipity/GalgameShell/releases)
+
+![GalgameShell 仓库架构](docs/assets/architecture.svg)
+
+> 图：GalgameShell 仓库架构，依据仓库真实目录结构绘制（本机未运行 Android 应用，故以架构图替代运行截图）。
+
 ## 功能亮点
 
 - **导入即玩**：选定游戏目录后，自动创建专属容器、复制游戏文件、注入运行环境，导入完成即可从库中启动，无需手工配置 Wine 容器。
@@ -168,6 +176,21 @@ echo "exit=$?"                      # 0 才算成功，日志里应有 BUILD SUC
 - 欢迎提交 Issue 与 Pull Request。本仓采用 DCO：所有提交须带 `Signed-off-by` 签署（`git commit -s` 自动追加），CI 会在 PR 上逐提交校验；本地门禁、提交约定与许可证要求见 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)。
 - 改动上游核心文件前，先核对入库的例外登记 [`ci/zero-mod-exceptions.md`](ci/zero-mod-exceptions.md)。
 - 项目文档（架构评审、决策记录、技术债登记等）随仓库分发在 [`docs/`](docs/) 下，clone 后可见。
+
+## 文档索引
+
+docs/ 下活动文档索引（随仓库分发，clone 后可见；CONTRIBUTING.md 已在上文链接、agent-contract.md 为 ReSerendipity/.github 治理模板的 vendored 副本，均不重复收录）：
+
+- [架构评审记录](docs/ARCHITECTURE-REVIEW.md)：重大变更评审决议与否决原因
+- [上游回馈清单](docs/UPSTREAM-PR-CHECKLIST.md)：可回馈 winlator-app 的候选修复清单
+- [box64 / wine 启动链修复记录](docs/box64-wine-launch-chain.md)：GT7 Pro 启动链问题与修复
+- [决策与风险编号登记表](docs/decision-registry.md)：仓内决策/风险编号索引
+- [引擎等价化 + UI 个性化落地记录](docs/engine-equivalence-ui-landed.md)：落地结果、勘误与真机复测手册
+- [原生引擎内嵌方案](docs/native-engine-integration.md)：Ren'Py / Kirikiroid2 内嵌集成记录
+- [引擎等价化 + UI 个性化实施简报](docs/plan-engine-equivalence-ui.md)：前置计划与已拍板决策
+- [真机验证报告](docs/real-device-verification.md)：真机验证结论与复现方式
+- [发布 / 回滚规范](docs/release-governance.md)：发布链与回滚规则
+- [技术债登记表](docs/tech-debt-register.md)：技术债编号、偿还计划与状态
 
 ## 许可证
 
