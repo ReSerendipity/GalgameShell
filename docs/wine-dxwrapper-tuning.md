@@ -184,12 +184,28 @@ adb shell am start -n com.winlator/.GalgameDetailActivity \
 adb shell run-as com.winlator cat files/wine_exec.log   # guest 输出（ProcessHelper.java:77 落盘）
 ```
 
-> 设备遗留（本轮测试产物，可在游戏库长按多选「彻底删除」清理）：
-> 容器 `galgame-yuris_wined3d`（xuser-19）、`galgame-advhd_wined3d`（xuser-20）。
-> `/sdcard` 上的复制样本与 wine 包已删；§4.5 的 imagefs shim、`box64_logs` 偏好与
-> `installed-wine/preinstall` 残留均已还原/清除（2026-10-26 11:27 复核为空）。
+> 设备遗留：本轮测试容器（xuser-19/20/21）已随 2026-10-26 的**卸载**一并消失（见 §7），
+> 无需清理。`/sdcard` 上的复制样本与 wine 包在卸载前已删；§4.5 的 imagefs shim、
+> `box64_logs`/`wine_debug_channels` 偏好与 `installed-wine/preinstall` 残留均已还原
+> （11:27 复核为空），随后随卸载清空。
 >
 > 复取 wine 包（如日后自建对照）：
 > `curl -L -o wine-9.22-amd64-wow64.tar.xz https://github.com/Kron4ek/Wine-Builds/releases/download/9.22/wine-9.22-amd64-wow64.tar.xz`
 > （sha256 `7350dcce…da2150`，见同 release `sha256sums.txt`）；社区包
 > `https://github.com/longjunyu2/winlator/releases/download/v7.1.3/wine-9.2-custom.wcp`（已证不可用，仅作存档线索）。
+
+## 7. 收口与设备交接（2026-10-26）
+
+- 任务一/二按 §3/§4 交付，PR #50–#53 合并（main @ `e12a3c1`）；9.22 路线（§4.5）与
+  zink 路线（chain §7.5）均实测关闭；TD-09 在模拟层已无剩余旋钮。
+- **设备数据清空**：用户于本轮收口时卸载了 debug 测试包，应用数据随之清除——
+  容器 xuser-1..21、游戏库索引、S: 盘存档（`storage/galgame-saves/`）全部不存在；
+  `/sdcard/Download` 与 `/sdcard/Games` 下的游戏源文件保留，游戏需重新导入。
+- **交接安装为 release 包**：`assembleRelease`（226,084,989 B，versionName 11.3，
+  `flags` 无 `DEBUGGABLE` 实测确认）。仓内约定 release 沿用 debug 签名、锁 arm64-v8a、
+  不捆绑正式 keystore（`app/build.gradle:41-52`）。首启 20s 内到空态库页（渲染级冒烟通过）。
+- **release 的诊断面收窄**：不导出 `XServerDisplayActivity` / `GalgameImportActivity` /
+  `GalgameDetailActivity`，也不可 `run-as`；后续真机取证需先换 debug 包
+  （口径见 `real-device-verification.md` §5）。
+- 「Wine 版本 / 安装」入口在 release 上同样受「开发者模式」开关控制（设置页默认关），
+  普通用户视图不受本轮改动影响。
