@@ -2,6 +2,7 @@ package android.content;
 public class Intent {
     public static final String ACTION_MAIN = "android.intent.action.MAIN";
     public static final String ACTION_VIEW = "android.intent.action.VIEW";
+    public static final String ACTION_OPEN_DOCUMENT_TREE = "android.intent.action.OPEN_DOCUMENT_TREE";
     public static final String CATEGORY_LAUNCHER = "android.intent.category.LAUNCHER";
     public static final String CATEGORY_DEFAULT = "android.intent.category.DEFAULT";
     public static final int FLAG_ACTIVITY_NEW_TASK = 0x10000000;
@@ -25,6 +26,7 @@ public class Intent {
     public Intent putExtra(String name, boolean value) { return this; }
     public Intent putExtra(String name, int value) { return this; }
     public String getAction() { return null; }
+    public android.net.Uri getData() { return null; }
     public String getStringExtra(String name) { return null; }
     public boolean getBooleanExtra(String name, boolean defaultValue) { return defaultValue; }
     public boolean hasExtra(String name) { return false; }

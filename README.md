@@ -155,6 +155,7 @@ A：本项目为源码分发，Release 仅附源码 SBOM（CycloneDX）与 SHA25
 - [原生引擎内嵌方案](docs/native-engine-integration.md)
 - [组件版本登记表](docs/component-versions.md)
 - [Wine / dxwrapper 兼容性调优（任务背景与真机取证）](docs/wine-dxwrapper-tuning.md)
+- [健壮性完整性评估（2026-10，导入事故链与处置）](docs/robustness-assessment-2026-10.md)
 - [真机验证报告](docs/real-device-verification.md)
 - [全屏修复复盘](docs/fullscreen-fix-retrospective.md)
 - [发布 / 回滚规范](docs/release-governance.md)

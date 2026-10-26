@@ -129,19 +129,23 @@
                         android:layout_height="wrap_content"
                         android:text="来源目录 / SOURCE" />
 
-                    <EditText
-                        android:id="@+id/ETImportPath"
+                    <Button
+                        android:id="@+id/BTPickFolder"
+                        style="@style/SwissButtonOutline"
+                        android:textAllCaps="false"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:layout_marginTop="8dp"
-                        android:background="@drawable/swiss_button_outline"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:text="/sdcard/Download"
-                        android:textSize="12sp"
-                        android:textColor="@color/swiss_ink" />
+                        android:text="@string/galgame_import_pick" />
+
+                    <TextView
+                        android:id="@+id/TVPicked"
+                        style="@style/SwissMeta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:maxLines="2"
+                        android:text="@string/galgame_import_pick_none" />
 
                     <TextView
                         style="@style/SwissMeta"
@@ -149,40 +153,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="@string/galgame_import_source_hint" />
-
-                    <TextView
-                        style="@style/SwissLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:text="@string/galgame_import_quick_paths" />
-
-                    <Button
-                        android:id="@+id/BTQuick1"
-                        style="@style/SwissButtonOutline"
-                        android:textAllCaps="false"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="8dp"
-                        android:text="/sdcard/Download" />
-
-                    <Button
-                        android:id="@+id/BTQuick2"
-                        style="@style/SwissButtonOutline"
-                        android:textAllCaps="false"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="6dp"
-                        android:text="/sdcard/Games" />
-
-                    <Button
-                        android:id="@+id/BTQuick3"
-                        style="@style/SwissButtonOutline"
-                        android:textAllCaps="false"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="6dp"
-                        android:text="/sdcard/Documents" />
                 </LinearLayout>
 
                 <!-- Step 2 检测 -->

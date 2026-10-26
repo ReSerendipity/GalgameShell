@@ -120,6 +120,42 @@ public final class EngineDetector {
     }
 
     /**
+     * 解压"套娃"归一：归档解包常产出「外层目录里只有一个包装子目录」的形态
+     * （在手机上用文件管理器解压尤其常见）。用户选中外层时 {@link #detect} 靠浅层下钻
+     * 仍能认引擎，但导入的复制与 {@code findExecutable} 只看顶层，会复制出一个套娃目录
+     * 并报缺 exe（2026-10-26 真机：《椎名真穂のヒミツ》选外层 → UNKNOWN +
+     * galgame_exe_missing）。这里把「只有一个子目录、且本层无任何游戏标记」的链逐层剥掉。
+     *
+     * @param dir 用户选中的目录；不可读或无套娃时原样返回
+     */
+    public static File resolveGameRoot(File dir) {
+        File cur = dir;
+        for (int depth = 0; depth < 4; depth++) {
+            File[] children = cur.listFiles();
+            if (children == null || children.length != 1) break;
+            File only = children[0];
+            if (!only.isDirectory() || isRuntimeDirName(only.getName())) break;
+            if (hasGameMarkers(cur)) break;
+            cur = only;
+        }
+        return cur;
+    }
+
+    private static boolean hasGameMarkers(File dir) {
+        File[] fs = dir.listFiles();
+        if (fs == null) return false;
+        for (File f : fs) {
+            String n = f.getName().toLowerCase();
+            if (n.endsWith(".exe") || n.endsWith(".xp3") || n.endsWith(".ypf") || n.endsWith(".rpa")
+                    || n.endsWith("_data") || n.endsWith(".wolf") || n.endsWith(".rgssad")
+                    || n.endsWith(".cso") || n.endsWith(".pbp") || n.endsWith(".nsa")
+                    || n.equals("unityplayer.dll") || n.equals("www") || n.equals("psp_game")
+                    || n.equals("game") || n.equals("tyrano") || n.equals("nscript.dat")) return true;
+        }
+        return false;
+    }
+
+    /**
      * 识别游戏目录的引擎并给出路由（B1 优先级裁决）。
      * @param gameDir 游戏根目录（A3 复制后的容器外/容器内路径）
      */

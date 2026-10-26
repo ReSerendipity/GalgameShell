@@ -21,9 +21,18 @@
 - **Wine 安装入口放行**：设置→更多设置里的「Wine 版本 / 安装 / 移除」行原被硬编码的
   `MainActivity.DEBUG_MODE=false` 挡死（逻辑早已写好但用户永远看不到），现同时认本 fork
   的「开发者模式」开关（`galgame_dev_mode`）。
+- **导入改用系统文件夹选择器（SAF）**：`ACTION_OPEN_DOCUMENT_TREE` + persistable 授权，
+  授权跟所选目录走、不随卸载重装重置（「所有文件访问」会）；所选树先复制进应用私有暂存
+  （`files/import-stage`，带进度、失败清半成品、可用空间 <128MB 硬失败、6h 残骸清扫）再走原
+  导入管线。手输路径框与快速路径按钮一并移除——输错/输不全是历史失败诱因。
+  评估与取证见 [`docs/robustness-assessment-2026-10.md`](docs/robustness-assessment-2026-10.md)。
 
 ### Changed
 
+- **导入入口单一化**：游戏库的 FAB / 空态按钮改为打开导入向导，删除库内 254 行「手输路径 +
+  自跑一遍 ImportFlow」的重复实现（两套入口会让同一批修复只落到一套）与 8 条随之死掉的字符串。
+- **gameId 与容器名一致性**：容器名恒等于 `galgame-<gameId>`（库/详情/存档都靠去前缀反推 id），
+  重名避让上移到 id 派生——占用集同时收自有索引与现存容器名，孤儿容器不再能遮住新导入。
 - **引擎预设 dxwrapper 分化（任务二）**：`advhd`/`yrg`/`systemnnn`/`artemis`/`cat_system2`/`cmvs`
   改 `wined3d`（其中 `yrg`/`systemnnn`/`artemis` 追加 `ddrawWrapper=cnc-ddraw`）；
   `kirikiri`/`siglus`/`unity`/`bgi`/`unknown` 保持 `dxvk`——前四者真机已验证可玩，改了即回归。
@@ -37,6 +46,14 @@
   纯黑 56dp，与页面对比亮度 18 vs 253）。改纸面版：白底 + 顶部 2dp 墨线 + 黑字；
   修复后同区域亮度 253.9（§16.4）。全站 UI 一致性扫描（库/设置/详情/高级设置/导入）
   无其他黑框残留。
+- **导入假成功链（真机事故 D1–D5）**：重装后「所有文件访问」被重置时 `listFiles()` 为 null，
+  旧行为检测判 UNKNOWN、复制 0 文件、到启动才报「启动文件缺失」——现 step0 即 fail-fast 并带用户
+  去授权页；解压套娃目录在检测与复制两端归一（`EngineDetector.resolveGameRoot`，回归 E15–E21）；
+  库条目回填 title/engine；CJK 目录名塌缩改附 4 位哈希后缀；导入失败回滚已建容器（不再留孤儿）；
+  复制完成但没定位到启动 exe 时当场告警，不再等启动才报错。
+- **SAF 树 API 误用（真机实测）**：树 URI（`/tree/…`）取 documentId 必须用 `getTreeDocumentId`、
+  取自身显示名必须先 `buildDocumentUriUsingTree`；误用 `getDocumentId` 会抛
+  IllegalArgumentException，表现为所选目录标签退回整串 content:// URI、复制在第一层即失败。
 
 
 ### Changed
