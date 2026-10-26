@@ -119,7 +119,8 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 if (name == null || !name.startsWith(CONTAINER_PREFIX)) continue;
                 String gameId = name.substring(CONTAINER_PREFIX.length());
                 GalgameLibraryIndex.Entry e = index.get(gameId);
-                items.add(GalgameLibraryAdapter.fromContainer(c, e != null ? e.preferredEngine : null));
+                items.add(GalgameLibraryAdapter.fromContainer(c,
+                        e != null ? e.preferredEngine : null, e != null ? e.title : null));
             }
         }
 

@@ -21,6 +21,7 @@ public class Activity extends Context {
     public void startActivityForResult(Intent intent, int requestCode) {}
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {}
     public void finish() {}
+    public boolean isFinishing() { return false; }
     public void recreate() {}
     public Intent getIntent() { return null; }
     public void runOnUiThread(Runnable action) {}

@@ -90,6 +90,15 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
      * （{@code .wine/drive_c/galgame/<gameId>}），登记引擎优先取容器 extra。
      */
     public static Item fromContainer(Container container, String preferredEngine) {
+        return fromContainer(container, preferredEngine, null);
+    }
+
+    /**
+     * @param title 索引里记的显示名（导入时用户确认的名字）。容器名里只有 ASCII gameId，
+     *              直接拿它当标题就是一串下划线（2026-10-26 真机：卡片标题全成
+     *              {@code ____H____} 而不显示 CJK 原名）。null/空则回退 gameId。
+     */
+    public static Item fromContainer(Container container, String preferredEngine, String title) {
         String name = container != null ? container.getName() : null;
         String gameId = (name != null && name.startsWith(CONTAINER_PREFIX))
                 ? name.substring(CONTAINER_PREFIX.length())
@@ -99,7 +108,8 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
         File exe = overlayExe(container);
         String engine = (container == null) ? null
                 : container.getExtra("galgame_engine", null);
-        return new Item(container, gameId, gameId, displayOf(engine),
+        String label = (title != null && !title.trim().isEmpty()) ? title.trim() : gameId;
+        return new Item(container, gameId, label, displayOf(engine),
                 gameDir, exe, engine, preferredEngine);
     }
 
