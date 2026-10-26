@@ -171,6 +171,26 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- 分类 chips：ENGINE（自动派生）/ GENRE（预置）/ TAG（自定义），单选过滤 -->
+        <HorizontalScrollView
+            android:id="@+id/HSVFilter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="8dp">
+
+            <LinearLayout
+                android:id="@+id/LLFilterChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
+        </HorizontalScrollView>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -209,6 +229,7 @@
                     android:contentDescription="@string/galgame_library_title" />
 
                 <TextView
+                    android:id="@+id/TVEmptyTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
@@ -218,6 +239,7 @@
                     android:textColor="@color/swiss_ink" />
 
                 <TextView
+                    android:id="@+id/TVEmptyHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"

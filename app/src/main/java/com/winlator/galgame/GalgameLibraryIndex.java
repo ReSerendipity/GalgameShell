@@ -74,9 +74,20 @@ public final class GalgameLibraryIndex {
         public final boolean containerized;
         public final long addedAt;
         public final long lastPlayedAt;
+        /** 预置内容品类 id（见 {@code ui/GalgameCategoryPicker.GENRE_IDS}）；null = 未设置。 */
+        public final String genre;
+        /** 用户自定义标签（不可变快照，去重、去空、≤12 字）。 */
+        public final List<String> tags;
 
         Entry(String gameId, String title, String engineName, String sourcePath,
               String preferredEngine, boolean containerized, long addedAt, long lastPlayedAt) {
+            this(gameId, title, engineName, sourcePath, preferredEngine, containerized,
+                    addedAt, lastPlayedAt, null, Collections.<String>emptyList());
+        }
+
+        Entry(String gameId, String title, String engineName, String sourcePath,
+              String preferredEngine, boolean containerized, long addedAt, long lastPlayedAt,
+              String genre, List<String> tags) {
             this.gameId = gameId;
             this.title = title;
             this.engineName = engineName;
@@ -85,6 +96,9 @@ public final class GalgameLibraryIndex {
             this.containerized = containerized;
             this.addedAt = addedAt;
             this.lastPlayedAt = lastPlayedAt;
+            this.genre = genre;
+            this.tags = tags == null ? Collections.<String>emptyList()
+                    : Collections.unmodifiableList(new ArrayList<>(tags));
         }
 
         JSONObject toJson() throws JSONException {
@@ -97,6 +111,12 @@ public final class GalgameLibraryIndex {
             o.put("containerized", containerized);
             o.put("added_at", addedAt);
             o.put("last_played_at", lastPlayedAt);
+            if (genre != null && !genre.isEmpty()) o.put("genre", genre);
+            if (!tags.isEmpty()) {
+                JSONArray arr = new JSONArray();
+                for (String t : tags) arr.put(t);
+                o.put("tags", arr);
+            }
             return o;
         }
 
@@ -112,12 +132,14 @@ public final class GalgameLibraryIndex {
                     o.optString("preferred_engine", null),
                     o.optBoolean("containerized", false),
                     o.optLong("added_at", 0L),
-                    o.optLong("last_played_at", 0L));
+                    o.optLong("last_played_at", 0L),
+                    o.optString("genre", null),
+                    readTags(o.optJSONArray("tags")));
         }
 
         Entry withPreferredEngine(String engine) {
             return new Entry(gameId, title, engineName, sourcePath, engine, containerized,
-                    addedAt, lastPlayedAt);
+                    addedAt, lastPlayedAt, genre, tags);
         }
 
         /** 补登记身份（标题/引擎）：A 路由导入旧路径只写 containerized，留下 null 引擎，
@@ -127,17 +149,27 @@ public final class GalgameLibraryIndex {
                     ? newTitle : title;
             String e = engineName == null ? newEngine : engineName;
             return new Entry(gameId, t, e, sourcePath, preferredEngine, containerized,
-                    addedAt, lastPlayedAt);
+                    addedAt, lastPlayedAt, genre, tags);
         }
 
         Entry withContainerized(boolean flag) {
             return new Entry(gameId, title, engineName, sourcePath, preferredEngine, flag,
-                    addedAt, lastPlayedAt);
+                    addedAt, lastPlayedAt, genre, tags);
         }
 
         Entry touched(long when) {
             return new Entry(gameId, title, engineName, sourcePath, preferredEngine, containerized,
-                    addedAt, when);
+                    addedAt, when, genre, tags);
+        }
+
+        Entry withGenre(String newGenre) {
+            return new Entry(gameId, title, engineName, sourcePath, preferredEngine, containerized,
+                    addedAt, lastPlayedAt, newGenre, tags);
+        }
+
+        Entry withTags(List<String> newTags) {
+            return new Entry(gameId, title, engineName, sourcePath, preferredEngine, containerized,
+                    addedAt, lastPlayedAt, genre, newTags);
         }
     }
 
@@ -275,6 +307,82 @@ public final class GalgameLibraryIndex {
             }
             writeQuietly(f, kept);
         }
+    }
+
+    // ---- 分类（引擎自动派生不落盘；品类 / 标签落盘）----
+
+    /** 单个标签的规范化：去空白、截断到 12 字；空串返回 null。 */
+    public static String normalizeTag(String raw) {
+        if (raw == null) return null;
+        String t = raw.trim();
+        if (t.isEmpty()) return null;
+        t = t.replace('\n', ' ').replace('\r', ' ');
+        return t.length() > 12 ? t.substring(0, 12) : t;
+    }
+
+    /** 设置预置品类 id；null/空 = 清除。条目不存在时不做任何事（先 {@link #ensureEntry}）。 */
+    public static void setGenre(Context context, String gameId, String genre) {
+        final String g = (genre == null || genre.isEmpty()) ? null : genre;
+        upsert(context, gameId, new Mutator() {
+            @Override
+            public Entry apply(Entry existing) {
+                return existing == null ? null : existing.withGenre(g);
+            }
+        });
+    }
+
+    /** 给某游戏的标签做增删；批量归类时对每个 gameId 调一次。 */
+    public static void applyTagChanges(Context context, String gameId,
+                                       java.util.Collection<String> add,
+                                       java.util.Collection<String> remove) {
+        upsert(context, gameId, new Mutator() {
+            @Override
+            public Entry apply(Entry existing) {
+                if (existing == null) return null;
+                java.util.LinkedHashSet<String> next = new java.util.LinkedHashSet<>(existing.tags);
+                if (remove != null) next.removeAll(remove);
+                if (add != null) {
+                    for (String raw : add) {
+                        String t = normalizeTag(raw);
+                        if (t != null) next.add(t);
+                    }
+                }
+                return existing.withTags(new ArrayList<>(next));
+            }
+        });
+    }
+
+    /** 库里出现过的全部标签（升序）。 */
+    public static List<String> allTags(Context context) {
+        java.util.TreeSet<String> set = new java.util.TreeSet<>();
+        for (Entry e : load(context)) set.addAll(e.tags);
+        return new ArrayList<>(set);
+    }
+
+    /**
+     * 确保条目存在（容器卡在索引里没有记录时也要能挂分类）。
+     * 与 {@link #setPreferredEngine} 同口径：只为「用户显式动作」建条目，不批量补。
+     */
+    public static void ensureEntry(Context context, final String gameId,
+                                   final String title, final String engineName) {
+        upsert(context, gameId, new Mutator() {
+            @Override
+            public Entry apply(Entry existing) {
+                if (existing != null) return existing;
+                return new Entry(gameId, (title == null || title.isEmpty()) ? gameId : title,
+                        engineName, null, null, false, System.currentTimeMillis(), 0L);
+            }
+        });
+    }
+
+    private static List<String> readTags(JSONArray arr) {
+        if (arr == null) return Collections.emptyList();
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < arr.length(); i++) {
+            String t = arr.optString(i, null);
+            if (t != null && !t.isEmpty()) out.add(t);
+        }
+        return out;
     }
 
     // ---- 内部 ----
