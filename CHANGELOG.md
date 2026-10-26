@@ -12,6 +12,25 @@
 
 ## [Unreleased]
 
+### Added
+
+- **按引擎指定 Wine 版本（任务一机制层）**：`engine_presets.json` 新增 `wine_version`
+  （Wine identifier）。导入时先核对设备上该版本真装好（`opt/installed-wine/<id>` 目录 +
+  `container-pattern-<版本>.tzst` 齐备）才写入容器 data；未装/装坏则回落主 Wine 并写带
+  可操作下一步的 logcat 告警，不静默降级。高级设置「环境详情」新增容器实际 Wine 版本行。
+- **Wine 安装入口放行**：设置→更多设置里的「Wine 版本 / 安装 / 移除」行原被硬编码的
+  `MainActivity.DEBUG_MODE=false` 挡死（逻辑早已写好但用户永远看不到），现同时认本 fork
+  的「开发者模式」开关（`galgame_dev_mode`）。
+
+### Changed
+
+- **引擎预设 dxwrapper 分化（任务二）**：`advhd`/`yrg`/`systemnnn`/`artemis`/`cat_system2`/`cmvs`
+  改 `wined3d`（其中 `yrg`/`systemnnn`/`artemis` 追加 `ddrawWrapper=cnc-ddraw`）；
+  `kirikiri`/`siglus`/`unity`/`bgi`/`unknown` 保持 `dxvk`——前四者真机已验证可玩，改了即回归。
+  分化面只覆盖基线里不通的引擎，故无回归面。真机取证：AdvHD 由 TD-17 的静默崩溃变为渲染出
+  引擎自身警告框（仍未可玩）；YU-RIS 机制全链路生效但 TD-09 黑屏未变。
+  背景、逐引擎依据与未覆盖格子见 [`docs/wine-dxwrapper-tuning.md`](docs/wine-dxwrapper-tuning.md)。
+
 ### Fixed
 
 - **「更多设置」底部大黑框**：真机取证定位为 SwissConfirmBar「完成」确认条（原通栏
