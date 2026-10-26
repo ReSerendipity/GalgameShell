@@ -12,6 +12,8 @@
 
 ## [Unreleased]
 
+## [11.4] - 2026-10-26
+
 ### Added
 
 - **按引擎指定 Wine 版本（任务一机制层）**：`engine_presets.json` 新增 `wine_version`
@@ -268,6 +270,7 @@
 - 本版 Release 说明由 GitHub `--generate-notes` 自动生成，未包含人工维护条目；完整提交对比见
   [v11.2 对比 main](https://github.com/ReSerendipity/GalgameShell/compare/v11.2...main)。
 
-[Unreleased]: https://github.com/ReSerendipity/GalgameShell/compare/v11.3...HEAD
+[Unreleased]: https://github.com/ReSerendipity/GalgameShell/compare/v11.4...HEAD
+[11.4]: https://github.com/ReSerendipity/GalgameShell/releases/tag/v11.4
 [11.3]: https://github.com/ReSerendipity/GalgameShell/releases/tag/v11.3
 [11.2]: https://github.com/ReSerendipity/GalgameShell/releases/tag/v11.2
