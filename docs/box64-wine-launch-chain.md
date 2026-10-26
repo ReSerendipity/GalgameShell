@@ -392,3 +392,27 @@ TD-09 的一个候选绕过是"把游戏跑在虚拟桌面里"——游戏窗口
 
 **本实验未覆盖**：未开 `file` 通道，"引擎是否尝试打开片头文件"以 quartz 通道 0 建图
 为间接证据；未用音频判据（BGM 是否响）区分"引擎卡在等待"与"引擎在渲染黑"。
+
+### 7.5 主渲染黑的正交对照：与 d3d 包装、GL 供给、片头存在性均无关（2026-10-26）
+
+§7.4 之后追加一组对照。新样本 = `yuris_lufia` 的无片头副本 `yuris_zink`（容器 xuser-21，
+`dxwrapper=wined3d` + `ddrawWrapper=cnc-ddraw` + 临时 `graphics_driver=turnip,zink`，
+该预设改动**未入库、已回滚**）；启动路径与量化口径同 §7.4。
+
+| 配置轴 | 取值 | 画面 | 关键日志 |
+|---|---|---|---|
+| dxwrapper=dxvk | 无片头（§7.4 基线） | mean 0.11 全黑 | 0 建图 |
+| wined3d + cnc-ddraw，GL=gladio | 有片头 | mean 0.11 全黑 | wined3d 拿到 GL 上下文但 `GL_VENDOR "Qualcomm"` 未识别、polyoffset 检测失败 |
+| wined3d + cnc-ddraw，GL=gladio | 无片头（§7.4） | mean 0.11 全黑 | 0 建图 |
+| wined3d + cnc-ddraw，GL=**zink** | 无片头 | mean 0.11 全黑 | zink 的 libGL 落地（14.7MB）但仍无 `libEGL.so.1`；wined3d **未走到 adapter init**（GL 上下文建不起来），比 gladio 更差 |
+
+对照面：SIGLUS/UNITY 在同一栈上经 **DXVK/Vulkan** 正常出帧（§7.2、§9.5，本轮回归
+`test_siglus` nonblack 81.73%）。
+
+**结论**：YU-RIS/SystemNNN 的客户区黑**不随三个轴变化**——d3d 包装（dxvk/wined3d）、
+GL 供给（gladio/zink）、片头存在性（有/无）。能出帧的引擎走的都是 DXVK/Vulkan 路径。
+TD-09 的主渲染面由此收窄为「引擎自身的 DDraw/表面呈现 × Wine 的 X11 表面交互」，
+属引擎×Wine 上游面；**模拟层配置已无剩余旋钮**。zink 路线关闭。
+
+设备复原：zink 提取替换过的 `usr/lib/libGL.so.1.7.0` 经一次 gladio 容器启动还原
+（530,432 B），`test_siglus` 回归出帧确认渲染栈健康；`/sdcard` 副本已删。
