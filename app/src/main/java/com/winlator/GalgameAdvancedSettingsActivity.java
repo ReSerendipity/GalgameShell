@@ -26,6 +26,7 @@ import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 import com.winlator.core.LocaleHelper;
 import com.winlator.core.PreloaderDialog;
+import com.winlator.core.WineInfo;
 import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
 import com.winlator.xenvironment.RootFSInstaller;
@@ -167,7 +168,9 @@ public class GalgameAdvancedSettingsActivity extends AppCompatActivity implement
                 "引擎 " + nv(container.getExtra("galgame_engine"))
                         + "  ·  Windows " + nv(container.getExtra("windows_version")) + "\n"
                         + "图形 " + nv(container.getDXWrapper())
-                        + "  ·  Box64 " + nv(container.getBox64Preset()));
+                        + "  ·  Box64 " + nv(container.getBox64Preset()) + "\n"
+                        + "Wine " + WineInfo.fromIdentifier(this, container.getWineVersion()).fullVersion()
+                        + (WineInfo.isMainWineVersion(container.getWineVersion()) ? "（内置）" : "（另装）"));
         ((TextView) dialog.findViewById(R.id.TVEnvPath)).setText(
                 "环境目录  " + container.getRootDir().getAbsolutePath());
 

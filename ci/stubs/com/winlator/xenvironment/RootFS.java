@@ -9,5 +9,6 @@ import java.io.File;
 public class RootFS {
     public static RootFS find(Context context) { return null; }
     public File getRootDir() { return null; }
+    public File getInstalledWineDir() { return null; }
     public boolean isValid() { return false; }
 }
