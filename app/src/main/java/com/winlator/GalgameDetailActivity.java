@@ -136,6 +136,7 @@ public class GalgameDetailActivity extends AppCompatActivity {
 
         ImageView cover = findViewById(R.id.IVCover);
         loadCover(cover);
+        updateCoverMeta();
     }
 
     private void bindActions() {
@@ -152,6 +153,7 @@ public class GalgameDetailActivity extends AppCompatActivity {
         findViewById(R.id.BTExport).setOnClickListener(v -> exportSave());
         findViewById(R.id.BTImportSave).setOnClickListener(v -> importSave());
         findViewById(R.id.BTLogs).setOnClickListener(v -> showLogs());
+        findViewById(R.id.BTCover).setOnClickListener(v -> showCoverDialog());
         findViewById(R.id.BTRemove).setOnClickListener(v -> removeFromLibrary());
         findViewById(R.id.BTPinShortcut).setOnClickListener(v -> pinShortcut());
 
@@ -458,7 +460,8 @@ public class GalgameDetailActivity extends AppCompatActivity {
         executor.execute(() -> {
             android.graphics.Bitmap bmp = null;
             try {
-                File cover = com.winlator.galgame.GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                File cover = com.winlator.galgame.GalgameCoverProvider.coverFor(
+                        getApplicationContext(), item.gameId, item.gameDir, item.exe);
                 if (cover != null && cover.isFile()) {
                     android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
                     o.inSampleSize = 2;
@@ -552,13 +555,75 @@ public class GalgameDetailActivity extends AppCompatActivity {
                 .show();
     }
 
+    // ---- 自定义封面（档5）----
+
+    private static final int REQ_PICK_COVER = 73;
+
+    private void updateCoverMeta() {
+        TextView meta = findViewById(R.id.TVCoverMeta);
+        if (meta == null || item == null) return;
+        meta.setText(GalgameCoverProvider.customCover(this, item.gameId) != null
+                ? getString(R.string.galgame_cover_custom) : getString(R.string.galgame_cover_auto));
+    }
+
+    /** 封面：相册选图（SAF 单文件）或恢复自动提取。 */
+    private void showCoverDialog() {
+        final boolean custom =
+                GalgameCoverProvider.customCover(this, item.gameId) != null;
+        String[] items = custom
+                ? new String[]{getString(R.string.galgame_cover_pick_new),
+                        getString(R.string.galgame_cover_reset)}
+                : new String[]{getString(R.string.galgame_cover_pick)};
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.galgame_cover_title)
+                .setItems(items, (d, which) -> {
+                    if (which == 0) pickCoverImage();
+                    else resetCover();
+                })
+                .setNegativeButton(R.string.galgame_cancel, null)
+                .show();
+    }
+
+    private void pickCoverImage() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        startActivityForResult(intent, REQ_PICK_COVER);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQ_PICK_COVER || resultCode != RESULT_OK || data == null) return;
+        android.net.Uri uri = data.getData();
+        if (uri == null) return;
+        boolean ok = GalgameCoverProvider.setCustomCover(this, item.gameId, uri);
+        toast(getString(ok ? R.string.galgame_cover_updated : R.string.galgame_cover_failed));
+        if (ok) refreshCover();
+    }
+
+    private void resetCover() {
+        GalgameCoverProvider.clearCustomCover(this, item.gameId);
+        toast(getString(R.string.galgame_cover_reset_done));
+        refreshCover();
+    }
+
+    private void refreshCover() {
+        item.cover = null;
+        item.coverBitmap = null;
+        item.coverResolved = false;
+        loadCover(findViewById(R.id.IVCover));
+        updateCoverMeta();
+    }
+
     private void loadCover(final ImageView iv) {
         if (item == null) return;
         executor.execute(() -> {
             Bitmap bmp = null;
             try {
                 File coverFile = item.cover != null ? item.cover
-                        : GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                        : GalgameCoverProvider.coverFor(getApplicationContext(), item.gameId,
+                                item.gameDir, item.exe);
                 if (coverFile != null && coverFile.isFile()) bmp = decode(coverFile, 560);
             } catch (Throwable ignored) {}
             final Bitmap b = bmp;

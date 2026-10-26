@@ -3,6 +3,8 @@ public class Intent {
     public static final String ACTION_MAIN = "android.intent.action.MAIN";
     public static final String ACTION_VIEW = "android.intent.action.VIEW";
     public static final String ACTION_OPEN_DOCUMENT_TREE = "android.intent.action.OPEN_DOCUMENT_TREE";
+    public static final String ACTION_OPEN_DOCUMENT = "android.intent.action.OPEN_DOCUMENT";
+    public static final String CATEGORY_OPENABLE = "android.intent.category.OPENABLE";
     public static final String CATEGORY_LAUNCHER = "android.intent.category.LAUNCHER";
     public static final String CATEGORY_DEFAULT = "android.intent.category.DEFAULT";
     public static final int FLAG_ACTIVITY_NEW_TASK = 0x10000000;
@@ -18,6 +20,7 @@ public class Intent {
     public Intent setPackage(String packageName) { return this; }
     public Intent setClassName(String packageName, String className) { return this; }
     public Intent addCategory(String category) { return this; }
+    public Intent setType(String type) { return this; }
     public Intent setDataAndType(android.net.Uri data, String type) { return this; }
     public Intent addFlags(int flags) { return this; }
     public Intent setAction(String action) { return this; }

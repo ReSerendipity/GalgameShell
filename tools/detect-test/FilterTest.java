@@ -77,7 +77,48 @@ public class FilterTest {
         check("filter-combo-miss-tag", !GalgameFilter.matches("UNITY", "vn", Arrays.asList("生肉"),
                 "UNITY", "vn", "汉化"));
 
+        // ---- 图标 DIB → BMP（档5：让 exe 图标能真正解码）----
+        byte[] dib = new byte[40 + 4 * 4 * 4];
+        writeLE32(dib, 0, 40);        // biSize
+        writeLE32(dib, 4, 4);         // biWidth
+        writeLE32(dib, 8, 8);         // biHeight = 显示高 4 ×2（含 AND 掩码）
+        writeLE16(dib, 14, 32);       // biBitCount
+        byte[] bmp = com.winlator.galgame.IconCodec.dibToBmp(dib);
+        check("icon-bmp-header", bmp != null && bmp[0] == 'B' && bmp[1] == 'M');
+        check("icon-bmp-offbits", bmp != null && readLE32(bmp, 10) == 14 + 40);
+        check("icon-bmp-half-height", bmp != null && readLE32(bmp, 14 + 8) == 4);
+        check("icon-bmp-reject-short",
+                com.winlator.galgame.IconCodec.dibToBmp(new byte[10]) == null);
+        byte[] odd = dib.clone();
+        writeLE32(odd, 8, 7);
+        check("icon-bmp-reject-odd-height",
+                com.winlator.galgame.IconCodec.dibToBmp(odd) == null);
+        byte[] dib8 = new byte[40 + 1024 + 4];
+        writeLE32(dib8, 0, 40);
+        writeLE32(dib8, 4, 4);
+        writeLE32(dib8, 8, 8);
+        writeLE16(dib8, 14, 8);       // 8bpp：默认 256 色调色板
+        byte[] bmp8 = com.winlator.galgame.IconCodec.dibToBmp(dib8);
+        check("icon-bmp-8bpp-palette", bmp8 != null && readLE32(bmp8, 10) == 14 + 40 + 1024);
+
         System.out.println("\n==== " + pass + " passed, " + fail + " failed ====");
         if (fail > 0) System.exit(1);
+    }
+
+    private static int readLE32(byte[] b, int off) {
+        return (b[off] & 0xFF) | ((b[off + 1] & 0xFF) << 8)
+                | ((b[off + 2] & 0xFF) << 16) | ((b[off + 3] & 0xFF) << 24);
+    }
+
+    private static void writeLE32(byte[] b, int off, int v) {
+        b[off] = (byte) (v & 0xFF);
+        b[off + 1] = (byte) ((v >>> 8) & 0xFF);
+        b[off + 2] = (byte) ((v >>> 16) & 0xFF);
+        b[off + 3] = (byte) ((v >>> 24) & 0xFF);
+    }
+
+    private static void writeLE16(byte[] b, int off, int v) {
+        b[off] = (byte) (v & 0xFF);
+        b[off + 1] = (byte) ((v >>> 8) & 0xFF);
     }
 }
