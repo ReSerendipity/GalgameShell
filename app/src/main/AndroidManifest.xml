@@ -76,6 +76,12 @@
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
 
+        <activity android:name="com.winlator.galgame.ui.GalgameBatchImportActivity"
+            android:theme="@style/GalgameMainTheme"
+            android:exported="false"
+            android:screenOrientation="sensor"
+            android:configChanges="keyboard|keyboardHidden|smallestScreenSize|density|navigation" />
+
         <activity android:name="com.winlator.GalgameSettingsActivity"
             android:theme="@style/GalgameSwissTheme"
             android:exported="false"
