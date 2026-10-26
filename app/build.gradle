@@ -16,8 +16,8 @@ android {
         // 前台服务类型（34+）/ POST_NOTIFICATIONS 运行时权限（33+）等更高适配项。
         // 残余发版前置：真机回归 R1–R17（TD-02，需 Adreno + Mali 真机），发版门禁不变。
         targetSdkVersion 30
-        versionCode 35
-        versionName "11.4"
+        versionCode 36
+        versionName "11.5"
     }
 
     buildTypes {
