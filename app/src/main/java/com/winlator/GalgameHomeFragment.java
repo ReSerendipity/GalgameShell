@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
 import com.winlator.galgame.GalgameCoverProvider;
+import com.winlator.galgame.GalgameFilter;
 import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.ui.GalgameCategoryPicker;
 import com.winlator.galgame.ui.GalgameLibraryAdapter;
@@ -50,9 +51,10 @@ public class GalgameHomeFragment extends Fragment {
     private View rootView;
     private View chipsRow;
     private View chipsScroll;
-    /** 分类过滤：三者至多一个非空（chips 单选）。 */
-    private String filterType;      // "engine" / "genre" / "tag"
-    private String filterValue;
+    /** 分类过滤：三个维度各自可空，非空则 AND 叠加（档4 起支持组合）。 */
+    private String filterEngine;
+    private String filterGenre;
+    private String filterTag;
     private final java.util.Map<String, GalgameLibraryIndex.Entry> indexMap = new java.util.HashMap<>();
     private View emptyView;
     private GridView grid;
@@ -414,33 +416,38 @@ public class GalgameHomeFragment extends Fragment {
     }
 
     private boolean matchesCategory(GalgameLibraryAdapter.Item it) {
-        if (filterType == null) return true;
-        if ("engine".equals(filterType)) return filterValue.equals(engineKeyOf(it));
         GalgameLibraryIndex.Entry e = indexMap.get(it.gameId);
-        if (e == null) return false;
-        if ("genre".equals(filterType)) return filterValue.equals(e.genre);
-        if ("tag".equals(filterType)) return e.tags.contains(filterValue);
-        return true;
+        return GalgameFilter.matches(engineKeyOf(it),
+                e != null ? e.genre : null,
+                e != null ? e.tags : null,
+                filterEngine, filterGenre, filterTag);
     }
 
     private static String engineKeyOf(GalgameLibraryAdapter.Item it) {
         return it.engineName != null ? it.engineName : "?";
     }
 
-    private void setFilter(String type, String value) {
-        if (type != null && type.equals(filterType) && value.equals(filterValue)) {
-            clearFilter();          // 再点一次同一个 chip = 取消
-        } else {
-            filterType = type;
-            filterValue = value;
+    /** 点 chip：同一维度再点一次取消；不同维度叠加（AND），如「Unity + 视觉小说 + 汉化」。 */
+    private void toggleFilter(String dimension, String value) {
+        if ("engine".equals(dimension)) {
+            filterEngine = value.equals(filterEngine) ? null : value;
+        } else if ("genre".equals(dimension)) {
+            filterGenre = value.equals(filterGenre) ? null : value;
+        } else if ("tag".equals(dimension)) {
+            filterTag = value.equals(filterTag) ? null : value;
         }
         rebuildChips();
         applyFilter();
     }
 
     private void clearFilter() {
-        filterType = null;
-        filterValue = null;
+        filterEngine = null;
+        filterGenre = null;
+        filterTag = null;
+    }
+
+    private boolean hasFilter() {
+        return filterEngine != null || filterGenre != null || filterTag != null;
     }
 
     private void afterCategoryEdit() {
@@ -467,34 +474,37 @@ public class GalgameHomeFragment extends Fragment {
         }
         java.util.List<String> tags = GalgameLibraryIndex.allTags(requireContext());
 
-        // 过滤值可能随删除/改名失效：失效即回到「全部」，别停在空结果上
-        if ("engine".equals(filterType) && !engines.containsKey(filterValue)) clearFilter();
-        if ("genre".equals(filterType) && !genres.contains(filterValue)) clearFilter();
-        if ("tag".equals(filterType) && !tags.contains(filterValue)) clearFilter();
+        // 过滤值可能随删除/改名失效：只清失效的那一维，别把其它维度的筛选也抹掉
+        if (filterEngine != null && !engines.containsKey(filterEngine)) filterEngine = null;
+        if (filterGenre != null && !genres.contains(filterGenre)) filterGenre = null;
+        if (filterTag != null && !tags.contains(filterTag)) filterTag = null;
 
-        addChip(getString(R.string.galgame_filter_all), filterType == null,
-                v -> setFilter(null, null));
+        addChip(getString(R.string.galgame_filter_all), !hasFilter(), v -> {
+            clearFilter();
+            rebuildChips();
+            applyFilter();
+        });
         if (engines.size() > 1) {
             addCaption(getString(R.string.galgame_filter_engine));
             for (java.util.Map.Entry<String, String> en : engines.entrySet()) {
                 final String key = en.getKey();
-                addChip(en.getValue(), "engine".equals(filterType) && key.equals(filterValue),
-                        v -> setFilter("engine", key));
+                addChip(en.getValue(), key.equals(filterEngine),
+                        v -> toggleFilter("engine", key));
             }
         }
         if (!genres.isEmpty()) {
             addCaption(getString(R.string.galgame_filter_genre));
             for (final String id : genres) {
                 addChip(GalgameCategoryPicker.genreLabel(requireContext(), id),
-                        "genre".equals(filterType) && id.equals(filterValue),
-                        v -> setFilter("genre", id));
+                        id.equals(filterGenre),
+                        v -> toggleFilter("genre", id));
             }
         }
         if (!tags.isEmpty()) {
             addCaption(getString(R.string.galgame_filter_tag));
             for (final String tag : tags) {
-                addChip(tag, "tag".equals(filterType) && tag.equals(filterValue),
-                        v -> setFilter("tag", tag));
+                addChip(tag, tag.equals(filterTag),
+                        v -> toggleFilter("tag", tag));
             }
         }
         if (chipsScroll != null) {
@@ -553,11 +563,23 @@ public class GalgameHomeFragment extends Fragment {
             recentContainer.setVisibility(View.GONE);
             return;
         }
+        // 「继续游玩」= 真玩过的（lastPlayedAt > 0），按最后启动时间倒序；
+        // 以前只是拿 master 前 3 个，名字名不副实（档4 修正）
+        java.util.List<GalgameLibraryAdapter.Item> recent = new java.util.ArrayList<>();
+        for (GalgameLibraryAdapter.Item it : master) {
+            GalgameLibraryIndex.Entry e = indexMap.get(it.gameId);
+            if (e != null && e.lastPlayedAt > 0) recent.add(it);
+        }
+        recent.sort((a, b) -> Long.compare(playedAt(b), playedAt(a)));
+        if (recent.isEmpty()) {
+            recentContainer.setVisibility(View.GONE);
+            return;
+        }
         recentContainer.setVisibility(View.VISIBLE);
         LayoutInflater inflater = LayoutInflater.from(requireContext());
-        int n = Math.min(3, master.size());
+        int n = Math.min(3, recent.size());
         for (int i = 0; i < n; i++) {
-            final GalgameLibraryAdapter.Item item = master.get(i);
+            final GalgameLibraryAdapter.Item item = recent.get(i);
             View v = inflater.inflate(R.layout.item_recent_swiss, recentRow, false);
             TextView title = v.findViewById(R.id.TVRecentTitle);
             TextView meta = v.findViewById(R.id.TVRecentMeta);
@@ -569,6 +591,11 @@ public class GalgameHomeFragment extends Fragment {
             recentRow.addView(v);
             loadCover(item, cover);
         }
+    }
+
+    private long playedAt(GalgameLibraryAdapter.Item it) {
+        GalgameLibraryIndex.Entry e = indexMap.get(it.gameId);
+        return e != null ? e.lastPlayedAt : 0L;
     }
 
     private void loadCover(final GalgameLibraryAdapter.Item item, final ImageView iv) {

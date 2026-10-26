@@ -317,11 +317,7 @@ public final class GalgameLibraryIndex {
 
     /** 单个标签的规范化：去空白、截断到 12 字；空串返回 null。 */
     public static String normalizeTag(String raw) {
-        if (raw == null) return null;
-        String t = raw.trim();
-        if (t.isEmpty()) return null;
-        t = t.replace('\n', ' ').replace('\r', ' ');
-        return t.length() > 12 ? t.substring(0, 12) : t;
+        return GalgameFilter.normalizeTag(raw);
     }
 
     /** 设置预置品类 id；null/空 = 清除。条目不存在时不做任何事（先 {@link #ensureEntry}）。 */
