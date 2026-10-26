@@ -253,8 +253,8 @@
     <style name="SwissConfirmBar">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">56dp</item>
-        <item name="android:background">@color/swiss_ink</item>
-        <item name="android:textColor">@color/swiss_paper</item>
+        <item name="android:background">@drawable/swiss_confirm_bar_bg</item>
+        <item name="android:textColor">@color/swiss_ink</item>
         <item name="android:textSize">11sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.18</item>
