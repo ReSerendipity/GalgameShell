@@ -152,37 +152,59 @@ public class GalgameHomeFragment extends Fragment {
 
     private void showSelectionBar() {
         if (selectionBar == null) {
+            float density = getResources().getDisplayMetrics().density;
             selectionBar = new android.widget.LinearLayout(requireActivity());
             selectionBar.setOrientation(android.widget.LinearLayout.HORIZONTAL);
             selectionBar.setGravity(android.view.Gravity.CENTER_VERTICAL);
-            selectionBar.setBackgroundColor(0xEE101010);
-            int pad = Math.round(10 * getResources().getDisplayMetrics().density);
-            selectionBar.setPadding(pad, pad, pad, pad);
+            // Swiss 纸面操作栏：白底 + 顶部 2dp 墨色分隔线（与全站纸面语言一致）
+            android.graphics.drawable.GradientDrawable bg =
+                    new android.graphics.drawable.GradientDrawable();
+            bg.setColor(0xFFFFFFFF);
+            bg.setStroke(Math.round(2 * density), 0xFF111111);
+            selectionBar.setBackground(bg);
+            int padH = Math.round(16 * density);
+            int padV = Math.round(10 * density);
+            selectionBar.setPadding(padH, padV, padH, padV);
 
             android.widget.TextView count = new android.widget.TextView(requireActivity());
-            count.setTextColor(0xFFFFFFFF);
+            count.setTextColor(0xFF111111);
             count.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
+            count.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             count.setTag("count");
             android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
                     0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
             count.setLayoutParams(lp);
             selectionBar.addView(count);
 
-            String[] labels = {"全选", "彻底删除", "仅移除记录", "退出"};
+            // 无框文字按钮：黑色大写字距；删除动作用 Swiss 红
+            String[] labels = {"全选", "彻底删除", "仅移除", "完成"};
             String[] tags = {"all", "purge", "records", "exit"};
             for (int i = 0; i < labels.length; i++) {
-                android.widget.Button b = new android.widget.Button(requireActivity());
+                android.widget.TextView b = new android.widget.TextView(requireActivity());
                 b.setText(labels[i]);
-                b.setTag(tags[i]);
                 b.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
-                b.setOnClickListener(v -> onSelectionAction((String) v.getTag()));
+                b.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                b.setLetterSpacing(0.06f);
+                b.setAllCaps(true);
+                b.setTextColor("purge".equals(tags[i]) || "records".equals(tags[i])
+                        ? 0xFFB3261E : 0xFF111111);
+                int margin = Math.round(12 * density);
+                android.widget.LinearLayout.LayoutParams blp = new android.widget.LinearLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+                blp.leftMargin = margin;
+                b.setLayoutParams(blp);
+                b.setPadding(Math.round(6 * density), Math.round(8 * density),
+                        Math.round(6 * density), Math.round(8 * density));
+                final String tag = tags[i];
+                b.setOnClickListener(v -> onSelectionAction(tag));
                 selectionBar.addView(b);
             }
 
             android.widget.FrameLayout.LayoutParams barLp = new android.widget.FrameLayout.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                    android.view.Gravity.TOP);
+                    android.view.Gravity.BOTTOM);
             requireActivity().addContentView(selectionBar, barLp);
 
             if (selectBackCallback == null) {
@@ -205,7 +227,7 @@ public class GalgameHomeFragment extends Fragment {
             if ("count".equals(c.getTag())) { count = (android.widget.TextView) c; break; }
         }
         if (count != null) {
-            count.setText("已选 " + adapter.getSelectedCount() + " 项 · 点选卡片，返回键退出");
+            count.setText("已选 " + adapter.getSelectedCount() + " 项");
         }
     }
 
