@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Swiss 确认条（纸面版）：白底 + 顶部 2dp 墨线（黑底衬白错位实现）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/swiss_ink" />
+        </shape>
+    </item>
+    <item android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/swiss_paper" />
+        </shape>
+    </item>
+</layer-list>
