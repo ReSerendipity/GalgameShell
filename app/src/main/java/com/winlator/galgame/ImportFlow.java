@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.winlator.container.Container;
+import com.winlator.core.WineInfo;
+import com.winlator.xenvironment.RootFS;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -213,6 +215,7 @@ public final class ImportFlow {
 
             if (preset != null) {
                 if (preset.dxwrapper != null) data.put("dxwrapper", preset.dxwrapper);
+                if (preset.dxwrapperConfig != null) data.put("dxwrapperConfig", preset.dxwrapperConfig);
                 if (preset.box64Preset != null) data.put("box64Preset", preset.box64Preset);
                 data.put("startupSelection", preset.startupSelection);
                 // TD-14：部分引擎（KiriKiri）把主窗口固定在虚拟屏 (152,152)，窗口尺寸等于容器分辨率时
@@ -227,6 +230,12 @@ public final class ImportFlow {
                         && !"default".equalsIgnoreCase(resolvedDriver)) {
                     data.put("graphicsDriver", resolvedDriver);
                 }
+                // 预设可指定非主版本 Wine：TD-09（SystemNNN / YU-RIS 过场黑屏）已坐实卡在上游
+                // Wine 10 内建 quartz 的跨线程 SendMessage 死锁，应用层不可改，只有换 Wine 才能
+                // 验证假设。设备上没装该版本就回落主 Wine——不回落会让 ContainerManager 去解一个
+                // 不存在的 container-pattern-<版本>.tzst，容器直接创建失败。
+                String resolvedWine = resolveWineVersion(context, preset.wineVersion, engine);
+                if (resolvedWine != null) data.put("wineVersion", resolvedWine);
             }
 
             // extraData：galgame 专属，官方 loadData 会原样保存，由本 fork 读取
@@ -246,6 +255,51 @@ public final class ImportFlow {
         } catch (Exception e) {
             throw new IllegalStateException("构造容器 data 失败", e);
         }
+    }
+
+    /**
+     * 把预设的 {@code wine_version} 解析成设备上真正可用的 Wine identifier。
+     *
+     * <p>返回 null 表示「用主 Wine」——调用方不写 {@code wineVersion} 键，Container 默认即
+     * {@code WineInfo.MAIN_WINE_INFO}。三种情况回落：identifier 非法、该版本没装、装了但缺
+     * {@code container-pattern-<fullVersion>.tzst}（安装被中断过；缺它时
+     * {@code ContainerManager.extractContainerPatternFile} 解不出 pattern，容器创建直接失败）。
+     *
+     * <p>三种回落都写 logcat 并带上可操作的下一步。预设指定了非主 Wine 却静默用主 Wine，
+     * 会把「以为在验 Wine 9.x」变成假账，比直接失败更难发现。
+     */
+    static String resolveWineVersion(Context context, String presetWineVersion,
+                                     EngineDetector.Engine engine) {
+        if (presetWineVersion == null || presetWineVersion.isEmpty()) return null;
+        if (WineInfo.isMainWineVersion(presetWineVersion)) return null;
+
+        File installedWineDir = RootFS.find(context).getInstalledWineDir();
+        WineInfo wineInfo = WineInfo.fromIdentifier(context, presetWineVersion);
+        if (wineInfo == WineInfo.MAIN_WINE_INFO) {
+            Log.w("GalgameShell: import", "wine_version=" + presetWineVersion
+                    + " 不是合法的 Wine identifier（期望形如 wine-9.22），engine=" + engine
+                    + "，回落主 Wine");
+            return null;
+        }
+        File wineDir = new File(installedWineDir, wineInfo.identifier());
+        if (!wineDir.isDirectory()) {
+            Log.w("GalgameShell: import", "engine=" + engine + " 预设要求 Wine "
+                    + wineInfo.fullVersion() + "，但设备上未安装（缺 " + wineDir.getPath()
+                    + "），回落主 Wine " + WineInfo.MAIN_WINE_VERSION
+                    + "；安装入口：设置 → Wine 版本 → 安装 Wine");
+            return null;
+        }
+        File pattern = new File(installedWineDir,
+                "container-pattern-" + wineInfo.fullVersion() + ".tzst");
+        if (!pattern.isFile()) {
+            Log.w("GalgameShell: import", "engine=" + engine + " 的 Wine "
+                    + wineInfo.fullVersion() + " 已安装但缺 " + pattern.getName()
+                    + "，说明上次安装未完成，回落主 Wine；请在设置里移除该 Wine 版本后重装");
+            return null;
+        }
+        Log.i("GalgameShell: import", "engine=" + engine + " 使用 Wine " + wineInfo.fullVersion()
+                + "（identifier=" + wineInfo.identifier() + "）");
+        return wineInfo.identifier();
     }
 
     // ---- 预设加载 ----

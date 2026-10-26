@@ -237,7 +237,11 @@ public class GalgameSettingsFragment extends Fragment {
 
         loadGamepadPlayerConfigs(view);
 
-        if (MainActivity.DEBUG_MODE) {
+        // Wine 版本行（安装/移除另装 Wine）：上游只认 MainActivity.DEBUG_MODE，而本 fork 把它
+        // 硬编码成 false，导致按引擎切换 Wine 的预设（engine_presets.json 的 wine_version）
+        // 永远拿不到第二个 Wine——入口是死的。改为同时认本 fork 自己的「开发者模式」开关
+        // （设置页 SWDevMode，写 galgame_dev_mode），其副标题本就声明「已显示 WINE / BOX64」。
+        if (MainActivity.DEBUG_MODE || preferences.getBoolean("galgame_dev_mode", false)) {
             view.findViewById(R.id.LLWineInstallation).setVisibility(View.VISIBLE);
         }
 
