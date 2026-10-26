@@ -120,6 +120,16 @@ public final class GalgameLibraryIndex {
                     addedAt, lastPlayedAt);
         }
 
+        /** 补登记身份（标题/引擎）：A 路由导入旧路径只写 containerized，留下 null 引擎，
+         *  详情页因此显示「未识别」（2026-10-26）。已有值不覆盖。 */
+        Entry withIdentity(String newTitle, String newEngine) {
+            String t = (title == null || title.isEmpty() || title.equals(gameId)) && newTitle != null
+                    ? newTitle : title;
+            String e = engineName == null ? newEngine : engineName;
+            return new Entry(gameId, t, e, sourcePath, preferredEngine, containerized,
+                    addedAt, lastPlayedAt);
+        }
+
         Entry withContainerized(boolean flag) {
             return new Entry(gameId, title, engineName, sourcePath, preferredEngine, flag,
                     addedAt, lastPlayedAt);
@@ -191,14 +201,23 @@ public final class GalgameLibraryIndex {
 
     /** 标记某个游戏已有容器（导入成容器的口味再直观不过：本体归位了）。 */
     public static void markContainerized(Context context, String gameId) {
+        markContainerized(context, gameId, null, null);
+    }
+
+    /**
+     * 登记/更新「已容器化」条目，并补上标题与引擎名。
+     * 旧签名只写 containerized，A 路由条目因此 engine=null → 详情页「未识别」、
+     * 启动裁决少一层依据（2026-10-26 真机）。
+     */
+    public static void markContainerized(Context context, String gameId, String title, String engineName) {
         upsert(context, gameId, new Mutator() {
             @Override
             public Entry apply(Entry existing) {
                 if (existing == null) {
-                    return new Entry(gameId, gameId, null, null, null, true,
+                    return new Entry(gameId, title != null ? title : gameId, engineName, null, null, true,
                             System.currentTimeMillis(), 0L);
                 }
-                return existing.withContainerized(true);
+                return existing.withIdentity(title, engineName).withContainerized(true);
             }
         });
     }

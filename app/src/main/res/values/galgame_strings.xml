@@ -31,10 +31,6 @@
     <string name="galgame_action_export_save">导出存档</string>
 
     <!-- 导入进度阶段文案 -->
-    <string name="galgame_import_step_detect">正在检测引擎与语言…</string>
-    <string name="galgame_import_step_create">正在创建游戏容器…</string>
-    <string name="galgame_import_step_copy">正在复制游戏文件（大目录可能较慢）…</string>
-    <string name="galgame_import_step_done">导入完成，正在刷新游戏库…</string>
     <string name="galgame_import_cannot_cancel">导入进行中，请稍候</string>
 
     <!-- 触控模式（游戏内抽屉菜单切换；galgame 容器默认直接触控） -->
@@ -58,12 +54,9 @@
     <!-- 外壳空态（容器页 / 文件管理器 / 快捷方式）：单 TextView 标题+提示一体 -->
     <string name="galgame_empty_containers">还没有容器\n点击右上角的 +，导入或创建一个游戏容器</string>
     <string name="galgame_empty_files">这里空空如也\n内容会以卡片形式显示在这里</string>
-    <string name="galgame_import_pick_folder">选择游戏文件夹</string>
-    <string name="galgame_import_hint">游戏文件夹路径（如 /sdcard/Download/MyGame）</string>
     <string name="galgame_import_detecting">正在识别引擎…</string>
     <string name="galgame_import_build_container">正在为「%1$s」创建独立容器…</string>
-    <string name="galgame_import_done">导入完成，回到列表点击「启动」</string>
-    <string name="galgame_import_invalid">路径不存在或不是文件夹</string>
+    <string name="galgame_import_unreadable">无法读取该目录：未授予「所有文件访问」权限。已打开系统设置，开启后返回重试</string>
     <string name="galgame_import_failed">导入失败</string>
 
     <!-- 引擎识别 (B1) -->
@@ -178,8 +171,14 @@
     <string name="galgame_import_step_source">目录</string>
     <string name="galgame_import_step_confirm">确认</string>
     <string name="galgame_import_source_en">SOURCE</string>
-    <string name="galgame_import_source_hint">选择已拷贝到手机的游戏目录；导入时自动检测引擎并推荐运行方式。</string>
-    <string name="galgame_import_quick_paths">常见位置 / QUICK PATHS</string>
+    <string name="galgame_import_source_hint">用系统选择器挑游戏所在文件夹即可，无需输入路径；授权只针对所选目录。</string>
+    <string name="galgame_import_pick">选择游戏文件夹 / PICK FOLDER</string>
+    <string name="galgame_import_pick_none">未选择</string>
+    <string name="galgame_import_pick_first">请先选择游戏文件夹</string>
+    <string name="galgame_import_dup_title">库中已有同名游戏</string>
+    <string name="galgame_import_dup_message">「%1$s」已在游戏库中。继续导入会新增一个副本；旧条目可在库中长按删除。</string>
+    <string name="galgame_import_dup_go">仍要导入</string>
+    <string name="galgame_import_staging">读取所选文件夹…</string>
     <string name="galgame_import_detected">DETECTED ENGINE</string>
     <string name="galgame_import_confidence">置信度</string>
     <string name="galgame_import_files">文件</string>

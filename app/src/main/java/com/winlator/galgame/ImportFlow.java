@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.winlator.container.Container;
+import com.winlator.container.ContainerManager;
 import com.winlator.core.WineInfo;
 import com.winlator.xenvironment.RootFS;
 
@@ -42,6 +43,9 @@ import java.util.List;
  */
 public final class ImportFlow {
 
+    /** 本外壳容器名前缀；库 / 详情 / 存档都靠「去前缀」反推 gameId，口径必须一致。 */
+    public static final String GALGAME_CONTAINER_PREFIX = "galgame-";
+
     private ImportFlow() {}
 
     /**
@@ -68,6 +72,13 @@ public final class ImportFlow {
         if (sourceFolder == null || !sourceFolder.isDirectory()) {
             throw new IllegalArgumentException("sourceFolder 必须是一个存在的目录");
         }
+        if (sourceFolder.listFiles() == null) {
+            throw new IllegalArgumentException("sourceFolder 不可读（可能缺少「所有文件访问」权限）: "
+                    + sourceFolder.getAbsolutePath());
+        }
+        // 解压"套娃"归一：复制与 findExecutable 都必须落在真游戏根，否则容器里是一层
+        // 空壳目录、报缺 exe（见 EngineDetector.resolveGameRoot）
+        sourceFolder = EngineDetector.resolveGameRoot(sourceFolder);
 
         EngineDetector.Engine engine = EngineDetector.detect(sourceFolder);
         EngineDetector.Route route = engine.route;
@@ -145,6 +156,9 @@ public final class ImportFlow {
         if (result.route != EngineDetector.Route.A || result.containerData == null) {
             throw new IllegalStateException("仅 A 路由需要 stage（B 路由由原生播放器处理）");
         }
+        // 与 run() 同口径归一：调用方（导入 UI）持有的是用户选中的原始目录，
+        // 不归一就会把"套娃"外层整棵复制进容器、exe 落在第二层而报缺 exe
+        sourceFolder = EngineDetector.resolveGameRoot(sourceFolder);
         File root = container.getRootDir();
 
         // A3 默认复制(可写)：sourceFolder 内容 → 容器 drive_c/galgame/<gameId>
@@ -191,6 +205,9 @@ public final class ImportFlow {
                                                   String detectedLocale, Context context) {
         try {
             JSONObject data = new JSONObject();
+            // 容器名必须恒等于 galgame-<gameId>：库列表 / 详情 / 存档全都靠「容器名去前缀」
+            // 反推 gameId，名字一旦带避让后缀（-2/-3）就与 gameDir、S: 盘、索引整体脱钩。
+            // 重名避让上移到 gameId 派生处（existingGameIds 同时收索引与现存容器名）。
             data.put("name", "galgame-" + gameId);
 
             // envVars：Container 默认 + 预设区域变量（A4 日文化）
@@ -300,6 +317,29 @@ public final class ImportFlow {
         Log.i("GalgameShell: import", "engine=" + engine + " 使用 Wine " + wineInfo.fullVersion()
                 + "（identifier=" + wineInfo.identifier() + "）");
         return wineInfo.identifier();
+    }
+
+    /**
+     * 已占用的 gameId 全集 = 自有索引条目 + 现存容器名去 {@code galgame-} 前缀。
+     *
+     * <p>只查索引会漏掉孤儿容器（索引被清/损坏、或上一次导入失败没回滚时容器还在）：
+     * 新导入复用同名 gameId 就会建出第二个同名容器，按名解析时互相遮挡
+     * （2026-10-26 真机：坏容器遮住好容器，启动被误拒）。派生 gameId 时把两者一起喂给
+     * {@link GalgameIds#gameId}，容器名与 gameId 就永远一一对应。
+     */
+    public static java.util.Set<String> existingGameIds(Context context) {
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        if (context == null) return ids;
+        for (GalgameLibraryIndex.Entry e : GalgameLibraryIndex.load(context)) {
+            if (e.gameId != null) ids.add(e.gameId);
+        }
+        for (Container c : new ContainerManager(context).getContainers()) {
+            String n = c != null ? c.getName() : null;
+            if (n != null && n.startsWith(GALGAME_CONTAINER_PREFIX)) {
+                ids.add(n.substring(GALGAME_CONTAINER_PREFIX.length()));
+            }
+        }
+        return ids;
     }
 
     // ---- 预设加载 ----

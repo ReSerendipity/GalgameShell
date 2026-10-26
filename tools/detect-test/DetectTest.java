@@ -51,6 +51,22 @@ public class DetectTest {
         else    { fail++; System.out.println("  FAIL  " + name + " -> got " + got + ", expect " + expect); }
     }
 
+    static void checkRoot(String name, String dirRel, String expectRel) {
+        File got = EngineDetector.resolveGameRoot(root.resolve(dirRel).toFile());
+        File exp = root.resolve(expectRel).toFile();
+        boolean ok = got.getAbsolutePath().equals(exp.getAbsolutePath());
+        if (ok) { pass++; System.out.println("  PASS  " + name + " -> " + expectRel); }
+        else    { fail++; System.out.println("  FAIL  " + name + " -> got " + got + ", expect " + exp); }
+    }
+
+    static void checkUnwrapped(String name, String dirRel, String expect) {
+        File dir = EngineDetector.resolveGameRoot(root.resolve(dirRel).toFile());
+        String got = EngineDetector.detect(dir).name();
+        boolean ok = got.equals(expect);
+        if (ok) { pass++; System.out.println("  PASS  " + name + " -> " + got); }
+        else    { fail++; System.out.println("  FAIL  " + name + " -> got " + got + ", expect " + expect); }
+    }
+
     public static void main(String[] args) throws Exception {
         root = Files.createTempDirectory("detect_test");
         System.out.println("temp root: " + root + "\n");
@@ -113,6 +129,33 @@ public class DetectTest {
         // 13) 负例：Siglus（走 A 路由）
         emptyFile("siglus_game/SiglusEngine.exe");
         check("E14 siglus-engine", "siglus_game", "SIGLUS");
+
+        // 14) 解压"套娃"归一（2026-10-26 真机形态：外层只有一个同名包装子目录）
+        file("wrap_unity/wrap_inner/Shiina.exe", "MZ".getBytes());
+        emptyFile("wrap_unity/wrap_inner/UnityPlayer.dll");
+        emptyFile("wrap_unity/wrap_inner/Shiina_Data/globalgamemanagers");
+        checkRoot("E15 unwrap-single-wrapper-dir", "wrap_unity", "wrap_unity/wrap_inner");
+        checkUnwrapped("E16 detect-after-unwrap-unity", "wrap_unity", "UNITY");
+        // 未归一时 detect 仍应靠浅层下钻认 UNITY（回归护栏：归一不得改变 detect 语义）
+        check("E17 detect-on-wrapper-still-unity", "wrap_unity", "UNITY");
+
+        // 15) 平铺根目录不得被剥（原样返回）
+        file("uni_flat/Game.exe", "MZ".getBytes());
+        emptyFile("uni_flat/UnityPlayer.dll");
+        checkRoot("E18 flat-root-not-unwrapped", "uni_flat", "uni_flat");
+
+        // 16) 本层已有游戏标记（exe）时不得下钻，即使只有一个子目录
+        file("mix_root/Game.exe", "MZ".getBytes());
+        emptyFile("mix_root/sub/readme.txt");
+        checkRoot("E19 markers-stop-descent", "mix_root", "mix_root");
+
+        // 17) 唯一子目录是运行时目录名（files/）时不得下钻
+        emptyFile("rt_wrap/files/save.dat");
+        checkRoot("E20 runtime-dir-child-not-unwrapped", "rt_wrap", "rt_wrap");
+
+        // 18) 两层套娃逐层剥到真根
+        emptyFile("w2/w2b/inner/UnityPlayer.dll");
+        checkRoot("E21 unwrap-two-levels", "w2", "w2/w2b/inner");
 
         System.out.println("\n==== " + pass + " passed, " + fail + " failed ====");
         if (fail > 0) System.exit(1);

@@ -1,15 +1,11 @@
 package com.winlator.galgame.ui;
 
-import android.animation.ValueAnimator;
 import android.app.AlertDialog;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.content.Intent;
 import android.view.View;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,10 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import com.winlator.GalgameImportActivity;
 import com.winlator.R;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
-import com.winlator.galgame.EngineDetector;
 import com.winlator.galgame.GalgameDiagnostics;
 import com.winlator.galgame.GalgameLibraryIndex;
 import com.winlator.galgame.GalgameLocaleInjector;
@@ -28,10 +24,6 @@ import com.winlator.galgame.GalgameLogs;
 import com.winlator.galgame.GalgameSaveManager;
 import com.winlator.galgame.GalgameStoragePermission;
 import com.winlator.galgame.GameLauncher;
-import com.winlator.galgame.ImportFlow;
-import com.winlator.galgame.NativeRouteLauncher;
-import com.winlator.galgame.engine.BuiltinEngine;
-import com.winlator.galgame.engine.BuiltinEngineRegistry;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,7 +41,6 @@ import java.util.List;
 public class GalgameLibraryActivity extends AppCompatActivity {
 
     private static final String CONTAINER_PREFIX = "galgame-";
-    private static final String DEFAULT_IMPORT_PATH = "/sdcard/Download";
 
     private ContainerManager containerManager;
     private GalgameLibraryAdapter adapter;
@@ -80,7 +71,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
         // 导入 FAB（现代主行动）+ 空态行动按钮
         fabImport = findViewById(R.id.FABImport);
-        fabImport.setOnClickListener(v -> showImportDialog());
+        fabImport.setOnClickListener(v -> openImportWizard());
         // FAB 入场：缩放淡入
         fabImport.setScaleX(0f);
         fabImport.setScaleY(0f);
@@ -91,7 +82,7 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         aboutButton.setOnClickListener(v -> showAbout());
 
         View importEmpty = findViewById(R.id.BTImportEmpty);
-        importEmpty.setOnClickListener(v -> showImportDialog());
+        importEmpty.setOnClickListener(v -> openImportWizard());
 
         refresh();
 
@@ -394,182 +385,13 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
     // ---- 导入 ----
 
-    private void showImportDialog() {
-        final EditText input = new EditText(this);
-        input.setHint(R.string.galgame_import_hint);
-        input.setText(DEFAULT_IMPORT_PATH);
-
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.galgame_import_title)
-                .setView(input)
-                .setPositiveButton(R.string.galgame_ok, (dialog, which) -> {
-                    String path = input.getText() != null ? input.getText().toString().trim() : "";
-                    if (!path.isEmpty()) startImport(new File(path));
-                })
-                .setNegativeButton(R.string.galgame_cancel, null)
-                .show();
-    }
-
-    private void startImport(final File source) {
-        if (!source.isDirectory()) {
-            snack(getString(R.string.galgame_import_invalid));
-            return;
-        }
-
-        final String gameId = sanitize(source.getName());
-        showProgressDialog(getString(R.string.galgame_import_step_detect));
-
-        // ImportFlow.run（引擎检测）与 stageGameFiles（复制游戏文件）都是重 IO，
-        // 移到后台线程执行，主线程只做对话框/Toast/refresh（此前会卡死主线程）。
-        final java.util.concurrent.ExecutorService exec =
-                java.util.concurrent.Executors.newSingleThreadExecutor();
-        final android.content.Context appCtx = getApplicationContext();
-
-        exec.execute(() -> {
-            final ImportFlow.ImportResult result;
-            try {
-                result = ImportFlow.run(source, gameId, appCtx);
-                Log.d("GalgameShell", "import engine=" + result.engine + " route=" + result.route + " gameId=" + gameId);
-            }
-            catch (Exception e) {
-                runOnUiThread(() -> {
-                    dismissProgressDialog();
-                    snackLong(getString(R.string.galgame_import_failed) + ": " + e.getMessage());
-                });
-                return;
-            }
-
-            // B 路由：原生播放器唤起
-            if (result.route == EngineDetector.Route.B) {
-                runOnUiThread(() -> {
-                    dismissProgressDialog();
-                    showNativeRouteDialog(result, source);
-                });
-                return;
-            }
-
-            runOnUiThread(() -> setProgress(40, getString(R.string.galgame_import_step_create)));
-
-            // A 路由：建每游戏容器 → stage（A3 复制 + B4 S: + P2 日文化）→ P4 存档重定向
-            createContainerOnMainThread(result.containerData, (container) -> {
-                if (container == null) {
-                    runOnUiThread(() -> {
-                        dismissProgressDialog();
-                        snackLong(getString(R.string.galgame_import_failed));
-                    });
-                    return;
-                }
-                exec.execute(() -> {
-                    try {
-                        runOnUiThread(() -> setProgress(70, getString(R.string.galgame_import_step_copy)));
-                        ImportFlow.stageGameFiles(container, result, source, appCtx);
-
-                        GalgameSaveManager saveManager = new GalgameSaveManager(gameId);
-                        saveManager.redirectShellFolders(container);
-                        // 落进了容器的游戏不必再按「无容器」展示
-                        GalgameLibraryIndex.markContainerized(appCtx, gameId);
-                        File stagedGameDir = new File(container.getRootDir(),
-                                ".wine/drive_c/galgame/" + gameId);
-                        saveManager.symlinkPortableSaves(stagedGameDir);
-
-                        // C 修复（2026-09-28）：拷贝完成但找不到启动 exe 时，明确告警而非假成功。
-                        final boolean exeFound = result.gameExe != null;
-                        runOnUiThread(() -> {
-                            setProgress(100, getString(R.string.galgame_import_step_done));
-                            dismissProgressDialog();
-                            snackLong(exeFound ? getString(R.string.galgame_import_done)
-                                              : getString(R.string.galgame_import_no_exe));
-                            refresh();
-                        });
-                    }
-                    catch (Exception e) {
-                        runOnUiThread(() -> {
-                            dismissProgressDialog();
-                            snackLong(getString(R.string.galgame_import_failed) + ": " + e.getMessage());
-                        });
-                    }
-                });
-            });
-        });
-    }
-
-    /** ContainerManager.createContainerAsync 内部 new Handler() 需要当前线程有 Looper；导入跑在后台线程，须切主线程。 */
-    private void createContainerOnMainThread(org.json.JSONObject data,
-                                             com.winlator.core.Callback<Container> callback) {
-        runOnUiThread(() -> containerManager.createContainerAsync(data, callback));
-    }
-
-    // ---- 导入进度对话框（确定进度条 + 百分比 + 平滑推进）----
-
-    private AlertDialog progressDialog;
-    private TextView progressTextView;
-    private TextView progressPercentView;
-    private ProgressBar progressBar;
-    // GalgameShell：进度条补间动画需持有引用——dismissProgressDialog 把 progressBar 置 null 后，
-    // 仍存活的 animator 下一帧回调即 NPE（与 GalgameHomeFragment 同款，真机实证崩溃）。
-    private ValueAnimator progressAnimator;
-
-    private void showProgressDialog(String text) {
-        View view = android.view.LayoutInflater.from(this).inflate(R.layout.galgame_progress_dialog, null);
-        progressTextView = view.findViewById(R.id.TVProgressText);
-        progressPercentView = view.findViewById(R.id.TVProgressPercent);
-        progressBar = view.findViewById(R.id.PBImport);
-        progressTextView.setText(text);
-        if (progressBar != null) progressBar.setProgress(0);
-        if (progressPercentView != null) progressPercentView.setText("0%");
-
-        progressDialog = new AlertDialog.Builder(this)
-                .setView(view)
-                .setCancelable(false)
-                .create();
-        progressDialog.show();
-        // 去掉 AlertDialog 默认的方角背景，露出自定义圆角
-        if (progressDialog.getWindow() != null) {
-            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
-        setProgressSmooth(12);
-    }
-
-    /** 推进到指定阶段：更新文案并平滑推进进度条（避免生硬跳变）。 */
-    private void setProgress(int percent, String text) {
-        if (progressTextView != null && text != null) progressTextView.setText(text);
-        setProgressSmooth(percent);
-    }
-
-    private void setProgressText(String text) {
-        if (progressTextView != null) progressTextView.setText(text);
-    }
-
-    /** 进度条平滑动画：从当前值补间到目标值，同步刷新百分比文本。 */
-    private void setProgressSmooth(int target) {
-        if (progressBar == null) return;
-        cancelProgressAnimator();
-        int from = progressBar.getProgress();
-        progressAnimator = ValueAnimator.ofInt(from, target);
-        progressAnimator.setDuration(450);
-        progressAnimator.addUpdateListener(a -> {
-            if (progressBar == null) return; // 对话框已被 dismiss：跳过余下帧，防 NPE
-            int v = (Integer) a.getAnimatedValue();
-            progressBar.setProgress(v);
-            if (progressPercentView != null) progressPercentView.setText(v + "%");
-        });
-        progressAnimator.start();
-    }
-
-    private void cancelProgressAnimator() {
-        if (progressAnimator != null) {
-            progressAnimator.cancel();
-            progressAnimator = null;
-        }
-    }
-
-    private void dismissProgressDialog() {
-        cancelProgressAnimator();
-        if (progressDialog != null && progressDialog.isShowing()) progressDialog.dismiss();
-        progressDialog = null;
-        progressTextView = null;
-        progressPercentView = null;
-        progressBar = null;
+    /**
+     * 导入只有一条入口：{@link GalgameImportActivity} 向导（系统文件夹选择器 → 检测 → 确认）。
+     * 库内不再自带一份「手输路径 + 自己跑 ImportFlow」的实现——两套入口会让同一批导入修复
+     * 只落到其中一套（2026-10-26 真机：手输路径把套娃目录填错 → UNKNOWN → 报「启动文件缺失」）。
+     */
+    private void openImportWizard() {
+        startActivity(new Intent(this, GalgameImportActivity.class));
     }
 
     /** 友好提示条（现代 Snackbar，替代 Toast）。 */
@@ -583,67 +405,6 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         View root = findViewById(android.R.id.content);
         if (root == null) return;
         Snackbar.make(root, message, Snackbar.LENGTH_LONG).show();
-    }
-
-    // ---- B 路由对话框（Tier 分层 + 免责）----
-
-    private void showNativeRouteDialog(final ImportFlow.ImportResult result, final File source) {
-        // GalgameShell：内置原生引擎优先——运行时已随包打包时直接用集成的引擎跑，
-        // 不再唤起/安装第三方播放器 APK。
-        BuiltinEngine builtin = BuiltinEngineRegistry.resolve(result.engine);
-        if (builtin != null && builtin.isAvailable(this)) {
-            if (builtin.launch(this, source)) {
-                // 原生路线不建容器，这里补一条索引记录，游戏才有「库入口」：
-                // 退出引擎后还能从封面墙一点即玩，而不是重新手打路径。
-                GalgameLibraryIndex.putNative(this, result.gameId, source.getName(),
-                        result.engine, source);
-                return;
-            }
-            snackLong("内置引擎启动失败：" + builtin.displayName);
-            return;
-        }
-
-        final NativeRouteLauncher.Plan plan =
-                NativeRouteLauncher.plan(this, result.engine, GalgameSettings.isTier2Enabled(this));
-
-        if (plan.target == null) {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.galgame_route_b)
-                    .setMessage(plan.message)
-                    .setPositiveButton(R.string.galgame_ok, null)
-                    .show();
-            return;
-        }
-
-        String message = plan.message;
-        if (plan.needsDisclaimer) {
-            message += "\n\n" + getString(R.string.galgame_broute_disclaimer);
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setTitle(getString(R.string.galgame_route_b) + " · " + plan.target.displayName)
-                .setMessage(message)
-                .setNegativeButton(R.string.galgame_cancel, null);
-
-        if (plan.ready()) {
-            builder.setPositiveButton(R.string.galgame_action_launch, (dialog, which) -> {
-                if (plan.scanDir != null) {
-                    NativeRouteLauncher.prepareScanDir(source, plan.scanDir, result.gameId);
-                }
-                NativeRouteLauncher.launch(GalgameLibraryActivity.this, plan.target);
-            });
-        }
-        else if (plan.needsDisclaimer && !plan.allowed) {
-            builder.setPositiveButton(R.string.galgame_broute_enable, (dialog, which) -> {
-                GalgameSettings.setTier2Enabled(GalgameLibraryActivity.this, true);
-                showNativeRouteDialog(result, source);
-            });
-        }
-        else {
-            builder.setPositiveButton(R.string.galgame_ok, null);
-        }
-
-        builder.show();
     }
 
     // ---- 工具 ----
@@ -673,8 +434,4 @@ public class GalgameLibraryActivity extends AppCompatActivity {
         return name.startsWith(CONTAINER_PREFIX) ? name.substring(CONTAINER_PREFIX.length()) : name;
     }
 
-    private static String sanitize(String name) {
-        if (name == null || name.isEmpty()) return "game";
-        return name.replaceAll("[^A-Za-z0-9._-]", "_");
-    }
 }

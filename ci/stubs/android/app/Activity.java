@@ -1,5 +1,6 @@
 package android.app;
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -7,6 +8,8 @@ import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.view.View;
 public class Activity extends Context {
+    public static final int RESULT_OK = -1;
+    public static final int RESULT_CANCELED = 0;
     protected void onCreate(Bundle savedInstanceState) {}
     protected void onResume() {}
     protected void onPause() {}
@@ -22,6 +25,7 @@ public class Activity extends Context {
     public Intent getIntent() { return null; }
     public void runOnUiThread(Runnable action) {}
     public AssetManager getAssets() { return null; }
+    public ContentResolver getContentResolver() { return null; }
     public PackageManager getPackageManager() { return null; }
     public String getPackageName() { return ""; }
     public ApplicationInfo getApplicationInfo() { return null; }

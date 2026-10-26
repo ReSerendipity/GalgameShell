@@ -39,7 +39,7 @@ HOT = load_hotspot_entries()
 OUT_APP = os.path.join(ROOT, "ci", "stubs", "com", "winlator", "R.java")
 OUT_ANDROID = os.path.join(ROOT, "ci", "stubs", "android", "R.java")
 
-REF_RE = re.compile(r"\b(R|android\.R)\.(layout|id|string|drawable|menu|anim|color|dimen|style)\.([A-Za-z0-9_]+)")
+REF_RE = re.compile(r"\b(R|android\.R)\.(layout|id|string|drawable|menu|anim|color|dimen|style|mipmap)\.([A-Za-z0-9_]+)")
 
 HEADER_APP = """package com.winlator;
 
