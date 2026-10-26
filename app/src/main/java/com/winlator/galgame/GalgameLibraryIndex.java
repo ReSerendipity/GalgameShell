@@ -78,16 +78,25 @@ public final class GalgameLibraryIndex {
         public final String genre;
         /** 用户自定义标签（不可变快照，去重、去空、≤12 字）。 */
         public final List<String> tags;
+        /** 自定义封面文件绝对路径（应用私有）；null = 用自动提取（目录图 → exe 图标）。 */
+        public final String cover;
 
         Entry(String gameId, String title, String engineName, String sourcePath,
               String preferredEngine, boolean containerized, long addedAt, long lastPlayedAt) {
             this(gameId, title, engineName, sourcePath, preferredEngine, containerized,
-                    addedAt, lastPlayedAt, null, Collections.<String>emptyList());
+                    addedAt, lastPlayedAt, null, Collections.<String>emptyList(), null);
         }
 
         Entry(String gameId, String title, String engineName, String sourcePath,
               String preferredEngine, boolean containerized, long addedAt, long lastPlayedAt,
               String genre, List<String> tags) {
+            this(gameId, title, engineName, sourcePath, preferredEngine, containerized,
+                    addedAt, lastPlayedAt, genre, tags, null);
+        }
+
+        Entry(String gameId, String title, String engineName, String sourcePath,
+              String preferredEngine, boolean containerized, long addedAt, long lastPlayedAt,
+              String genre, List<String> tags, String cover) {
             this.gameId = gameId;
             this.title = title;
             this.engineName = engineName;
@@ -99,6 +108,7 @@ public final class GalgameLibraryIndex {
             this.genre = genre;
             this.tags = tags == null ? Collections.<String>emptyList()
                     : Collections.unmodifiableList(new ArrayList<>(tags));
+            this.cover = cover;
         }
 
         JSONObject toJson() throws JSONException {
@@ -112,6 +122,7 @@ public final class GalgameLibraryIndex {
             o.put("added_at", addedAt);
             o.put("last_played_at", lastPlayedAt);
             if (genre != null && !genre.isEmpty()) o.put("genre", genre);
+            if (cover != null && !cover.isEmpty()) o.put("cover", cover);
             if (!tags.isEmpty()) {
                 JSONArray arr = new JSONArray();
                 for (String t : tags) arr.put(t);
@@ -134,12 +145,13 @@ public final class GalgameLibraryIndex {
                     o.optLong("added_at", 0L),
                     o.optLong("last_played_at", 0L),
                     o.optString("genre", null),
-                    readTags(o.optJSONArray("tags")));
+                    readTags(o.optJSONArray("tags")),
+                    o.optString("cover", null));
         }
 
         Entry withPreferredEngine(String engine) {
             return new Entry(gameId, title, engineName, sourcePath, engine, containerized,
-                    addedAt, lastPlayedAt, genre, tags);
+                    addedAt, lastPlayedAt, genre, tags, cover);
         }
 
         /** 补登记身份（标题/引擎）：A 路由导入旧路径只写 containerized，留下 null 引擎，
@@ -149,12 +161,12 @@ public final class GalgameLibraryIndex {
                     ? newTitle : title;
             String e = engineName == null ? newEngine : engineName;
             return new Entry(gameId, t, e, sourcePath, preferredEngine, containerized,
-                    addedAt, lastPlayedAt, genre, tags);
+                    addedAt, lastPlayedAt, genre, tags, cover);
         }
 
         Entry withContainerized(boolean flag) {
             return new Entry(gameId, title, engineName, sourcePath, preferredEngine, flag,
-                    addedAt, lastPlayedAt, genre, tags);
+                    addedAt, lastPlayedAt, genre, tags, cover);
         }
 
         Entry touched(long when) {
@@ -169,7 +181,12 @@ public final class GalgameLibraryIndex {
 
         Entry withTags(List<String> newTags) {
             return new Entry(gameId, title, engineName, sourcePath, preferredEngine, containerized,
-                    addedAt, lastPlayedAt, genre, newTags);
+                    addedAt, lastPlayedAt, genre, newTags, cover);
+        }
+
+        Entry withCover(String newCover) {
+            return new Entry(gameId, title, engineName, sourcePath, preferredEngine, containerized,
+                    addedAt, lastPlayedAt, genre, tags, newCover);
         }
     }
 
@@ -348,6 +365,17 @@ public final class GalgameLibraryIndex {
                     }
                 }
                 return existing.withTags(new ArrayList<>(next));
+            }
+        });
+    }
+
+    /** 登记/清除自定义封面（null = 恢复自动提取）。 */
+    public static void setCover(Context context, String gameId, String path) {
+        final String p = (path == null || path.isEmpty()) ? null : path;
+        upsert(context, gameId, new Mutator() {
+            @Override
+            public Entry apply(Entry existing) {
+                return existing == null ? null : existing.withCover(p);
             }
         });
     }

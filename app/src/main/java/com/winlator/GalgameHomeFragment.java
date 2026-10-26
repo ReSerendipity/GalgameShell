@@ -605,7 +605,11 @@ public class GalgameHomeFragment extends Fragment {
         }
         coverExecutor.execute(() -> {
             try {
-                if (item.cover == null) item.cover = GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                if (item.cover == null) {
+                    item.cover = GalgameCoverProvider.coverFor(
+                            requireContext().getApplicationContext(), item.gameId,
+                            item.gameDir, item.exe);
+                }
                 if (item.cover != null && item.cover.isFile()) item.coverBitmap = decodeSampled(item.cover, 256);
             } catch (Throwable ignored) {}
             main.post(() -> {

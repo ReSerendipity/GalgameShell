@@ -1,7 +1,9 @@
 package com.winlator.galgame;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 
 import com.winlator.core.AppUtils;
 
@@ -10,6 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,6 +55,64 @@ public final class GalgameCoverProvider {
      * @param gameDir 容器内游戏目录（drive_c/galgame/<id>）或原始游戏目录
      * @param exe     启动 exe（用于提取图标），可为 null
      */
+    /**
+     * 带自定义优先级的入口：<b>自定义封面 &gt; 目录图 &gt; exe 图标</b>。
+     * 自定义封面由 {@link #setCustomCover} 拷进应用私有目录并登记在索引里。
+     */
+    public static File coverFor(Context context, String gameId, File gameDir, File exe) {
+        File custom = customCover(context, gameId);
+        if (custom != null) return custom;
+        return coverFor(gameDir, exe);
+    }
+
+    /** 自定义封面文件（索引里登记且文件仍在才返回）。 */
+    public static File customCover(Context context, String gameId) {
+        if (context == null || gameId == null || gameId.isEmpty()) return null;
+        GalgameLibraryIndex.Entry e = GalgameLibraryIndex.find(context, gameId);
+        if (e == null || e.cover == null || e.cover.isEmpty()) return null;
+        File f = new File(e.cover);
+        return f.isFile() && f.length() > 0 ? f : null;
+    }
+
+    /**
+     * 把用户选的图片拷成该游戏的自定义封面。
+     * 先写 .tmp 并实际解码一次，解不开的（非图片/损坏文件）不落盘。
+     */
+    public static boolean setCustomCover(Context context, String gameId, Uri uri) {
+        if (context == null || gameId == null || uri == null) return false;
+        File dest = new File(cacheDir(), "custom-" + gameId + ".img");
+        File tmp = new File(dest.getAbsolutePath() + ".tmp");
+        try (InputStream in = context.getContentResolver().openInputStream(uri);
+             OutputStream out = new FileOutputStream(tmp)) {
+            if (in == null) return false;
+            byte[] buf = new byte[1 << 16];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        } catch (Exception e) {
+            tmp.delete();
+            return false;
+        }
+        Bitmap probe = BitmapFactory.decodeFile(tmp.getAbsolutePath());
+        if (probe == null) {
+            tmp.delete();
+            return false;
+        }
+        probe.recycle();
+        if (!tmp.renameTo(dest)) {
+            tmp.delete();
+            return false;
+        }
+        GalgameLibraryIndex.setCover(context, gameId, dest.getAbsolutePath());
+        return true;
+    }
+
+    /** 恢复自动封面（删掉自定义文件并清除登记）。 */
+    public static void clearCustomCover(Context context, String gameId) {
+        File f = customCover(context, gameId);
+        if (f != null) f.delete();
+        GalgameLibraryIndex.setCover(context, gameId, null);
+    }
+
     public static File coverFor(File gameDir, File exe) {
         if (gameDir == null || !gameDir.isDirectory()) return null;
         try {
@@ -105,22 +166,34 @@ public final class GalgameCoverProvider {
         File cache = new File(cacheDir(), hash(exe.getAbsolutePath()) + ".png");
         if (cache.isFile() && cache.length() > 0) return cache;   // 已缓存
 
-        byte[] icon = readBestIcon(exe);
-        if (icon == null || icon.length < 4) return null;
-
-        try {
-            if (isPng(icon)) {
-                write(cache, icon);
+        // 组内候选按字节数降序逐个试：最大的那个未必能解码（DIB/调色板/掩码），
+        // 以前「取第一个可用」遇到第一张解不开就直接放弃 → 真机永远占位图。
+        for (byte[] icon : readIcons(exe)) {
+            byte[] png = toPng(icon);
+            if (png == null) continue;
+            try {
+                write(cache, png);
                 return cache;
+            } catch (Exception ignored) {
+                return null;
             }
-            // ICO / BMP 形态：尝试用 Android 解码后转 PNG
-            Bitmap bmp = BitmapFactory.decodeByteArray(icon, 0, icon.length);
+        }
+        return null;
+    }
+
+    /** RT_ICON 原始数据 → PNG 字节。PNG 原样保留；DIB 补 BMP 文件头后交给 BitmapFactory。 */
+    private static byte[] toPng(byte[] icon) {
+        if (icon == null || icon.length < 4) return null;
+        if (isPng(icon)) return icon;
+        try {
+            byte[] bmp = IconCodec.dibToBmp(icon);
             if (bmp == null) return null;
+            Bitmap decoded = BitmapFactory.decodeByteArray(bmp, 0, bmp.length);
+            if (decoded == null) return null;
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            if (!bmp.compress(Bitmap.CompressFormat.PNG, 100, bos)) return null;
-            write(cache, bos.toByteArray());
-            bmp.recycle();
-            return cache;
+            boolean ok = decoded.compress(Bitmap.CompressFormat.PNG, 100, bos);
+            decoded.recycle();
+            return ok ? bos.toByteArray() : null;
         } catch (Throwable ignored) {
             return null;
         }
@@ -138,57 +211,55 @@ public final class GalgameCoverProvider {
     }
 
     /**
-     * 解析 PE 资源，取最佳图标（最大/32 位）的完整图标数据（PNG 或 ICO 容器）。
-     * 失败返回 null。仅支持标准 PE（x86/x64），ARM64 等不常见，失败即降级。
+     * 解析 PE 资源，按 GRPICONDIR 里的字节数降序返回若干候选图标的原始数据（最多 4 个）。
+     * 失败返回空列表。
      */
-    private static byte[] readBestIcon(File exe) {
+    private static java.util.List<byte[]> readIcons(File exe) {
+        java.util.List<byte[]> out = new java.util.ArrayList<>();
         try (InputStream in = new FileInputStream(exe)) {
             byte[] all = readAll(in);
-            if (all.length < 64 || all[0] != 'M' || all[1] != 'Z') return null;
+            if (all.length < 64 || all[0] != 'M' || all[1] != 'Z') return out;
 
             int peOff = readLE32(all, 0x3C);
-            if (peOff + 24 >= all.length) return null;
+            if (peOff + 24 >= all.length) return out;
             if (all[peOff] != 'P' || all[peOff + 1] != 'E' || all[peOff + 2] != 0 || all[peOff + 3] != 0) {
-                return null;
+                return out;
             }
 
             int magic = readLE16(all, peOff + 24);
             int optSize = readLE16(all, peOff + 20);
             boolean pe32plus = (magic == 0x20b);
-            // DataDirectory[2]（Resource）：PE32 在可选头内偏移 96；PE32+ 为 112
             int ddOff = peOff + 24 + (pe32plus ? 112 : 96) + 2 * 8;
-            if (ddOff + 8 > all.length) return null;
+            if (ddOff + 8 > all.length) return out;
             int resRva = readLE32(all, ddOff);
-            if (resRva == 0) return null;
+            if (resRva == 0) return out;
 
             int numSections = readLE16(all, peOff + 6);
             int secOff = peOff + 24 + optSize;
             int resRaw = rvaToRaw(all, secOff, numSections, resRva);
-            if (resRaw < 0 || resRaw + 16 > all.length) return null;
+            if (resRaw < 0 || resRaw + 16 > all.length) return out;
 
-            // 顶层目录 → 找 RT_GROUP_ICON (Id=14)
             int groupDir = findResourceEntry(all, resRaw, resRaw, 14);
-            if (groupDir < 0) return null;
+            if (groupDir < 0) return out;
 
-            // groupDir 是子目录 → 遍历图标组（取第一个），读其 GRPICONDIR 数据
             int gCount = readLE16(all, groupDir + 12) + readLE16(all, groupDir + 14);
-            for (int i = 0; i < gCount; i++) {
+            for (int i = 0; i < gCount && out.size() < 4; i++) {
                 int entry = groupDir + 16 + i * 8;
                 int offset = readLE32(all, entry + 4);
-                int child = (offset & 0x7FFFFFFF) + resRaw;   // 子目录偏移（相对资源基）
+                int child = (offset & 0x7FFFFFFF) + resRaw;
                 if (child + 16 > all.length) continue;
                 int childCount = readLE16(all, child + 12) + readLE16(all, child + 14);
                 for (int j = 0; j < childCount; j++) {
                     int centry = child + 16 + j * 8;
                     int dataOffset = readLE32(all, centry + 4);
                     int dataEntry = (dataOffset & 0x7FFFFFFF) + resRaw;
-                    byte[] icon = readIconData(all, resRaw, secOff, numSections, dataEntry);
-                    if (icon != null) return icon;   // 取第一个可用图标组
+                    out.addAll(readIconCandidates(all, resRaw, secOff, numSections, dataEntry));
+                    if (out.size() >= 4) break;
                 }
             }
-            return null;
+            return out;
         } catch (Throwable ignored) {
-            return null;
+            return out;
         }
     }
 
@@ -206,59 +277,63 @@ public final class GalgameCoverProvider {
         return -1;
     }
 
-    /** 读 GRPICONDIR 指向的 RT_ICON 数据，组装成完整图标字节（PNG 或 ICO 容器）。 */
-    private static byte[] readIconData(byte[] all, int resRaw, int secOff, int numSections, int dataEntry) {
-        // dataEntry 指向 IMAGE_RESOURCE_DATA_ENTRY：OffsetToData(RVA,4) + Size(4)
+    /**
+     * 读 GRPICONDIR 指向的 RT_ICON 数据，按 BytesInRes 降序返回各候选的原始字节。
+     * 组内某一条读不出来不影响其它条（不再「第一条失败就整组放弃」）。
+     */
+    private static java.util.List<byte[]> readIconCandidates(byte[] all, int resRaw, int secOff,
+                                                              int numSections, int dataEntry) {
+        java.util.List<byte[]> out = new java.util.ArrayList<>();
         int dataRva = readLE32(all, dataEntry);
         int size = readLE32(all, dataEntry + 4);
         int raw = rvaToRaw(all, secOff, numSections, dataRva);
-        if (raw < 0 || size <= 0 || raw + size > all.length) return null;
+        if (raw < 0 || size <= 0 || raw + size > all.length) return out;
+
         // GRPICONDIR: Reserved(2)+Type(2)+Count(2)+ entries(每个 14)
         int count = readLE16(all, raw + 4);
-        if (count <= 0) return null;
-        // 收集每个图标条目（BytesInRes 最大优先，优先 32 位），并记录其 RT_ICON id
+        if (count <= 0) return out;
         int[] idRefs = new int[count];
         int[] sizes = new int[count];
         Integer[] order = new Integer[count];
         for (int i = 0; i < count; i++) {
             int e = raw + 6 + i * 14;
-            // Width(1) Height(1) ColorCount(1) Reserved(1) Planes(2) BitCount(2) BytesInRes(4) Id(2)
             sizes[i] = readLE32(all, e + 8);
             idRefs[i] = readLE16(all, e + 12);
             order[i] = i;
         }
-        // 按 BytesInRes 降序：优先最大图标；某条目损坏时自动降级到次大
         java.util.Arrays.sort(order, (a, b) -> Integer.compare(sizes[b], sizes[a]));
 
-        // 在 RT_ICON(3) 目录找对应 Id 的数据（标准 PE 资源为 Type→Name→Language→Data 四级树）
-        int iconDir = findResourceEntry(all, resRaw, resRaw, 3); // RT_ICON 顶层
-        if (iconDir < 0) return null;
+        int iconDir = findResourceEntry(all, resRaw, resRaw, 3);
+        if (iconDir < 0) return out;
         int iconCount = readLE16(all, iconDir + 12) + readLE16(all, iconDir + 14);
 
         for (int oi : order) {
+            if (out.size() >= 4) break;
             int wantId = idRefs[oi];
             for (int i = 0; i < iconCount; i++) {
                 int e = iconDir + 16 + i * 8;
-                int id = readLE32(all, e) & 0x7FFFFFFF;   // 高位置位表示字符串名，非数字 id 则跳过
+                int id = readLE32(all, e) & 0x7FFFFFFF;
                 if (id != wantId) continue;
                 int off = readLE32(all, e + 4);
-                int langDir = (off & 0x7FFFFFFF) + resRaw;  // Name 条目指向 Language 子目录
+                int langDir = (off & 0x7FFFFFFF) + resRaw;
                 int langCount = readLE16(all, langDir + 12) + readLE16(all, langDir + 14);
                 for (int L = 0; L < langCount; L++) {
                     int le = langDir + 16 + L * 8;
                     int dataOff = readLE32(all, le + 4);
-                    int dataEntry2 = (dataOff & 0x7FFFFFFF) + resRaw; // 下钻到真实图标数据
+                    int dataEntry2 = (dataOff & 0x7FFFFFFF) + resRaw;
                     int rva = readLE32(all, dataEntry2);
                     int sz = readLE32(all, dataEntry2 + 4);
                     int r = rvaToRaw(all, secOff, numSections, rva);
                     if (r < 0 || sz <= 0 || r + sz > all.length) continue;
-                    byte[] out = new byte[sz];
-                    System.arraycopy(all, r, out, 0, sz);
-                    return out;
+                    byte[] one = new byte[sz];
+                    System.arraycopy(all, r, one, 0, sz);
+                    out.add(one);
+                    break;
                 }
+                break;
             }
         }
-        return null;
+        return out;
     }
 
     private static int rvaToRaw(byte[] all, int secOff, int numSections, int rva) {

@@ -137,6 +137,17 @@
     <string name="galgame_tag_new">新建标签…</string>
     <string name="galgame_tag_hint">标签名（≤12 字）</string>
     <string name="galgame_tags_empty">还没有标签。点「新建标签…」给这批游戏挂第一个标签。</string>
+    <!-- 封面（档5） -->
+    <string name="galgame_cover_title">封面</string>
+    <string name="galgame_cover_pick">从相册选择封面</string>
+    <string name="galgame_cover_pick_new">从相册选择新封面</string>
+    <string name="galgame_cover_reset">恢复自动封面</string>
+    <string name="galgame_cover_custom">已自定义</string>
+    <string name="galgame_cover_auto">自动提取（目录图 / exe 图标）</string>
+    <string name="galgame_cover_updated">封面已更新</string>
+    <string name="galgame_cover_failed">无法读取这张图片</string>
+    <string name="galgame_cover_reset_done">已恢复自动封面</string>
+
     <!-- 批量导入（档3） -->
     <string name="galgame_batch_back">←  返回</string>
     <string name="galgame_batch_meta">BATCH / SAF</string>

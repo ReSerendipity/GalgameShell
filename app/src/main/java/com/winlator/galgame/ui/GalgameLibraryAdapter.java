@@ -172,7 +172,10 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
     private boolean selectionMode = false;
     private final java.util.Set<String> selectedIds = new java.util.HashSet<>();
 
+    private final Context context;
+
     public GalgameLibraryAdapter(Context context, List<Item> items) {
+        this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.items = items;
     }
@@ -285,13 +288,18 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
 
     /** 后台解析 + 解码封面，完成后淡入。 */
     private void loadCoverAsync(final Item item, final ImageView iv) {
-        if (item.coverResolved) return;
+        if (item.coverBitmap != null) {
+            iv.setImageBitmap(item.coverBitmap);
+            return;
+        }
+        if (item.coverResolved) return;   // 正在解析中
         item.coverResolved = true;
 
         executor.execute(() -> {
             try {
                 if (item.cover == null) {
-                    item.cover = GalgameCoverProvider.coverFor(item.gameDir, item.exe);
+                    item.cover = GalgameCoverProvider.coverFor(context, item.gameId,
+                            item.gameDir, item.exe);
                 }
                 if (item.cover != null && item.cover.isFile()) {
                     item.coverBitmap = decodeSampled(item.cover.getAbsolutePath(), 512);
@@ -299,12 +307,17 @@ public final class GalgameLibraryAdapter extends BaseAdapter {
             } catch (Throwable ignored) { /* 降级为占位图 */ }
 
             main.post(() -> {
-                if (iv.getTag(R.id.IVCover) != item) return;   // 已被回收给其它项
-                if (item.coverBitmap != null) {
+                if (item.coverBitmap == null) return;
+                if (iv.getTag(R.id.IVCover) == item) {
                     iv.setImageBitmap(item.coverBitmap);
                     iv.setAlpha(0f);
                     iv.animate().alpha(1f).setDuration(220).start();
                 }
+                // 解码完成前同一位置可能已被重绑到另一个 View（两次 bind 都早于 post，
+                // tag 都等于同一个 item）：只贴给持有者会让屏上那个一直停在占位图
+                // （真机实测：换完封面回列表是灰占位图，冷启动才正常）。
+                // 让列表按缓存位图重画一遍，谁在屏上谁拿到图。
+                notifyDataSetChanged();
             });
         });
     }

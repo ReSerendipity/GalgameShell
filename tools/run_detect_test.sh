@@ -53,6 +53,11 @@ echo "== GalgameLanguageDetector 回归（LanguageDetectorTest）=="
   "$L/LanguageDetectorTest.java"
 "$JAVA" -Dfile.encoding=UTF-8 -cp "$T/classes" LanguageDetectorTest
 
-echo "== 分类 / ID 纯逻辑（FilterTest）=="
-"$JAVAC" -encoding UTF-8 -nowarn   -d "$T/classes"   "$SRC/GalgameIds.java"   "$SRC/GalgameFilter.java"   "$T/FilterTest.java"
+echo "== 分类 / ID / 图标编解码纯逻辑（FilterTest）=="
+"$JAVAC" -encoding UTF-8 -nowarn \
+  -d "$T/classes" \
+  "$SRC/GalgameIds.java" \
+  "$SRC/GalgameFilter.java" \
+  "$SRC/IconCodec.java" \
+  "$T/FilterTest.java"
 "$JAVA" -Dfile.encoding=UTF-8 -cp "$T/classes" FilterTest
