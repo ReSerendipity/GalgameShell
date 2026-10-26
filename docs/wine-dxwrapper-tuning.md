@@ -133,12 +133,30 @@ YU-RIS/SystemNNN 的 wined3d 收益被 TD-09 遮蔽，**无法判定**；AdvHD �
 因此任务一本轮交付 = **机制 + 入口 + 根因取证 + 可执行下一步**；
 「装上第二个 Wine 并验证 TD-09 是否翻盘」这一格**未完成**，原因如上，不粉饰。
 
+### 4.5 社区预编译包路线（已试、失败、按止损跳过）
+
+用户指示「用社区的试试，否则跳过 9.22 这个路线」。实测如下：
+
+| 项 | 结果 |
+|---|---|
+| 来源 | `longjunyu2/winlator` v7.1.3 的 `wine-9.2-custom.wcp`（81,403,064 B，release 资产下载量 97,477；repo 548 star、brunodev85/winlator 的 fork、MIT）。包内 `profile.json` 自述 "Built based on brunodev85/wine-9.2-custom. For Winlator-glibc v7.1.3" |
+| 格式 | xz-compressed tar（与安装入口 `Type.XZ` 同格式），顶层即 `bin/ lib/ share/` + `prefixPack.txz` + `profile.json`；**WoW64 形态**（`lib/wine/` 下无 `i386-unix`，与本机 10.10 同形）；`bin/wine` 为 ELF64 x86-64 |
+| 补丁核验 | **带** socket 目录改写，但写死的是 winlator-glibc 的布局 `/data/data/com.winlator/files/imagefs/usr/tmp/.wine-%u`；本仓是 `files/rootfs/tmp` |
+| 第一层 shim（成功） | 建 `files/imagefs -> files/rootfs` 符号链接 + `rootfs/usr/tmp`(1777) 后，`/tmp Permission denied` 消失——证明失败确系路径写死，且 shim 可对齐 |
+| 第二层失败（止损点） | `err:winediag:nodrv_CreateWindow … no driver could be loaded`（winex11 起不来，winecfg/explorer 无法建窗）。已排除：`libX11.so.6`/`libXext.so.6` 缺失（rootfs 内有）、winex11 dlopen 报错（日志无）、socket 目录（已 shim）。该包的 X 客户端库栈与 winlator-glibc 的 rootfs 配套，与本仓 rootfs 不匹配 |
+| 处置 | 结构性不兼容第二层，按用户指示**跳过 9.22 路线**；shim、`box64_logs` 偏好、设备 preinstall 残留、/sdcard 与本地的包均已还原/删除（本地仅留获取命令与 sha，见 §6） |
+
+**结论**：9.x 第二 Wine 的可行来源仍只有自建 `brunodev85/wine-9.2-custom`（§4.4）；
+社区预编译包因 rootfs 布局与 X 库栈双重不匹配而不可用，且其 `prefixPack.txz` 是
+winlator-glibc 自有格式，本仓安装链路不消费。
+
 ## 5. 后续（按收益排序）
 
-1. **装 WSL/容器 → 交叉编译 `brunodev85/wine-9.2-custom`（wow64）**，产出 `.tar.xz` 后走现有
+1. **交叉编译 `brunodev85/wine-9.2-custom`（wow64）**，产出 `.tar.xz` 后走现有
    「设置 → 开发者模式 → 更多设置 → Wine 版本 → 安装」入口安装，再对 TD-09 样本（`yuris_lufia`/
    `sysnnn_sainogami`）做 A/B。届时在 `engine_presets.json` 的 `yrg`/`systemnnn` 上设
    `wine_version: "wine-9.2"` 即可按引擎切换（机制已就绪）。
+   捷径已排除：社区预编译包不可用（§4.5）；用户 2026-10-26 决定本轮不装 WSL/容器，故本条保持开放未启动。
 2. **给 wined3d 补 OpenGL 供给**：rootfs 无 `libEGL.so.1`，wined3d 走 GLX 回退且 gladio 报
    `unrecognized GL_VENDOR "Qualcomm"` / polyoffset 检测失败。候选：为 wined3d 引擎配
    `graphics_driver: zink`（Vulkan→GL），或确认 gladio 是否应提供 EGL。
@@ -166,4 +184,10 @@ adb shell run-as com.winlator cat files/wine_exec.log   # guest 输出（Process
 
 > 设备遗留（本轮测试产物，可在游戏库长按多选「彻底删除」清理）：
 > 容器 `galgame-yuris_wined3d`（xuser-19）、`galgame-advhd_wined3d`（xuser-20）。
-> `/sdcard` 上的复制样本与 wine 包已删。
+> `/sdcard` 上的复制样本与 wine 包已删；§4.5 的 imagefs shim、`box64_logs` 偏好与
+> `installed-wine/preinstall` 残留均已还原/清除（2026-10-26 11:27 复核为空）。
+>
+> 复取 wine 包（如日后自建对照）：
+> `curl -L -o wine-9.22-amd64-wow64.tar.xz https://github.com/Kron4ek/Wine-Builds/releases/download/9.22/wine-9.22-amd64-wow64.tar.xz`
+> （sha256 `7350dcce…da2150`，见同 release `sha256sums.txt`）；社区包
+> `https://github.com/longjunyu2/winlator/releases/download/v7.1.3/wine-9.2-custom.wcp`（已证不可用，仅作存档线索）。
