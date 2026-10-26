@@ -141,7 +141,7 @@ public final class SafStager {
      * getDocumentId 遇到树 URI 抛 IllegalArgumentException。递归里两种都会出现，
      * 这里按形状兜底，避免整棵复制在第一层就失败。
      */
-    private static String documentIdOf(Uri uri) {
+    static String documentIdOf(Uri uri) {
         try {
             return DocumentsContract.getDocumentId(uri);
         } catch (Exception e) {

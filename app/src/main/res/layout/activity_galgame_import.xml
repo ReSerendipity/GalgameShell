@@ -153,6 +153,15 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="@string/galgame_import_source_hint" />
+
+                    <Button
+                        android:id="@+id/BTBatchImport"
+                        style="@style/SwissButtonOutline"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="12dp"
+                        android:textAllCaps="false"
+                        android:text="@string/galgame_batch_entry" />
                 </LinearLayout>
 
                 <!-- Step 2 检测 -->

@@ -5,5 +5,6 @@ public class CompoundButton extends Button {
         void onCheckedChanged(CompoundButton buttonView, boolean isChecked);
     }
     public void setChecked(boolean checked) {}
+    public boolean isChecked() { return false; }
     public void setOnCheckedChangeListener(OnCheckedChangeListener listener) {}
 }

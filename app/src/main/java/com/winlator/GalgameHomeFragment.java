@@ -180,14 +180,17 @@ public class GalgameHomeFragment extends Fragment {
             count.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15);
             count.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
             count.setTag("count");
+            count.setMinWidth(Math.round(72 * density));
             android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
                     0, android.view.ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
             count.setLayoutParams(lp);
             selectionBar.addView(count);
 
             // 无框文字按钮：黑色大写字距；删除动作用 Swiss 红
+            // 六个动作 + 计数要挤在一条 1264px 宽的竖屏条上：标签取最短（"删除/移除"），
+            // 完整说明放在确认弹窗里（真机实测长标签会把「已选 N 项」挤成 0 宽、完成被截断）
             String[] labels = {"全选", getString(R.string.galgame_category_genre),
-                    getString(R.string.galgame_category_tag), "彻底删除", "仅移除", "完成"};
+                    getString(R.string.galgame_category_tag), "删除", "移除", "完成"};
             String[] tags = {"all", "genre", "tag", "purge", "records", "exit"};
             for (int i = 0; i < labels.length; i++) {
                 android.widget.TextView b = new android.widget.TextView(requireActivity());
@@ -198,7 +201,7 @@ public class GalgameHomeFragment extends Fragment {
                 b.setAllCaps(true);
                 b.setTextColor("purge".equals(tags[i]) || "records".equals(tags[i])
                         ? 0xFFB3261E : 0xFF111111);
-                int margin = Math.round(12 * density);
+                int margin = Math.round(8 * density);
                 android.widget.LinearLayout.LayoutParams blp = new android.widget.LinearLayout.LayoutParams(
                         android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
                         android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -272,11 +275,26 @@ public class GalgameHomeFragment extends Fragment {
         final boolean purge = "purge".equals(action);
         int withEnv = 0;
         for (GalgameLibraryAdapter.Item it : sel) if (it.hasContainer()) withEnv++;
+        // 只报数量不够：删错一批的代价不可逆，弹窗必须把「删谁」写出来（真机实测过）
+        StringBuilder names = new StringBuilder();
+        for (int i = 0; i < sel.size() && i < 6; i++) {
+            if (i > 0) names.append("、");
+            names.append("「").append(sel.get(i).label).append("」");
+        }
+        if (sel.size() > 6) names.append(" 等 ").append(sel.size()).append(" 个");
+        boolean anyNative = false;
+        for (GalgameLibraryAdapter.Item it : sel) {
+            if (com.winlator.galgame.GalgameNativeStore.isStored(requireContext(), it.gameId)) {
+                anyNative = true;
+                break;
+            }
+        }
         String msg = purge
-                ? "将删除 " + sel.size() + " 个游戏的库记录" + (withEnv > 0
-                    ? "，其中 " + withEnv + " 个连同游戏文件、独立存档与运行环境容器一并删除" : "")
+                ? "将删除 " + names + " 的库记录" + (withEnv > 0
+                    ? "；其中 " + withEnv + " 个连同游戏文件、独立存档与运行环境容器一并删除" : "")
+                  + (anyNative ? "；原生游戏在应用内的收纳副本也会删除" : "")
                   + "。\n导入源不受影响；此操作不可恢复。"
-                : "仅移除 " + sel.size() + " 个游戏的库记录，不删除任何文件。";
+                : "仅移除 " + names + " 的库记录，不删除任何文件。";
         new android.app.AlertDialog.Builder(requireContext())
                 .setTitle(purge ? "批量彻底删除" : "批量移除记录")
                 .setMessage(msg)

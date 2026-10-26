@@ -134,6 +134,9 @@ public class GalgameImportActivity extends AppCompatActivity {
         findViewById(R.id.BTBack).setOnClickListener(v -> onBack());
         prev.setOnClickListener(v -> onPrev());
         next.setOnClickListener(v -> onNext());
+        findViewById(R.id.BTBatchImport).setOnClickListener(v ->
+                startActivity(new android.content.Intent(this,
+                        com.winlator.galgame.ui.GalgameBatchImportActivity.class)));
         pickFolder.setOnClickListener(v -> {
             // 系统文件夹选择器（SAF）：授权只针对所选目录，且不依赖 MANAGE_EXTERNAL_STORAGE
             // （该特殊权限在卸载重装后会被系统重置，是 2026-10-26 导入失败的根因之一）。

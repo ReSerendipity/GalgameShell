@@ -11,4 +11,5 @@ public class TextView extends View {
     public void setTextSize(int unit, float size) {}
     public void setLetterSpacing(float ls) {}
     public void setAllCaps(boolean allCaps) {}
+    public void setMinWidth(int minPixels) {}
 }
