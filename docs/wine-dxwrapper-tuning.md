@@ -157,9 +157,11 @@ winlator-glibc 自有格式，本仓安装链路不消费。
    `sysnnn_sainogami`）做 A/B。届时在 `engine_presets.json` 的 `yrg`/`systemnnn` 上设
    `wine_version: "wine-9.2"` 即可按引擎切换（机制已就绪）。
    捷径已排除：社区预编译包不可用（§4.5）；用户 2026-10-26 决定本轮不装 WSL/容器，故本条保持开放未启动。
-2. **给 wined3d 补 OpenGL 供给**：rootfs 无 `libEGL.so.1`，wined3d 走 GLX 回退且 gladio 报
-   `unrecognized GL_VENDOR "Qualcomm"` / polyoffset 检测失败。候选：为 wined3d 引擎配
-   `graphics_driver: zink`（Vulkan→GL），或确认 gladio 是否应提供 EGL。
+2. ~~**给 wined3d 补 OpenGL 供给**~~ **已试、负、关闭（2026-10-26）**：为 `yrg` 临时配
+   `graphics_driver: "turnip,zink"` 并以无片头副本真机对照——zink 的 libGL 落地（14.7MB）
+   但仍无 `libEGL.so.1`，wined3d 连 adapter init 都未走到（GL 上下文建不起来，比 gladio 更差），
+   画面与基线同黑（mean 0.11）。结合 §3.2 与 chain §7.4/§7.5：黑屏不随 d3d 包装、GL 供给、
+   片头存在性三个轴变化，GL 供给线关闭。预设改动已回滚，未入库。
 3. 更新 TD-17（wined3d 变体已测：崩溃→引擎报错对话框，仍未可玩）与 TD-09（换 Wine 路线被
    「需自建补丁 Wine」阻塞）的登记状态。
 
