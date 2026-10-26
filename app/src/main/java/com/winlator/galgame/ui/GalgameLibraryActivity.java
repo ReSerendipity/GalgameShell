@@ -169,6 +169,8 @@ public class GalgameLibraryActivity extends AppCompatActivity {
 
         actions.add(getString(R.string.galgame_action_launch));         codes.add(0);
         actions.add(getString(R.string.galgame_action_switch_engine));  codes.add(5);
+        actions.add(getString(R.string.galgame_category_genre));        codes.add(6);
+        actions.add(getString(R.string.galgame_category_tag));          codes.add(7);
         if (item.hasContainer()) {
             actions.add(getString(R.string.galgame_action_diagnose));       codes.add(1);
             actions.add(getString(R.string.galgame_action_export_save));    codes.add(2);
@@ -191,6 +193,14 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                         case 3: importSave(container); break;
                         case 4: showLogs(container); break;
                         case 5: showEnginePicker(item); break;
+                        case 6:
+                            GalgameCategoryPicker.pickGenre(GalgameLibraryActivity.this,
+                                    categoryTarget(item), GalgameLibraryActivity.this::refresh);
+                            break;
+                        case 7:
+                            GalgameCategoryPicker.editTags(GalgameLibraryActivity.this,
+                                    categoryTarget(item), GalgameLibraryActivity.this::refresh);
+                            break;
                         default: break;
                     }
                 })
@@ -427,6 +437,14 @@ public class GalgameLibraryActivity extends AppCompatActivity {
                 .setMessage(R.string.galgame_privacy_message)
                 .setPositiveButton(R.string.galgame_ok, null)
                 .show();
+    }
+
+    /** 分类编辑的目标集合（单卡菜单用）。容器卡可能没有索引条目，先补一条再改。 */
+    private java.util.List<String> categoryTarget(GalgameLibraryAdapter.Item item) {
+        GalgameLibraryIndex.ensureEntry(this, item.gameId, item.label, item.engineName);
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        ids.add(item.gameId);
+        return ids;
     }
 
     private static String gameIdOf(Container container) {

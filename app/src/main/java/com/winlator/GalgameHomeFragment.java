@@ -23,6 +23,7 @@ import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
 import com.winlator.galgame.GalgameCoverProvider;
 import com.winlator.galgame.GalgameLibraryIndex;
+import com.winlator.galgame.ui.GalgameCategoryPicker;
 import com.winlator.galgame.ui.GalgameLibraryAdapter;
 
 import java.io.File;
@@ -47,6 +48,12 @@ public class GalgameHomeFragment extends Fragment {
     private final List<GalgameLibraryAdapter.Item> shown = new ArrayList<>();
 
     private View rootView;
+    private View chipsRow;
+    private View chipsScroll;
+    /** 分类过滤：三者至多一个非空（chips 单选）。 */
+    private String filterType;      // "engine" / "genre" / "tag"
+    private String filterValue;
+    private final java.util.Map<String, GalgameLibraryIndex.Entry> indexMap = new java.util.HashMap<>();
     private View emptyView;
     private GridView grid;
     private EditText search;
@@ -90,6 +97,8 @@ public class GalgameHomeFragment extends Fragment {
         allCountView = view.findViewById(R.id.TVAllCount);
         recentRow = view.findViewById(R.id.LLRecent);
         recentContainer = view.findViewById(R.id.HSVRecent);
+        chipsRow = view.findViewById(R.id.LLFilterChips);
+        chipsScroll = view.findViewById(R.id.HSVFilter);
 
         view.findViewById(R.id.BTSettings).setOnClickListener(v ->
                 startActivity(new Intent(requireContext(), GalgameSettingsActivity.class)));
@@ -177,8 +186,9 @@ public class GalgameHomeFragment extends Fragment {
             selectionBar.addView(count);
 
             // 无框文字按钮：黑色大写字距；删除动作用 Swiss 红
-            String[] labels = {"全选", "彻底删除", "仅移除", "完成"};
-            String[] tags = {"all", "purge", "records", "exit"};
+            String[] labels = {"全选", getString(R.string.galgame_category_genre),
+                    getString(R.string.galgame_category_tag), "彻底删除", "仅移除", "完成"};
+            String[] tags = {"all", "genre", "tag", "purge", "records", "exit"};
             for (int i = 0; i < labels.length; i++) {
                 android.widget.TextView b = new android.widget.TextView(requireActivity());
                 b.setText(labels[i]);
@@ -245,6 +255,20 @@ public class GalgameHomeFragment extends Fragment {
             android.widget.Toast.makeText(requireContext(), "未选择任何游戏", android.widget.Toast.LENGTH_SHORT).show();
             return;
         }
+        if ("genre".equals(action) || "tag".equals(action)) {
+            java.util.List<String> ids = new java.util.ArrayList<>();
+            for (GalgameLibraryAdapter.Item it : sel) {
+                // 容器卡可能没有索引条目（历史导入只建了容器）：先补一条，否则分类写不进去
+                GalgameLibraryIndex.ensureEntry(requireContext(), it.gameId, it.label, it.engineName);
+                ids.add(it.gameId);
+            }
+            if ("genre".equals(action)) {
+                GalgameCategoryPicker.pickGenre(requireContext(), ids, this::afterCategoryEdit);
+            } else {
+                GalgameCategoryPicker.editTags(requireContext(), ids, this::afterCategoryEdit);
+            }
+            return;
+        }
         final boolean purge = "purge".equals(action);
         int withEnv = 0;
         for (GalgameLibraryAdapter.Item it : sel) if (it.hasContainer()) withEnv++;
@@ -292,9 +316,9 @@ public class GalgameHomeFragment extends Fragment {
         containerManager = new ContainerManager(requireContext());
         master.clear();
 
-        java.util.Map<String, GalgameLibraryIndex.Entry> index = new java.util.HashMap<>();
+        indexMap.clear();
         for (GalgameLibraryIndex.Entry e : GalgameLibraryIndex.load(requireContext())) {
-            index.put(e.gameId, e);
+            indexMap.put(e.gameId, e);
         }
 
         List<Container> containers = containerManager.getContainers();
@@ -303,12 +327,12 @@ public class GalgameHomeFragment extends Fragment {
                 String name = c.getName();
                 if (name == null || !name.startsWith(CONTAINER_PREFIX)) continue;
                 String gameId = name.substring(CONTAINER_PREFIX.length());
-                GalgameLibraryIndex.Entry e = index.get(gameId);
+                GalgameLibraryIndex.Entry e = indexMap.get(gameId);
                 master.add(GalgameLibraryAdapter.fromContainer(c,
                         e != null ? e.preferredEngine : null, e != null ? e.title : null));
             }
         }
-        for (GalgameLibraryIndex.Entry e : index.values()) {
+        for (GalgameLibraryIndex.Entry e : indexMap.values()) {
             if (e.containerized) continue;
             boolean listed = false;
             for (GalgameLibraryAdapter.Item it : master) {
@@ -318,6 +342,7 @@ public class GalgameHomeFragment extends Fragment {
         }
 
         if (countView != null) countView.setText(String.format(Locale.US, "%02d", master.size()));
+        rebuildChips();
         populateRecent();
         applyFilter();
     }
@@ -327,17 +352,163 @@ public class GalgameHomeFragment extends Fragment {
                 ? search.getText().toString().trim().toLowerCase(Locale.ROOT) : "";
         shown.clear();
         for (GalgameLibraryAdapter.Item it : master) {
-            if (q.isEmpty() || (it.label != null && it.label.toLowerCase(Locale.ROOT).contains(q))) shown.add(it);
+            if (!q.isEmpty()
+                    && (it.label == null || !it.label.toLowerCase(Locale.ROOT).contains(q))) continue;
+            if (!matchesCategory(it)) continue;
+            shown.add(it);
         }
         adapter.notifyDataSetChanged();
         if (allCountView != null) allCountView.setText(getString(R.string.galgame_index_count, shown.size()));
 
         boolean empty = shown.isEmpty();
-        if (emptyView != null) emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
+        boolean filterOnly = empty && !master.isEmpty();
+        if (emptyView != null) {
+            emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
+            // 库里有游戏、只是被筛空：文案要说清「筛选无结果」，别让人以为库被清空了
+            TextView t = emptyView.findViewById(R.id.TVEmptyTitle);
+            TextView h = emptyView.findViewById(R.id.TVEmptyHint);
+            if (t != null) t.setText(filterOnly
+                    ? R.string.galgame_filter_empty_title : R.string.galgame_empty_title);
+            if (h != null) h.setText(filterOnly
+                    ? R.string.galgame_filter_empty_hint : R.string.galgame_empty_hint);
+        }
         if (grid != null) grid.setVisibility(empty ? View.GONE : View.VISIBLE);
         View fab = rootView != null ? rootView.findViewById(R.id.FABImport) : null;
         if (fab != null) fab.setVisibility(master.isEmpty() ? View.GONE : View.VISIBLE);
         if (!empty && grid != null) grid.startLayoutAnimation();
+    }
+
+    private boolean matchesCategory(GalgameLibraryAdapter.Item it) {
+        if (filterType == null) return true;
+        if ("engine".equals(filterType)) return filterValue.equals(engineKeyOf(it));
+        GalgameLibraryIndex.Entry e = indexMap.get(it.gameId);
+        if (e == null) return false;
+        if ("genre".equals(filterType)) return filterValue.equals(e.genre);
+        if ("tag".equals(filterType)) return e.tags.contains(filterValue);
+        return true;
+    }
+
+    private static String engineKeyOf(GalgameLibraryAdapter.Item it) {
+        return it.engineName != null ? it.engineName : "?";
+    }
+
+    private void setFilter(String type, String value) {
+        if (type != null && type.equals(filterType) && value.equals(filterValue)) {
+            clearFilter();          // 再点一次同一个 chip = 取消
+        } else {
+            filterType = type;
+            filterValue = value;
+        }
+        rebuildChips();
+        applyFilter();
+    }
+
+    private void clearFilter() {
+        filterType = null;
+        filterValue = null;
+    }
+
+    private void afterCategoryEdit() {
+        exitSelectMode();
+        refresh();
+    }
+
+    // ---- 分类 chips（引擎 / 品类 / 标签，单选过滤）----
+
+    private void rebuildChips() {
+        if (!(chipsRow instanceof LinearLayout)) return;
+        LinearLayout row = (LinearLayout) chipsRow;
+        row.removeAllViews();
+
+        java.util.LinkedHashMap<String, String> engines = new java.util.LinkedHashMap<>();
+        for (GalgameLibraryAdapter.Item it : master) {
+            engines.putIfAbsent(engineKeyOf(it), it.sub != null ? it.sub : "?");
+        }
+        java.util.List<String> genres = new java.util.ArrayList<>();
+        for (String id : GalgameCategoryPicker.GENRE_IDS) {
+            for (GalgameLibraryIndex.Entry e : indexMap.values()) {
+                if (id.equals(e.genre)) { genres.add(id); break; }
+            }
+        }
+        java.util.List<String> tags = GalgameLibraryIndex.allTags(requireContext());
+
+        // 过滤值可能随删除/改名失效：失效即回到「全部」，别停在空结果上
+        if ("engine".equals(filterType) && !engines.containsKey(filterValue)) clearFilter();
+        if ("genre".equals(filterType) && !genres.contains(filterValue)) clearFilter();
+        if ("tag".equals(filterType) && !tags.contains(filterValue)) clearFilter();
+
+        addChip(getString(R.string.galgame_filter_all), filterType == null,
+                v -> setFilter(null, null));
+        if (engines.size() > 1) {
+            addCaption(getString(R.string.galgame_filter_engine));
+            for (java.util.Map.Entry<String, String> en : engines.entrySet()) {
+                final String key = en.getKey();
+                addChip(en.getValue(), "engine".equals(filterType) && key.equals(filterValue),
+                        v -> setFilter("engine", key));
+            }
+        }
+        if (!genres.isEmpty()) {
+            addCaption(getString(R.string.galgame_filter_genre));
+            for (final String id : genres) {
+                addChip(GalgameCategoryPicker.genreLabel(requireContext(), id),
+                        "genre".equals(filterType) && id.equals(filterValue),
+                        v -> setFilter("genre", id));
+            }
+        }
+        if (!tags.isEmpty()) {
+            addCaption(getString(R.string.galgame_filter_tag));
+            for (final String tag : tags) {
+                addChip(tag, "tag".equals(filterType) && tag.equals(filterValue),
+                        v -> setFilter("tag", tag));
+            }
+        }
+        if (chipsScroll != null) {
+            chipsScroll.setVisibility(master.isEmpty() ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    private void addCaption(String text) {
+        TextView t = new TextView(requireContext());
+        t.setText(text);
+        t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 10);
+        t.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        t.setLetterSpacing(0.12f);
+        t.setAllCaps(true);
+        t.setTextColor(androidx.core.content.ContextCompat.getColor(
+                requireContext(), R.color.swiss_faint));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.leftMargin = dp(10);
+        lp.rightMargin = dp(6);
+        t.setLayoutParams(lp);
+        ((LinearLayout) chipsRow).addView(t);
+    }
+
+    private void addChip(String text, boolean selected, View.OnClickListener onClick) {
+        TextView chip = new TextView(requireContext());
+        chip.setText(text);
+        chip.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11);
+        chip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        chip.setLetterSpacing(0.04f);
+        chip.setPadding(dp(10), dp(6), dp(10), dp(6));
+        int ink = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.swiss_ink);
+        android.graphics.drawable.GradientDrawable bg =
+                new android.graphics.drawable.GradientDrawable();
+        bg.setColor(selected ? ink : 0xFFFFFFFF);
+        bg.setStroke(dp(2), ink);
+        bg.setCornerRadius(dp(2));
+        chip.setBackground(bg);
+        chip.setTextColor(selected ? 0xFFFFFFFF : ink);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.rightMargin = dp(6);
+        chip.setLayoutParams(lp);
+        chip.setOnClickListener(onClick);
+        ((LinearLayout) chipsRow).addView(chip);
+    }
+
+    private int dp(int v) {
+        return Math.round(v * getResources().getDisplayMetrics().density);
     }
 
     private void populateRecent() {
