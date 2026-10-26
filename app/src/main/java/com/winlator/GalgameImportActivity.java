@@ -312,14 +312,14 @@ public class GalgameImportActivity extends AppCompatActivity {
 
     private void onBack() {
         if (busy) return;
-        if (step == 0) { finish(); return; }
+        if (step == 0) { cleanupStaging(); finish(); return; }
         step--;
         renderStep();
     }
 
     private void onPrev() {
         if (busy) return;
-        if (step == 0) finish();
+        if (step == 0) { cleanupStaging(); finish(); }
         else { step--; renderStep(); }
     }
 
@@ -360,7 +360,13 @@ public class GalgameImportActivity extends AppCompatActivity {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.galgame_import_dup_title)
                         .setMessage(getString(R.string.galgame_import_dup_message, titleFor()))
-                        .setNegativeButton(R.string.galgame_cancel, null)
+                        .setNegativeButton(R.string.galgame_cancel, (d, w) -> {
+                            // 取消＝放弃这次导入：暂存副本必须一起删（750MB 级的泄漏，
+                            // 2026-10-26 真机复验时实测残留）。treeUri 保留，重试只需再按下一步。
+                            cleanupStaging();
+                            source = null;
+                            detected = null;
+                        })
                         .setPositiveButton(R.string.galgame_import_dup_go, (d, w) -> startImport())
                         .show();
             } else {
@@ -385,8 +391,11 @@ public class GalgameImportActivity extends AppCompatActivity {
             int count = 0;
             try {
                 engine = EngineDetector.detect(source);
-                enc = EngineDetector.isEncrypted(source);
-                String[] children = source.list();
+                // 文件数按归一后的游戏根数：套娃目录下数外层只会得 1，与检测出的
+                // 引擎和真实内容对不上（2026-10-26 真机：step2 显示 1 个文件）。
+                final File gameRoot = EngineDetector.resolveGameRoot(source);
+                enc = EngineDetector.isEncrypted(gameRoot);
+                String[] children = gameRoot.list();
                 count = children != null ? children.length : 0;
             } catch (Throwable ignored) {}
             final EngineDetector.Engine e = engine;
@@ -566,9 +575,21 @@ public class GalgameImportActivity extends AppCompatActivity {
         try { outState.putInt("files", Integer.parseInt(files)); } catch (Throwable ignored) {}
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 只在真正退出时清暂存：旋转/重建（isFinishing()==false）后 source 还要继续用，
+        // 删了就得把几 GB 重新拷一遍。未完成且被系统回收的残骸由下次打开时的 sweep 兜底。
+        if (isFinishing() && step < 3) cleanupStaging();
+    }
+
     private void fail(String message) {
         setBusy(false);
         cleanupStaging();
+        // 暂存副本已被删：source 必须一起作废，否则用户在确认页再按「开始导入」会拿
+        // 不存在的目录继续，step0 的 fail-fast 还会误报「缺少所有文件访问权限」。
+        source = null;
+        detected = null;
         next.setText(getString(R.string.galgame_import_start));
         toast(message);
     }

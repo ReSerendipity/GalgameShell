@@ -50,6 +50,9 @@
 | R10 | 导入完成但没定位到启动 exe 时当场告警（不再等启动才报「启动文件缺失」） | GalgameImportActivity.java:481-485,542 | 门禁；待真机复验 |
 | R11 | 标题在主线程取一次（后台线程不碰 EditText）；SAF 流程不再用暂存目录名当游戏名；改选目录作废旧暂存与旧检测结果 | GalgameImportActivity.java:404-407,246-252 | 门禁 |
 | R12 | 库页删除 254 行「手输路径 + 自跑一遍 ImportFlow」的重复实现，导入只留向导一条入口；随之删除 8 条死字符串 | GalgameLibraryActivity.java:393；galgame_strings.xml | 门禁三步全绿 |
+| R13 | **真机复验发现**：卡片/详情标题仍取容器名（ASCII gameId）→ 显示一串下划线；改为优先取索引 title（`fromContainer` 新增 title 参数，库/首页/详情三处调用点一起改） | GalgameLibraryAdapter.java `fromContainer(..., title)` | 真机：卡片与「继续游玩」均显示 CJK 原名 |
+| R14 | **真机复验发现**：确认页文件数按暂存根目录数（套娃场景恒为 1），改为按归一后的游戏根 | GalgameImportActivity.java `detect()` | 真机：同一目录由 1 变为 5，与容器内顶层条目一致 |
+| R15 | **真机复验发现**：在确认页取消/退出会留下整份暂存副本（实测 750MB 级）；取消对话框、`fail()`、step0 退出、`onDestroy`（仅 `isFinishing()`，不误伤旋转重建）都清暂存，并作废 `source`（避免再按「开始导入」时拿已删目录误报「缺少所有文件访问权限」） | GalgameImportActivity.java `fail()`/`onDestroy()`/dup 取消 | 真机：取消后 `files/import-stage` 为空 |
 
 ## 4 仍开放（已登记 TD-18…TD-24，见 tech-debt-register.md）
 
@@ -81,12 +84,19 @@ SafStager 的 cursor 关闭/失败清半成品/空间预检/sweepStale 防误删
 容器接管裁决（:104-119）；GalgameShortcutActivity 对 exported 入口的索引白名单（挡住 game_id 路径穿越）；
 GalgameSettingsActivity 主题切换正确用 `commit()`（:43）；GalgameStoragePermission.openSettings 双层回退。
 
-## 6 待真机复验清单（设备离线前未完成；回来后逐条打勾）
+## 6 真机复验结果（2026-10-26 晚，RMX5010 / Android 16）
 
-1. 向导 step1 标签显示 CJK 目录名（非 content:// URI）——R8 的直接判据。
-2. 下一步后暂存+检测：step2 显示 UNITY、文件数 = 内层目录条目数（5）。
-3. 确认导入：容器名 == `galgame-<下划线串>-<4位哈希>`；`drive_c/galgame/<同 id>/` 顶层有 exe；
-   索引条目 title = CJK 原名、engine = UNITY（R4/R5 判据）。
-4. 库中仅一张卡；点卡启动到游戏主菜单并推进对白 ≥60s（游玩级）。
-5. 再导一次同目录：弹「库中已有同名游戏」确认（R7）；取消则零副作用。
-6. 人为制造 stageGameFiles 失败（导入中途 `run-as` 删暂存目录不可行时改用小空间场景）：确认无孤儿容器（R6）。
+| # | 判据 | 结果 |
+|---|---|---|
+| 1 | 向导 step1 标签显示 CJK 目录名（非 content:// URI） | **通过**：`椎名真穂のヒミツ ～ネームはHで思いつきます～` |
+| 2 | step2 显示 UNITY、文件数 = 内层目录条目数（5） | **通过**（R14 修复后：1 → 5） |
+| 3 | 容器名 == `galgame-<下划线串>-<4位哈希>`；游戏目录顶层有 exe；索引 title/engine 正确 | **通过**：`galgame-______________H________-6b0d`；顶层 `ShiinaMahoNoHimitsu.exe`/`UnityPlayer.dll`/`_Data`；索引 title=CJK、engine=UNITY。暂存目录已清 |
+| 4 | 库中仅一张卡；点卡启动到游戏并可推进对白 ≥60s | **通过**：单卡（INDEX·1）→ 详情 → 启动 → logo → 18 禁警告页 → 标题菜单 → 正片；连续推进对白 100s+（约 8 条），游戏内菜单/存档栏正常。该拷贝是机翻中文版，故 `language=zh_CN.UTF-8` 判定正确（TD-23 未牵涉本例） |
+| 5 | 再导一次同目录：弹「库中已有同名游戏」确认；取消零副作用 | **通过**：弹窗文案/按钮正确；取消后无新容器、索引仍 1 条、暂存为空（R15 修复前这里实测残留 750MB 暂存） |
+| 6 | 人为制造 stageGameFiles 失败：确认无孤儿容器 | **通过**：把小号测试目录里的一个文件 `chmod 000` 后导入，后台 0.2s 轮询记录到 `xuser-2` 于 16:15:26.512 出现、16:15:26.956 消失（回滚删除），最终无孤儿、暂存已清 |
+
+### 6.1 复验期间观察（不属导入链缺陷，记录备查）
+
+- **标题菜单点击有约 70px 竖直偏移**：点视觉上的「終了/EXIT」会激活上方约 70px 的那一行（实测点 EXIT 打开了 CONFIG 的页；按 +70px 补正后「初めから」一次点中）。与 TD-14（KiriKiri 窗口 (152,152) 偏移）同属「guest 命中测试与窗口位置不一致」家族，成因在游戏/窗口层，不在导入/启动链。Adreno 830 + 该 Unity 标题实测，换标题未必复现。
+- **首次启动耗时**：logo 停在画面约 4 分钟后才响应点击（期间 `ShiinaMahoNoHimitsu.exe` 持续 260% CPU，非死锁），属 box64 首次翻译 + DXVK 着色器编译的一次性成本。
+- 复验用的临时目录 `/sdcard/Download/galgame_failtest` 已删除。

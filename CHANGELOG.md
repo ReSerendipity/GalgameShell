@@ -54,6 +54,9 @@
 - **SAF 树 API 误用（真机实测）**：树 URI（`/tree/…`）取 documentId 必须用 `getTreeDocumentId`、
   取自身显示名必须先 `buildDocumentUriUsingTree`；误用 `getDocumentId` 会抛
   IllegalArgumentException，表现为所选目录标签退回整串 content:// URI、复制在第一层即失败。
+- **真机复验补的三处**：卡片/详情标题优先取索引里的显示名（此前容器卡只显示 ASCII gameId，
+  即一串下划线）；确认页文件数改按归一后的游戏根统计（套娃目录此前恒显示 1）；取消/退出导入
+  现在会清掉整份暂存副本（此前实测残留 750MB 级），并作废已删的 `source` 以免误报权限问题。
 
 
 ### Changed

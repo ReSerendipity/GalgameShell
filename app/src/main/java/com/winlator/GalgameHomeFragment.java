@@ -304,7 +304,8 @@ public class GalgameHomeFragment extends Fragment {
                 if (name == null || !name.startsWith(CONTAINER_PREFIX)) continue;
                 String gameId = name.substring(CONTAINER_PREFIX.length());
                 GalgameLibraryIndex.Entry e = index.get(gameId);
-                master.add(GalgameLibraryAdapter.fromContainer(c, e != null ? e.preferredEngine : null));
+                master.add(GalgameLibraryAdapter.fromContainer(c,
+                        e != null ? e.preferredEngine : null, e != null ? e.title : null));
             }
         }
         for (GalgameLibraryIndex.Entry e : index.values()) {

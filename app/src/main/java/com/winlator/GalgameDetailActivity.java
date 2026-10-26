@@ -80,7 +80,8 @@ public class GalgameDetailActivity extends AppCompatActivity {
         container = findContainer(containerName);
         if (container == null) container = findContainerByGameId(gameId);
         if (container != null) {
-            item = GalgameLibraryAdapter.fromContainer(container, preferred);
+            item = GalgameLibraryAdapter.fromContainer(container, preferred,
+                    indexEntry != null ? indexEntry.title : null);
         } else {
             if (indexEntry != null) item = GalgameLibraryAdapter.fromIndexEntry(this, indexEntry);
             else item = new GalgameLibraryAdapter.Item(null, gameId, label != null ? label : gameId,
