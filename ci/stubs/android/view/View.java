@@ -27,6 +27,8 @@ public class View {
     public void setVisibility(int visibility) {}
     public int getVisibility() { return VISIBLE; }
     public void setBackgroundColor(int color) {}
+    public void setPadding(int left, int top, int right, int bottom) {}
+    public void setBackground(android.graphics.drawable.Drawable background) {}
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {}
     public boolean onTouchEvent(MotionEvent event) { return false; }
     public void postDelayed(Runnable action, long delayMillis) {}

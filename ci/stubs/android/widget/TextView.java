@@ -9,4 +9,6 @@ public class TextView extends View {
     public void addTextChangedListener(android.text.TextWatcher watcher) {}
     public void setTypeface(android.graphics.Typeface tf) {}
     public void setTextSize(int unit, float size) {}
+    public void setLetterSpacing(float ls) {}
+    public void setAllCaps(boolean allCaps) {}
 }
