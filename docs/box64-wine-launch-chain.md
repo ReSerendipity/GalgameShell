@@ -351,3 +351,44 @@ TD-09 的一个候选绕过是"把游戏跑在虚拟桌面里"——游戏窗口
 
 **结论**：虚拟桌面作为 TD-09 的绕过路线**当前不可用**，瓶颈在 Wine/box64 侧。
 剩余候选只有"绕过片头"与"上游 Wine 修复"。
+
+### 7.4 片头绕过实验：负结果，且修正 §7.2 的因果模型（2026-10-26）
+
+动机：§7.3 收口时剩余候选只剩「绕过片头」与上游修复。若引擎对"片头文件不存在"
+容忍（跳过而非致命错误），用户今天就能玩到游戏，无需等 Wine。
+
+方法：同一容器、同一启动路径（详情页 `galgame.auto_launch`），**只改一个变量**——
+把片头文件改名（可逆，实验后已还原）：
+
+- `xuser-15 / sysnnn_sainogami`：`movie/sainogami_op.wmv` → `*.off`
+- `xuser-10 / yuris_lufia`：`pac/{BRANDCALL01..03,op_movie}.mpg` → `*.off`
+  （散文件不存在，副本只在 `pac/` 归档旁挂的散文件里）
+
+通道 `quartz,ole,msg`（与 §7.2 同口径）；截图按 §7.1 的亮度均值/非黑占比量化。
+
+| 样本 | 视频路径 | 死锁签名 | 致命错误 | 画面 |
+|---|---|---|---|---|
+| sysnnn（无片头） | 0 建图 / 0 `RenderFile` | `put_WindowStyle` 0、`WM_WINE_SETWINDOWPOS` 0、`MediaControl_Run` 0 | 无 | mean=0.11 / nonblack 0.12%，t=45s 与 t=90s 相同 |
+| yuris_lufia（无片头） | 0 建图 / 0 `RenderFile` | 同上全 0 | 无 | mean=0.11 / nonblack 0.12% |
+
+对照：片头在位时 §7 观测到 `wg_parser_create` 18 次（sysnnn）、§7.2 观测到
+`put_WindowStyle → WM_WINE_SETWINDOWPOS` 死锁（yuris）。
+
+**结论（修正性，四条）**：
+
+1. 引擎对缺失片头**容忍**（不弹致命错误），整条 DirectShow 路径——含 §7.2 坐实的
+   死锁——随之完全消失；**但客户区仍全黑**。
+2. 因此 §7.2 的死锁是"片头永远不播"的真因，却**不是客户区全黑的唯一成因**：
+   主窗口已创建并映射（`WM_NCCREATE`/`WM_NCPAINT`/`WM_WINDOWPOSCHANGED` 齐全）、
+   主循环存活（`PowerGetActiveScheme` 刷屏），黑的是引擎主渲染自身。
+   TD-09 的因果模型按此修正：死锁与主渲染黑是**两个独立缺陷面**。
+3. 「绕过片头」作为 TD-09 的用户侧解锁**不成立**；该线关闭（与 §8.1 的"禁用 quartz
+   =致命错误"合看：视频路径既不能禁、也不能靠缺文件绕过）。
+4. 新假设（未验证，列为下一候选）：YU-RIS/SystemNNN 的主渲染走 DDraw/D3D →
+   wined3d → gladio 的 GL 路径，而该 GL 路径已测得退化（无 `libEGL.so.1`、
+   `unrecognized GL_VENDOR "Qualcomm"`、polyoffset 检测失败，见
+   `wine-dxwrapper-tuning.md` §3.2 的启动日志）。候选实验：同引擎对照
+   `wined3d + graphics_driver: zink`（Vulkan→GL 供 GL 给 wined3d）。
+
+**本实验未覆盖**：未开 `file` 通道，"引擎是否尝试打开片头文件"以 quartz 通道 0 建图
+为间接证据；未用音频判据（BGM 是否响）区分"引擎卡在等待"与"引擎在渲染黑"。
