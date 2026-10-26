@@ -300,7 +300,11 @@ public final class GalgameLibraryIndex {
         synchronized (LOCK) {
             File f = indexFile(context);
             if (f == null) return;
-            List<Entry> all = load(readRaw(f));
+            List<Entry> all = parse(readRaw(f));
+            if (all == null) {
+                quarantine(f);
+                all = Collections.emptyList();
+            }
             List<Entry> kept = new ArrayList<>();
             for (Entry e : all) {
                 if (!gameId.equals(e.gameId)) kept.add(e);
@@ -396,7 +400,12 @@ public final class GalgameLibraryIndex {
         synchronized (LOCK) {
             File f = indexFile(context);
             if (f == null) return;
-            List<Entry> all = load(readRaw(f));
+            String raw = readRaw(f);
+            List<Entry> all = parse(raw);
+            if (all == null) {
+                quarantine(f);
+                all = Collections.emptyList();
+            }
             Entry existing = null;
             for (Entry e : all) {
                 if (gameId.equals(e.gameId)) { existing = e; break; }
@@ -434,8 +443,8 @@ public final class GalgameLibraryIndex {
         }
     }
 
-    /** 解析索引文本；空/损坏返回空列表。 */
-    private static List<Entry> load(String raw) {
+    /** 解析索引文本；空返回空列表，<b>损坏返回 null</b>（调用方据此隔离旧文件）。 */
+    private static List<Entry> parse(String raw) {
         if (raw == null || raw.trim().isEmpty()) return Collections.emptyList();
         try {
             JSONObject root = new JSONObject(raw);
@@ -448,9 +457,25 @@ public final class GalgameLibraryIndex {
             }
             return out;
         } catch (Exception e) {
-            Log.w(TAG, "索引解析失败，按空索引处理", e);
-            return Collections.emptyList();
+            Log.w(TAG, "索引解析失败，准备隔离旧文件", e);
+            return null;
         }
+    }
+
+    private static List<Entry> load(String raw) {
+        List<Entry> parsed = parse(raw);
+        return parsed == null ? Collections.<Entry>emptyList() : parsed;
+    }
+
+    /**
+     * 下标损坏时把文件改名留档，再按空索引继续写。
+     * 不隔离的话，下一次 upsert 会用单条记录覆盖整个文件，其余条目永久丢失。
+     */
+    private static void quarantine(File f) {
+        if (f == null) return;
+        File bak = new File(f.getAbsolutePath() + ".corrupt-" + System.currentTimeMillis());
+        if (f.renameTo(bak)) Log.w(TAG, "索引已损坏，旧文件留档: " + bak);
+        else Log.w(TAG, "索引已损坏且无法留档: " + f);
     }
 
     private static void writeQuietly(File f, List<Entry> entries) {
@@ -465,9 +490,20 @@ public final class GalgameLibraryIndex {
             File parent = f.getParentFile();
             if (parent != null && !parent.isDirectory() && !parent.mkdirs()) return;
             byte[] bytes = root.toString(2).getBytes(StandardCharsets.UTF_8);
-            try (FileOutputStream out = new FileOutputStream(f, false)) {
+            // 原子写：先落 .tmp 再 rename 覆盖。写一半被杀只会留下 .tmp，
+            // 旧索引保持完整（此前直接覆写，写到一半就是全库索引损坏）。
+            File tmp = new File(f.getAbsolutePath() + ".tmp");
+            try (FileOutputStream out = new FileOutputStream(tmp, false)) {
                 out.write(bytes);
+                out.getFD().sync();
             }
+            if (tmp.renameTo(f)) return;
+            // 少数文件系统 rename 不覆盖既有文件：删旧再改名（此时 tmp 已完整落盘）
+            if (f.exists() && !f.delete()) {
+                Log.w(TAG, "索引替换失败（旧文件删不掉）：" + f);
+                return;
+            }
+            if (!tmp.renameTo(f)) Log.w(TAG, "索引替换失败：" + f);
         } catch (Exception e) {
             // 索引写失败不该阻断启动流程
             Log.w(TAG, "写入索引失败：" + f, e);

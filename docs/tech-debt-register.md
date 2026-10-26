@@ -27,11 +27,13 @@
 
 | TD-18 | 2026-10-26 | `GalgameDetailActivity.startForceContainer`（「改用 Wine 容器运行」）失败不回滚已建容器、成功也不 `markContainerized` | 库中同一游戏出现容器卡+原生卡两张；失败残留孤儿容器 | 已登记，待偿还（评估 robustness-assessment-2026-10.md §4；导入侧同型问题已在本轮修掉，见该文档 R6） |
 | TD-19 | 2026-10-26 | `GalgameNativeStore.store`「目标目录非空即返回」：磁盘满/进程被杀留下的半拷贝被当成品；`ImportFlow.copyDirectory` 对 `listFiles()==null` 静默返回（0 文件=成功） | 原生游戏缺文件且无提示；导入中途权限被收时复现 D1 老形态 | 已登记，待偿还（需续拷或校验和；评估 §4） |
-| TD-20 | 2026-10-26 | 「彻底删除」只删容器+S: 盘+索引，不删 `files/galgame-native/<id>` 收纳副本；`GalgameNativeStore.remove` 全仓零调用；删除结果不校验 | 确认文案承诺「连同游戏文件删除」却不兑现，数 GB 静默泄漏 | 已登记，待偿还（评估 §4） |
-| TD-21 | 2026-10-26 | `GalgameLibraryIndex.writeQuietly` 直接覆写（无 tmp+rename）；`readRaw` 失败按空处理，下一次 upsert 用单条覆盖全文件 | 写一半被杀 → 索引损坏 → 其余条目静默丢失 | 已登记，待偿还（评估 §4） |
+| TD-20 | 2026-10-26 | 「彻底删除」只删容器+S: 盘+索引，不删 `files/galgame-native/<id>` 收纳副本；`GalgameNativeStore.remove` 全仓零调用；删除结果不校验 | 确认文案承诺「连同游戏文件删除」却不兑现，数 GB 静默泄漏 | **已偿还（2026-10-26）**：批删与详情「从库中移除」都删收纳副本；批删校验容器目录/存档目录/收纳副本三项结果并汇总「N 个未完全删除」。真机验证：注入 2MB 收纳副本 + 索引条目后彻底删除，`files/galgame-native/` 归空、索引归 1 条 |
+| TD-21 | 2026-10-26 | `GalgameLibraryIndex.writeQuietly` 直接覆写（无 tmp+rename）；`readRaw` 失败按空处理，下一次 upsert 用单条覆盖全文件 | 写一半被杀 → 索引损坏 → 其余条目静默丢失 | **已偿还（2026-10-26）**：改写 `.tmp` + `fd.sync()` + rename；解析失败先把旧文件隔离成 `.corrupt-<ts>` 再按空索引重建。真机验证：把索引写成 `THIS-IS-NOT-JSON` 后改一次分类，旧文件被留档、新索引 1 条且字段正确 |
 | TD-22 | 2026-10-26 | 点卡片在主线程同步跑 `GameLauncher.decide → detectDeep`（深度 3、预算 4000 目录项 + 逐文件读魔数） | 大游戏目录卡顿/ANR | 已登记，待偿还（评估 §4） |
 | TD-23 | 2026-10-26 | `GalgameLanguageDetector` 弱信号「文件夹名含任意汉字 → zh_CN」：日文标题几乎必含汉字 → LCID 936、Shift-JIS 文本乱码；`GalgameLocaleInjector.reapply` 还会用同一误判纠正正确值 | 日文游戏被当中文跑 | 已登记，待偿还（评估 §4） |
-| TD-24 | 2026-10-26 | `GalgameSaveManager` 的 gameId 无校验：空串时存档目录指向 SAVE_ROOT 根（跨游戏串档）；`symlinkPortableSaves` 先 `FileUtils.delete(dir)` 再 symlink，symlink 失败即存档目录消失 | 导出/恢复串档；存档丢失 | 已登记，待偿还（评估 §4） |
+| TD-24 | 2026-10-26 | `GalgameSaveManager` 的 gameId 无校验：空串时存档目录指向 SAVE_ROOT 根（跨游戏串档）；`symlinkPortableSaves` 先 `FileUtils.delete(dir)` 再 symlink，symlink 失败即存档目录消失 | 导出/恢复串档；存档丢失 | **已偿还（2026-10-26）**：构造函数拒绝空 gameId（抛 IllegalArgumentException），详情页缺 gameId 直接退回列表；移档顺序改为「合并不完整就跳过链接 → 源目录删不掉就跳过 → symlink 后校验，未链上则把档拷回 → 同名不同内容留 `.bak-<ts>`」。未在真机诱导 symlink 失败（容器内该目录形态不常出现），以代码复核为准 |
+
+| TD-25 | 2026-10-26 | 显示标题只存在索引里；索引损坏/丢失后容器卡标题退化成 ASCII gameId（`______________H________-6b0d`），真机复验时实测 | 用户可见的名字丢失，只能靠用户记得原名重命名 | 已登记，待偿还：把 title 冗余进容器内 `galgame_overlay.json`，索引缺 title 时回落读取（导入时已写 overlay，加一个字段即可） |
 
 > **积压取舍（2026-10-24）**：TD-01 / TD-03 / TD-04 / TD-05 / TD-06 / TD-10 判定为**可事后解决**，
 > 保留为待办积压，不阻塞发布；TD-02 因无对应设备**永久跳过**（见上，不再提及）。

@@ -88,6 +88,14 @@ public class GalgameDetailActivity extends AppCompatActivity {
                     engine != null ? engine : "?", null, null, engine, preferred);
         }
 
+        if (item == null || item.gameId == null || item.gameId.isEmpty()) {
+            // 没有 gameId 时，存档/导出/索引等动作都会退化成共享路径（S: 盘根、索引空键），
+            // 宁可退回列表也不在半坏状态下让人点（2026-10-26 评估 TD-24）。
+            toast("缺少游戏标识，无法打开详情");
+            finish();
+            return;
+        }
+
         bindHeader();
         bindActions();
         if (getIntent().getBooleanExtra(EXTRA_AUTO_LAUNCH, false)) {
@@ -480,13 +488,19 @@ public class GalgameDetailActivity extends AppCompatActivity {
             toast("该游戏有运行环境，请先在「高级设置 → 运行环境」中清理容器后再移除");
             return;
         }
+        final boolean stored = com.winlator.galgame.GalgameNativeStore.isStored(this, item.gameId);
         new AlertDialog.Builder(this)
                 .setTitle("从库中移除")
-                .setMessage("仅移除「" + item.label + "」的库记录，不删除手机中的游戏文件。")
+                .setMessage(stored
+                        ? "将移除「" + item.label + "」的库记录，并删除应用内的游戏副本（你的源目录不受影响）。"
+                        : "仅移除「" + item.label + "」的库记录，不删除手机中的游戏文件。")
                 .setNegativeButton(R.string.galgame_cancel, null)
                 .setPositiveButton("移除", (d, w) -> {
+                    // 收纳副本删掉后记录就再没人能访问：留着就是数 GB 的静默泄漏（TD-20）
+                    boolean ok = !stored
+                            || com.winlator.galgame.GalgameNativeStore.remove(this, item.gameId);
                     GalgameLibraryIndex.remove(this, item.gameId);
-                    toast("已从游戏库移除");
+                    toast(ok ? "已从游戏库移除" : "记录已移除，但应用内副本未能删净（可重试）");
                     finish();
                 })
                 .show();
