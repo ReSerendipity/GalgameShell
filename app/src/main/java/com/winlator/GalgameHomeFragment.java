@@ -281,27 +281,44 @@ public class GalgameHomeFragment extends Fragment {
                 .setTitle(purge ? "批量彻底删除" : "批量移除记录")
                 .setMessage(msg)
                 .setNegativeButton(com.winlator.R.string.galgame_cancel, null)
-                .setPositiveButton("删除", (d, w) -> batchDelete(new java.util.ArrayList<>(sel), purge, 0))
+                .setPositiveButton("删除", (d, w) -> {
+                    deleteFailures = 0;
+                    batchDelete(new java.util.ArrayList<>(sel), purge, 0);
+                })
                 .show();
     }
+
+    /** 本轮批删里没能删干净的数量（重试提示用）。 */
+    private int deleteFailures;
 
     /** 顺序批删：容器删除是异步的，逐个排队避免并发重建容器目录。 */
     private void batchDelete(final java.util.List<GalgameLibraryAdapter.Item> rest, final boolean purge, final int done) {
         if (rest.isEmpty()) {
             refresh();
             exitSelectMode();
-            android.widget.Toast.makeText(requireContext(),
-                    "已删除 " + done + " 个游戏", android.widget.Toast.LENGTH_SHORT).show();
+            String msg = "已删除 " + done + " 个游戏";
+            if (deleteFailures > 0) msg += "，" + deleteFailures + " 个未完全删除（文件可能被占用，可重试）";
+            android.widget.Toast.makeText(requireContext(), msg, android.widget.Toast.LENGTH_SHORT).show();
+            deleteFailures = 0;
             return;
         }
         final GalgameLibraryAdapter.Item it = rest.remove(0);
         final android.content.Context ctx = requireContext();
         Runnable next = () -> {
-            if (purge && it.hasContainer()) {
-                com.winlator.core.FileUtils.delete(
+            boolean ok = true;
+            if (purge) {
+                // 回调在 removeContainerAsync 删完之后才跑：目录还在就是没删干净
+                if (it.hasContainer()) ok = it.container == null || !it.container.getRootDir().exists();
+                ok &= com.winlator.core.FileUtils.delete(
                         new File(new com.winlator.galgame.GalgameSaveManager(it.gameId).savePath()));
+                // 原生游戏的收纳副本（files/galgame-native/<id>，动辄数 GB）此前漏删：
+                // 记录一删就再没人能访问它，属静默泄漏（2026-10-26 评估 TD-20）。
+                if (com.winlator.galgame.GalgameNativeStore.isStored(ctx, it.gameId)) {
+                    ok &= com.winlator.galgame.GalgameNativeStore.remove(ctx, it.gameId);
+                }
             }
             GalgameLibraryIndex.remove(ctx, it.gameId);
+            if (!ok) deleteFailures++;
             batchDelete(rest, purge, done + 1);
         };
         if (purge && it.hasContainer()) {

@@ -1,5 +1,7 @@
 package com.winlator.galgame;
 
+import android.util.Log;
+
 import com.winlator.container.Container;
 import com.winlator.core.FileUtils;
 import com.winlator.core.WineRegistryEditor;
@@ -30,6 +32,8 @@ import java.io.InputStream;
  */
 public final class GalgameSaveManager {
 
+    private static final String TAG = "GalgameShell: saves";
+
     /** 容器外存档根（对应 S: 盘）。 */
     public static final String SAVE_ROOT =
             "/data/data/com.winlator/storage/galgame-saves";
@@ -48,6 +52,12 @@ public final class GalgameSaveManager {
     private boolean autoBackup = true;
 
     public GalgameSaveManager(String gameId) {
+        if (gameId == null || gameId.trim().isEmpty()) {
+            // 空 id 会让 S: 盘目录退化成 SAVE_ROOT 根：所有游戏共用一份存档，
+            // 导出/恢复互相串档（2026-10-26 评估 TD-24）。宁可当场报错。
+            throw new IllegalArgumentException(
+                    "gameId 不能为空：空的 gameId 会让存档目录退化成 S: 盘根，导致跨游戏串档");
+        }
         this.gameId = gameId;
         this.gameSaveDir = new File(SAVE_ROOT, gameId);
     }
@@ -135,18 +145,31 @@ public final class GalgameSaveManager {
             if (FileUtils.isSymlink(dir)) continue;   // 已链，跳过
 
             File target = new File(gameSaveDir, name);
-            if (!target.isDirectory()) target.mkdirs();
+            if (!target.isDirectory() && !target.mkdirs()) continue;   // 目标建不出就别动源目录
 
             try {
-                // 先搬（合并到 S:，不覆盖已有同名文件）
-                mergeInto(dir, target);
-                // 再链
-                FileUtils.delete(dir);
+                // 先搬：同名不同内容以游戏目录为准，旧副本改名 .bak-<ts> 保留（不直接覆盖）
+                if (!mergeInto(dir, target)) {
+                    // 合并不完整（拷不动/改名失败）→ 跳过链接，源目录原样留着，宁可没链上也不丢档
+                    Log.w(TAG, "存档合并不完整，跳过 S: 链接: " + dir);
+                    continue;
+                }
+                if (!FileUtils.delete(dir)) {
+                    Log.w(TAG, "源存档目录删不掉，跳过 S: 链接: " + dir);
+                    continue;
+                }
                 FileUtils.symlink(target, dir);
+                if (!FileUtils.isSymlink(dir)) {
+                    // 上游 symlink 吞掉 ErrnoException：链没建成就把存档拷回去，宁可多占一份
+                    mergeInto(target, dir);
+                    Log.w(TAG, "符号链接创建失败，已把存档拷回游戏目录: " + dir);
+                    continue;
+                }
                 linked++;
             }
             catch (Exception e) {
-                // 单个目录失败不影响其它
+                Log.w(TAG, "便携存档迁移失败: " + dir, e);
+                if (!dir.exists()) mergeInto(target, dir);
             }
         }
         return linked;
@@ -194,15 +217,27 @@ public final class GalgameSaveManager {
     // ---- 文件工具 ----
 
     /** 把 src 内容合并进 dst（不覆盖 dst 已存在的同名文件）。 */
-    private static void mergeInto(File src, File dst) throws IOException {
-        if (!dst.isDirectory() && !dst.mkdirs()) throw new IOException("无法创建 " + dst);
+    /** 把 src 合并进 dst；返回是否每个文件都已在 dst 落地（false = 调用方不该删 src）。 */
+    private static boolean mergeInto(File src, File dst) {
+        if (!dst.isDirectory() && !dst.mkdirs()) return false;
         File[] files = src.listFiles();
-        if (files == null) return;
+        if (files == null) return false;
+        boolean ok = true;
         for (File f : files) {
             File t = new File(dst, f.getName());
-            if (f.isDirectory()) mergeInto(f, t);
-            else if (!t.exists()) copyFile(f, t);
+            if (f.isDirectory()) {
+                if (!mergeInto(f, t)) ok = false;
+                continue;
+            }
+            if (t.isFile() && t.length() == f.length()) continue;      // 已有等价副本
+            if (t.exists()) {
+                // 同名不同内容：源（游戏目录里的活档）为准，旧的目标副本改名保留
+                File bak = new File(dst, f.getName() + ".bak-" + System.currentTimeMillis());
+                if (!t.renameTo(bak)) { ok = false; continue; }
+            }
+            if (!copyFile(f, t)) ok = false;
         }
+        return ok;
     }
 
     private static void copyDirectory(File src, File dst) throws IOException {
@@ -212,16 +247,20 @@ public final class GalgameSaveManager {
         for (File f : files) {
             File t = new File(dst, f.getName());
             if (f.isDirectory()) copyDirectory(f, t);
-            else copyFile(f, t);
+            else if (!copyFile(f, t)) throw new IOException("复制失败: " + f);
         }
     }
 
-    private static void copyFile(File src, File dst) throws IOException {
+    private static boolean copyFile(File src, File dst) {
         try (InputStream in = new FileInputStream(src);
              FileOutputStream out = new FileOutputStream(dst)) {
             byte[] buf = new byte[1 << 16];
             int n;
             while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            return true;
+        } catch (IOException e) {
+            Log.w(TAG, "复制存档文件失败: " + src + " -> " + dst, e);
+            return false;
         }
     }
 
