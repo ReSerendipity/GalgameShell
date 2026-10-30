@@ -52,7 +52,17 @@
 ## 5. 回滚
 
 - **判定阈值**：待定（负责人：仓库所有者；触发条件：出现 Release 资产损坏 / 错误版本发布 / 安装包不可用时，由所有者判定并发起回滚）。
-- **执行**：`git revert <bad-commit>`（保历史、可再 forward）；不可变产物按上一版 tag 重发。
+- **执行**（发布链只由**新 tag 的 push** 触发，因此回滚一律前滚；不存在「按上一版 tag 重发」这条路）：
+  1. `git revert <bad-commit>`（保历史、可再 forward）——先把坏内容从主干摘掉。
+  2. 递增 `app/build.gradle` 的 `versionName` / `versionCode` 并落 CHANGELOG，按 §3 打**新** tag 推送。
+     `publish` 用 `gh release create --verify-tag`，同名 Release 已存在时创建会直接失败；
+     重推既有 tag 不产生新的触发事件，移动/删除 tag 又属下方红线，所以旧 tag 无法用来「重发」。
+  3. 要让坏版本不再被拿到：`gh release edit <坏tag> --draft=true` 把它退回草稿（不删资产、不动 ref）。
+  4. 上一版本身不需要重发：GitHub 对任何已存在的 tag 常驻提供 Source code zip/tar.gz（见 §4 产物表），
+     需要回退的用户直接取上一版 tag；本仓 Release 上传资产仅 `sbom.cdx.json` + `SHA256SUMS.txt`，
+     若确需给既有 tag 补资产，用 `gh release upload <tag> …`（对已存在的 Release 有效，不触发发布链）。
+  5. 新 tag 的版本位必须与 tag 一致：`validate-tag` 除形状外还会比对 `app/build.gradle` 的
+     `versionName`，不一致会在任何创建动作之前失败。
 - **破坏性动作**：重指向 / 删除 tag、移动任何远端 ref → **须仓库所有者单独授权**。`release.yml` 由 `push: tags` 触发，移动已发布 tag 会当场重跑发布链。
 - **回滚后验证**：重跑 `ci.yml`（rebase-guard、JSON/XML 资产校验、`scripts/check_licenses.py`、`galgame-compile`、`tools/run_detect_test.sh`）至全绿。
 

@@ -26,6 +26,27 @@ jobs:
             echo "::error::Release tags must use vMAJOR.MINOR or vMAJOR.MINOR.PATCH (for example, v11.2)."
             exit 1
           fi
+      # tag 与版本位绑定：格式正则只保证形状，不保证 Release 名对得上源码声明的版本。
+      # 历史实例：v11.5.1 落在 versionName 仍为 11.5 的提交上，发布链当时全绿。
+      - name: Check out the tagged commit
+        uses: actions/checkout@v7
+      - name: Validate versionName matches tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          EXPECTED="${RELEASE_TAG#v}"
+          ACTUAL="$(grep -E '^[[:space:]]*versionName[[:space:]]' app/build.gradle | head -1 | sed -E 's/.*"([^"]*)".*/\1/')"
+          if [ -z "$ACTUAL" ]; then
+            echo "::error::app/build.gradle 里读不到 versionName，无法核验 tag 与版本位的一致性。"
+            exit 1
+          fi
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::tag 声明 v$EXPECTED，但 app/build.gradle 的 versionName 是 $ACTUAL；发版标识与源码版本位不一致。"
+            echo "::error::要么递增 versionName/versionCode 后重打新 tag，要么把 tag 改成与版本位一致的形状；不要移动已发布的 tag。"
+            exit 1
+          fi
+          echo "OK: tag $RELEASE_TAG 与 versionName $ACTUAL 一致"
 
   ci:
     name: Run CI checks
@@ -48,7 +69,7 @@ jobs:
 
   sbom:
     name: Attach source SBOM (syft, CycloneDX)
-    needs: [validate-tag, ci]
+    needs: [validate-tag, ci, publish]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 10

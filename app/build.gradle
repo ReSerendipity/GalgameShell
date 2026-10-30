@@ -14,7 +14,8 @@ android {
         // 前置核对（README.internal §7 P9）：B 路由 FileProvider 化、MANAGE_EXTERNAL_STORAGE
         // 运行时申请链（GalgameStoragePermission）均已完成；targetSdk 30 不触发
         // 前台服务类型（34+）/ POST_NOTIFICATIONS 运行时权限（33+）等更高适配项。
-        // 残余发版前置：真机回归 R1–R17（TD-02，需 Adreno + Mali 真机），发版门禁不变。
+        // 真机回归 R1–R17（TD-02）已于 2026-10-24 永久跳过：本机只有 Adreno 设备，Mali 档
+        // 永不可能执行，该条不再是发版门禁（权威口径见 docs/tech-debt-register.md TD-02）。
         targetSdkVersion 30
         versionCode 36
         versionName "11.5"

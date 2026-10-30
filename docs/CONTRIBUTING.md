@@ -4,6 +4,8 @@
 
 1. 克隆后先读根 `README.md`（对外说明、门禁清单与零改铁律）与 `ci/README.md`（CI 内部约定）。
    > `AGENTS.md` 为本机维护者上下文，按 `REPOSITORY_GUIDELINES.md` §7 **不入库**，fresh clone 中不存在，无需查找。
+   > 跨工具通用的 agent 契约在 `docs/agent-contract.md`（入库，随仓分发）：新会话开工前先读它，
+   > 其中 DCO、禁改平台设置、勿动用户未提交改动等硬约束对本地与云端会话同等适用。
 2. 本仓按设计不含大二进制：clone 后不能直接 `./gradlew assembleDebug` 出完整 APK
    （按 README「获取运行时资源」补齐）；CI 门禁在无 SDK / 无二进制条件下可跑。
 
