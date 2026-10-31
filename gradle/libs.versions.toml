@@ -7,7 +7,7 @@ preference = "1.2.1"
 material = "1.14.0"
 # 1.5.6/1.5.7 的 Android AAR loader 会把库名拼成 liblibzstd-jni-*.so（1.5.7-13+ 还要求 compileSdk 37）；
 # 1.5.2-3 是旧 APK 真机验证可用的最后版本，A 路线 rootfs/容器解压仍走它。
-zstdJni = "1.5.7-24"
+zstdJni = "1.5.7-25"
 xz = "1.12"
 # v2.9 评估整改（供应链报告 P1-4）：1.20 -> 1.26.0，脱离 CVE-2021-36090（修复于 1.21）
 # 与 CVE-2024-25710/CVE-2024-26308（修复于 1.26）影响区间；使用方仅 core/ZipUtils 与
